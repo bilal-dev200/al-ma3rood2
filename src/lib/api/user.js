@@ -69,12 +69,15 @@ export const userApi = {
     axiosClient.post(`user/notification/read`),
 
   // userFeedbacks: () => axiosClient.get("/user/notification"),
-  addFeedback: (formData) => {
-    return axiosClient.post("user/feedback/store", formData, {
+  addFeedback: (payload) => {
+    return axiosClient.post("user/feedback/store", payload, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "application/json",
       },
     });
+  },
+  addImprovementFeedback: (payload) => {
+    return axiosClient.post("user/feedback/storeform", payload);
   },
 
   updateFeedback: (id, formData) => {
@@ -87,6 +90,9 @@ export const userApi = {
 
   userFeedback: (userId) =>
     axiosClient.get(`user/feedback/stats/${userId}`),
+
+  getFeedbackForm: () =>
+    axiosClient.get("/user/feedback/form"),
 
   contactmessage: async (payload) => {
     return await axiosClient.post("contact/message", payload);

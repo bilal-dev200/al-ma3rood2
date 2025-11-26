@@ -50,7 +50,6 @@ export default function CategoryClient({
         search,
       };
 
-      console.log("📡 Loading page:", nextPage);
       const response = await listingsApi.getListingsByFilter(payload);
 
       // ✅ Adjust depending on API structure
@@ -118,8 +117,8 @@ export default function CategoryClient({
 
   // ✅ Debug Pagination Info
   useEffect(() => {
-    console.log("📊 Pagination Info:", pagination);
-    console.log("➡️ Has More:", hasMore);
+    // console.log("📊 Pagination Info:", pagination);
+    // console.log("➡️ Has More:", hasMore);
     const productsToShow = sortProducts(filteredProducts || products, sortOption);
   }, [products, filteredProducts]);
 

@@ -450,25 +450,34 @@ if (Array.isArray(initialValues.key_points)) {
       }
       
     } catch (error) {
-      console.error("Error creating job listing:", error); // Laravel validation errors (422)
-  if (error?.data?.errors) {
-    const errors = error.data.errors;
-
-    // Show each error as toast
-    Object.keys(errors).forEach((key) => {
-      errors[key].forEach((msg) => {
-        toast.error(`${msg}`);
-      });
-    });
-
-    return; // stop further toasts
-  }
-
-  // Other backend messages
-  if (error?.data?.message) {
-    toast.error(error.data.message);
-    return;
-  }
+      console.error("Error creating job listing:", error);
+      
+      // Handle API validation errors - check multiple possible error structures
+      const validationErrors = 
+        error?.data?.data || 
+        error?.data?.errors || 
+        error?.response?.data?.data || 
+        error?.response?.data?.errors;
+      
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
+        });
+      } else {
+        // Fallback to general error message
+        const errorMessage =
+          error?.data?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to create job listing. Please try again.";
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }

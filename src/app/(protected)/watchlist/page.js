@@ -9,10 +9,13 @@ import {
   Image_URL,
 } from "@/config/constants";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 
 const Page = () => {
     const { t } = useTranslation();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showListingDropdown, setShowListingDropdown] = useState(false);
@@ -56,37 +59,121 @@ const Page = () => {
               ? `${Image_URL}${listing.images[0].image_path}`
               : Image_NotFound;
 
+            const getListingUrl = () => {
+              // Check listing.type first for service and job
+              if (listing.type === "service") {
+                return `/services/${listing?.slug}`;
+              }
+              
+              if (listing.type === "job") {
+                return `/jobs/${listing?.slug}`;
+              }
+
+              // Then check listing_type for marketplace, property, and motors
+              const catSlug = listing.category?.slug?.includes("/")
+                ? listing.category.slug.split("/").pop()
+                : listing.category?.slug || "unknown";
+
+              switch (listing.listing_type) {
+                case "marketplace":
+                  return `/marketplace/${catSlug}/${listing?.slug}`;
+                case "property":
+                case "motors":
+                  return `/${listing.listing_type}/${listing?.slug}`;
+                default:
+                  console.warn("Unknown listing type:", listing.listing_type, listing.type);
+                  return "#";
+              }
+            };
+
+            const listingUrl = getListingUrl();
+            const highestBid = listing?.bids?.[0];
+            const hasBids = listing?.bids_count > 0;
+            const buyNowPrice = listing?.buy_now_price;
+            const startPrice = listing?.start_price;
+
             return (
               <div
                 key={item.id}
-                className="flex flex-col md:flex-row gap-4 items-start border rounded-md p-4 shadow-sm hover:shadow-md transition w-full mb-4"
+                className="bg-white rounded w-full max-w-[300px] sm:max-w-full shadow mb-6 mx-auto"
               >
-                <img
-                  src={imageUrl}
-                  alt={listing?.title || "Watchlist item"}
-                  className="w-full md:w-48 h-48 object-cover rounded-md"
-                />
+                <div
+                  onClick={() => router.push(listingUrl)}
+                  className="block cursor-pointer"
+                >
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center p-4">
+                    {/* Image */}
+                    <div className="w-full sm:w-28 h-40 relative">
+                      <Image
+                        src={imageUrl}
+                        alt={listing?.title || "Watchlist item"}
+                        fill
+                        className="object-contain rounded"
+                      />
+                    </div>
 
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-1">
-                    {listing?.title}
-                  </h3>
-                  {listing?.subtitle && (
-                    <p className="text-sm text-gray-600 mb-2">
-                      {listing.subtitle}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-800">
-                    <strong>{t("Starting Price")}:</strong>{listing?.start_price} <span className="price">$</span>
-                  </p>
-                  <p className="text-sm text-gray-800">
-                    <strong>{t("Condition")}:</strong> {listing?.condition}
-                  </p>
-                  {listing?.subtitle && (
-                    <p className="text-sm text-gray-600 mt-2 line-clamp-3">
-                      {listing.subtitle}
-                    </p>
-                  )}
+                    {/* Info */}
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-xs text-gray-500 mb-1 uppercase">
+                          {t("Listing Type:")} {listing?.listing_type || listing?.type || "N/A"}
+                        </span>
+                        {listing?.expire_at && (
+                          <span className="text-xs text-gray-500 mb-1 uppercase">
+                            {t("Closing Date:")}{" "}
+                            {new Date(listing.expire_at).toDateString()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-md font-semibold text-gray-800 my-1">
+                        {listing?.title}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Views / Price */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-gray-600 px-4 sm:px-6">
+                  <div className="flex gap-6 mt-2 items-center">
+                    {listing?.views && (
+                      <span>
+                        👁️ {listing.views} {t("views")}
+                      </span>
+                    )}
+                    {hasBids && (
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">
+                        {listing.bids_count} {t("Bid")}
+                        {listing.bids_count !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-right sm:text-left mt-2 sm:mt-0">
+                    {buyNowPrice ? (
+                      <>
+                        <span className="text-xs text-gray-500 block">{t("Buy Now")}</span>
+                        <span className="font-semibold text-gray-800 text-base">
+                          <span className="price">$</span>
+                          <span className="ml-1">{buyNowPrice}</span>
+                        </span>
+                      </>
+                    ) : hasBids && highestBid ? (
+                      <>
+                        <span className="text-xs text-gray-500 block">{t("Current Bid")}</span>
+                        <span className="font-semibold text-gray-800 text-base">
+                          <span className="price">$</span>
+                          <span className="ml-1">{highestBid.amount}</span>
+                        </span>
+                      </>
+                    ) : startPrice ? (
+                      <>
+                        <span className="text-xs text-gray-500 block">{t("Starting Price")}</span>
+                        <span className="font-semibold text-gray-800 text-base">
+                          <span className="price">$</span>
+                          <span className="ml-1">{startPrice}</span>
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             );

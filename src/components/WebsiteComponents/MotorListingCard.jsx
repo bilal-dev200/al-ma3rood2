@@ -1,22 +1,31 @@
-import React from 'react';
-import Link from 'next/link';
-import { Car, Calendar, Gauge, Fuel, Settings, MapPin, Heart, Eye } from 'lucide-react';
-import { Image_URL } from '@/config/constants';
+import React from "react";
+import Link from "next/link";
+import {
+  Car,
+  Calendar,
+  Gauge,
+  Fuel,
+  Settings,
+  MapPin,
+  Heart,
+  Eye,
+} from "lucide-react";
+import { Image_URL } from "@/config/constants";
 
 const MotorListingCard = ({ listing, viewMode }) => {
   const getAttributeValue = (key) => {
-    const attribute = listing.attributes?.find(attr => attr.key === key);
+    const attribute = listing.attributes?.find((attr) => attr.key === key);
     return attribute ? attribute.value : null;
   };
 
-  const make = getAttributeValue('make');
-  const model = getAttributeValue('model');
-  const year = getAttributeValue('year');
-  const fuelType = getAttributeValue('fuel_type');
-  const transmission = getAttributeValue('transmission');
-  const odometer = getAttributeValue('odometer');
-  const vehicleType = getAttributeValue('vehicle_type');
-  const bodyStyle = getAttributeValue('body_style');
+  const make = getAttributeValue("make");
+  const model = getAttributeValue("model");
+  const year = getAttributeValue("year");
+  const fuelType = getAttributeValue("fuel_type");
+  const transmission = getAttributeValue("transmission");
+  const odometer = getAttributeValue("odometer");
+  const vehicleType = getAttributeValue("vehicle_type");
+  const bodyStyle = getAttributeValue("body_style");
 
   // const formatPrice = (price) => {
   //   if (!price) return 'Price on application';
@@ -29,23 +38,24 @@ const MotorListingCard = ({ listing, viewMode }) => {
   //   return `${numPrice.toLocaleString()}`;
   // };
   const formatPrice = (price) => {
-  if (!price) return "Price on application";
+    if (!price) return "Price on application";
 
-  // Remove commas and any extra spaces before converting
-  const numPrice = parseFloat(price.replace(/,/g, ""));
+    // Remove commas and any extra spaces before converting
+    const numPrice = parseFloat(price.replace(/,/g, ""));
 
-  if (isNaN(numPrice)) return "Price on application";
+    if (isNaN(numPrice)) return "Price on application";
 
-  if (numPrice >= 1000000) {
-    return `${(numPrice / 1000000).toFixed(1)}M`;
-  } else if (numPrice >= 1000) {
-    return `${(numPrice / 1000).toFixed(0)}k`;
-  }
+    if (numPrice >= 1000000) {
+      return `${(numPrice / 1000000).toFixed(1)}M`;
+    } else if (numPrice >= 1000) {
+      return `${(numPrice / 1000).toFixed(0)}k`;
+    }
 
-  // Add commas properly formatted
-  return numPrice.toLocaleString();
-};
+    // Add commas properly formatted
+    return numPrice.toLocaleString();
+  };
 
+  console.log("aaa listing", listing);
 
   const formatOdometer = (km) => {
     if (!km) return null;
@@ -58,7 +68,7 @@ const MotorListingCard = ({ listing, viewMode }) => {
 
   const getVehicleIcon = (type) => {
     switch (type) {
-      case 'car':
+      case "car":
         return <Car className="w-4 h-4" />;
       default:
         return <Car className="w-4 h-4" />;
@@ -66,8 +76,17 @@ const MotorListingCard = ({ listing, viewMode }) => {
   };
 
   return (
-    <Link href={`/motors/${listing.slug}`} className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${viewMode !== 'grid' ? 'flex flex-row' : "flex flex-col"}`}>
-      <div className={`relative ${viewMode == "grid" ? 'h-48' : 'w-96  h-58'} bg-gray-200`}>
+    <Link
+      href={`/motors/${listing.slug}`}
+      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${
+        viewMode !== "grid" ? "flex flex-row" : "flex flex-col"
+      }`}
+    >
+      <div
+        className={`relative ${
+          viewMode == "grid" ? "h-48" : "w-96  h-58"
+        } bg-gray-200`}
+      >
         {listing.images && listing.images.length > 0 ? (
           <img
             src={`${Image_URL}/${listing.images[0].image_path}`}
@@ -79,22 +98,24 @@ const MotorListingCard = ({ listing, viewMode }) => {
             <Car className="w-16 h-16" />
           </div>
         )}
-        
+
         {/* Badge for vehicle type */}
         <div className="absolute top-2 left-2">
           <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium capitalize">
-            {listing.vehicle_type || "Vehicle" }
+            {listing.vehicle_type || "Vehicle"}
           </span>
         </div>
 
         {/* Condition badge */}
         <div className="absolute top-2 right-2">
-          <span className={`px-2 py-1 rounded text-xs font-medium ${
-            listing.condition === 'new' 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-600 text-white'
-          }`}>
-            {listing.condition === 'new' ? 'New' : 'Used'}
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              listing.condition === "new"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-600 text-white"
+            }`}
+          >
+            {listing.condition === "new" ? "New" : "Used"}
           </span>
         </div>
 
@@ -114,28 +135,37 @@ const MotorListingCard = ({ listing, viewMode }) => {
         {/* Title and Price */}
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
-            <h3 className={`text-lg font-semibold text-gray-900 line-clamp-2 truncate ${viewMode !== 'grid' ? 'w-32 md:w-64' : "w-32 md:w-72"}`}>
-              {year && `${year} `}{make && `${make} `}{model || listing.title}
+            <h3
+              className={`text-lg font-semibold text-gray-900 line-clamp-2 truncate ${
+                viewMode !== "grid" ? "w-32 md:w-64" : "w-32 md:w-72"
+              }`}
+            >
+              {year && `${year} `}
+              {make && `${make} `}
+              {model || listing.title}
             </h3>
             {listing?.body_style && (
-              <p className="text-sm text-gray-600 capitalize">{listing?.body_style}</p>
+              <p className="text-sm text-gray-600 capitalize">
+                {listing?.body_style}
+              </p>
             )}
           </div>
           <div className="text-right ml-4">
             {listing.bids_count === 0
-                      ? listing.buy_now_price && (
-            <p className="text-xl font-bold text-green-600">
-              <span className='price'>$</span>
-              {formatPrice(listing.buy_now_price)}
-              
-            </p>
-                      ) : listing.bids_count &&
-                        listing.bids?.length > 0 & (
-            <p className="text-xl font-bold text-green-600">
-              <span className='price'>$</span>
-              {formatPrice(listing.bids?.[0]?.amount)}
-            </p>
-                      )}
+              ? listing.buy_now_price && (
+                  <p className="text-xl font-bold text-green-600">
+                    <span className="price">$</span>
+                    {formatPrice(listing.buy_now_price)}
+                  </p>
+                )
+              : listing.bids_count &&
+                (listing.bids?.length > 0) &
+                (
+                  <p className="text-xl font-bold text-green-600">
+                    <span className="price">$</span>
+                    {formatPrice(listing.bids?.[0]?.amount)}
+                  </p>
+                )}
             {listing.allow_offers && (
               <p className="text-xs text-gray-500">or best offer</p>
             )}
@@ -144,44 +174,36 @@ const MotorListingCard = ({ listing, viewMode }) => {
 
         {/* Vehicle Details */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          {listing?.year && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-              {listing?.year}
-            </div>
-          )}
-          
-          {listing?.odometer && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Gauge className="w-4 h-4 mr-2 text-gray-400" />
-              {listing?.odometer}
-            </div>
-          )}
-          
-          {listing?.fuel_type && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Fuel className="w-4 h-4 mr-2 text-gray-400" />
-              {listing?.fuel_type}
-            </div>
-          )}
-          
-          {listing?.transmission && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Settings className="w-4 h-4 mr-2 text-gray-400" />
-              {listing?.transmission}
-            </div>
-          )}
+          <div className="flex items-center text-sm text-gray-600">
+            <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+            {listing?.year || "Not specified"}
+          </div>
+
+          <div className="flex items-center text-sm text-gray-600">
+            <Gauge className="w-4 h-4 mr-2 text-gray-400" />
+            {(listing?.odometer && formatOdometer(listing?.odometer)) ||
+              "Not specified"}
+          </div>
+
+          <div className="flex items-center text-sm text-gray-600">
+            <Fuel className="w-4 h-4 mr-2 text-gray-400" />
+            {listing?.fuel_type || "Not specified"}
+          </div>
+
+          <div className="flex items-center text-sm text-gray-600">
+            <Settings className="w-4 h-4 mr-2 text-gray-400" />
+            {listing?.transmission || "Not specified"}
+          </div>
         </div>
 
         {/* Location and Date */}
         <div className="flex justify-between items-center text-xs text-gray-500 mb4">
           <div className="flex items-center">
             <MapPin className="w-3 h-3 mr-1" />
-            {`${listing.creator.regions?.name}, ${listing.creator.countries?.name}` || 'Location not specified'}
+            {`${listing.creator.regions?.name}, ${listing.creator.countries?.name}` ||
+              "Location not specified"}
           </div>
-          <div>
-            Listed {new Date(listing.created_at).toLocaleDateString()}
-          </div>
+          <div>Listed {new Date(listing.created_at).toLocaleDateString()}</div>
         </div>
 
         {/* Action Buttons */}

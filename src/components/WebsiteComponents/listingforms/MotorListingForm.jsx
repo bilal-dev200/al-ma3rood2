@@ -106,6 +106,50 @@ const motorListingSchema = z
         "Either enter Buy Now Price, or both Start Price and Reserve Price",
       path: ["buy_now_price"], // error will show under buy_now_price by default
     }
+  )
+  .refine(
+    (data) => {
+      // Start Price cannot be greater than Buy Now Price
+      if (
+        data.buy_now_price &&
+        data.buy_now_price.trim() !== "" &&
+        data.start_price &&
+        data.start_price.trim() !== ""
+      ) {
+        const buyNow = parseFloat(data.buy_now_price);
+        const start = parseFloat(data.start_price);
+        if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: "Start Price cannot be greater than Buy Now Price",
+      path: ["start_price"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Reserve Price cannot be greater than Buy Now Price
+      if (
+        data.buy_now_price &&
+        data.buy_now_price.trim() !== "" &&
+        data.reserve_price &&
+        data.reserve_price.trim() !== ""
+      ) {
+        const buyNow = parseFloat(data.buy_now_price);
+        const reserve = parseFloat(data.reserve_price);
+        if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: "Reserve Price cannot be greater than Buy Now Price",
+      path: ["reserve_price"],
+    }
   );
 
 const steps = [
@@ -800,6 +844,14 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
     console.log("🚨 Validation Errors:", errors);
   }, [errors]);
 
+  // Clear reserve_price when start_price is empty
+  const startPrice = watch("start_price");
+  useEffect(() => {
+    if (!startPrice || startPrice.trim() === "") {
+      setValue("reserve_price", "", { shouldValidate: false });
+    }
+  }, [startPrice, setValue]);
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
@@ -902,24 +954,27 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
       setIsSubmitting(false);
       console.error("Error creating motor listing:", error);
 
-      // ✅ Handle Laravel 422 Validation Errors
-
-      // if (error.response) {
-      const validationErrors = error.data.data;
+      // Handle API validation errors
+      const validationErrors = error?.data?.data || error?.response?.data?.data;
       if (validationErrors && typeof validationErrors === "object") {
         Object.entries(validationErrors).forEach(([field, messages]) => {
-          messages.forEach((msg) => {
-            toast.error(`${msg}`);
-          });
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
         });
       } else {
-        toast.error(error.response.data.message || "Validation failed");
+        // Fallback to general error message
+        const errorMessage =
+          error?.data?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to create motor listing. Please try again.";
+        toast.error(errorMessage);
       }
-
-      // }
-      // else {
-      //   toast.error("Failed to create motor listing. Please try again.");
-      // }
     }
     // finally {
     //   setIsSubmitting(false);
@@ -1517,8 +1572,6 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                     <option value="">Select Transmission</option>
                     <option value="Automatic">Automatic</option>
                     <option value="Manual">Manual</option>
-                    <option value="CVT">CVT</option>
-                    <option value="Semi-Auto">Semi-Auto</option>
                   </select>
                 )}
               />
@@ -1692,6 +1745,9 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
 
   const renderPricePaymentStep = () => {
     const categoryId = watch("category_id");
+    const startPrice = watch("start_price");
+    const buyNowPrice = watch("buy_now_price");
+    const isReservePriceDisabled = !startPrice || startPrice.trim() === "";
     return (
       <div className="space-y-8">
         <div className="text-center">
@@ -1770,18 +1826,24 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                       <input
                         {...field}
                         type="number"
-                        className="w-full border border-gray-300 rounded-md 
+                        className={`w-full border rounded-md 
       focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
-      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+      ${errors.start_price ? "border-red-500" : "border-gray-300"}`}
                         placeholder="Enter start price"
                       />
                     </div>
                   )}
                 />
+                {errors.start_price && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.start_price.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  o Reserve Price
+                  Reserve Price
                 </label>
                 <Controller
                   name="reserve_price"
@@ -1794,14 +1856,31 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                       <input
                         {...field}
                         type="number"
-                        className="w-full border border-gray-300 rounded-md 
+                        disabled={isReservePriceDisabled}
+                        className={`w-full border rounded-md 
       focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
-      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+      ${errors.reserve_price ? "border-red-500" : "border-gray-300"}
+      ${
+        isReservePriceDisabled
+          ? "bg-gray-100 cursor-not-allowed opacity-60"
+          : ""
+      }`}
                         placeholder="Enter reserve price"
                       />
                     </div>
                   )}
                 />
+                {errors.reserve_price && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.reserve_price.message}
+                  </p>
+                )}
+                {isReservePriceDisabled && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    Please enter Start Price first
+                  </p>
+                )}
               </div>
             </>
           </div>

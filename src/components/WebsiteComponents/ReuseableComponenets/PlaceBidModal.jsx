@@ -139,6 +139,9 @@ const PlaceBidModal = ({ isOpen, onClose, product, onBidPlaced }) => {
           </label>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 price">$</span>
+              </div>
               <input
                 type="number"
                 min="0"
@@ -146,7 +149,8 @@ const PlaceBidModal = ({ isOpen, onClose, product, onBidPlaced }) => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={t("Enter bid amount")}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 pr-10 text-gray-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-10 py-2
+      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 required
                 disabled={loading}
               />

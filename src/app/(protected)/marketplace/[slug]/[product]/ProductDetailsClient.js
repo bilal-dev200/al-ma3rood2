@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import { Image_URL } from "@/config/constants";
 import { Image_NotFound } from "@/config/constants";
 import { useWatchlistStore } from "@/lib/stores/watchlistStore";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useSellerFavoritesStore } from "@/lib/stores/sellerFavoritesStore";
 import { commentsApi, listingsApi } from "@/lib/api/listings";
 import PlaceBidModal from "@/components/WebsiteComponents/ReuseableComponenets/PlaceBidModal";
 import MakeOfferModal from "./MakeOfferModal";
@@ -292,6 +293,13 @@ export default function ProductDetailsClient({ product: initialProduct }) {
   const [product, setProduct] = useState(initialProduct);
   const { watchlist, addToWatchlist, removeFromWatchlist } =
     useWatchlistStore();
+  const { 
+    favoriteSellers, 
+    fetchSellerFavorites, 
+    toggleSellerFavorite, 
+    isSellerFavorite: checkIsSellerFavorite,
+    isLoading: isFavoritesLoading 
+  } = useSellerFavoritesStore();
   const isInWatchlist = watchlist?.some(
     (item) => item.listing?.slug === product.slug
   );
@@ -299,6 +307,14 @@ export default function ProductDetailsClient({ product: initialProduct }) {
 
   // Seller check
   const isSeller = currentUser?.id === product?.seller_id;
+  const isSellerFavorite = product?.creator?.id ? checkIsSellerFavorite(product.creator.id) : false;
+
+  // Fetch seller favorites on mount
+  useEffect(() => {
+    if (currentUser && product?.creator?.id) {
+      fetchSellerFavorites();
+    }
+  }, [currentUser, product?.creator?.id, fetchSellerFavorites]);
 
   console.log('product', product);
 
@@ -335,16 +351,26 @@ export default function ProductDetailsClient({ product: initialProduct }) {
 
       toast.success("Question posted successfully!");
 
-      if (res?.comment) {
-        setProduct((prev) => ({
-          ...prev,
-          comments: [...(prev.comments || []), res.comment],
-        }));
-      }
+      // Refetch product data to get updated comments
+      await refreshProduct();
 
       setNewQuestion("");
     } catch (e) {
-      toast.error(e.message || "Failed to post question");
+      // Handle API validation errors
+      const validationErrors = e?.data?.data || e?.response?.data?.data;
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(e?.message || "Failed to post question");
+      }
     }
   };
   const handleReply = async (commentId) => {
@@ -358,18 +384,26 @@ export default function ProductDetailsClient({ product: initialProduct }) {
 
       toast.success("Reply posted successfully!");
 
-      if (res?.reply) {
-        setProduct((prev) => ({
-          ...prev,
-          comments: prev.comments.map((c) =>
-            c.id === commentId ? { ...c, reply: res.reply } : c
-          ),
-        }));
-      }
+      // Refetch product data to get updated comments with replies
+      await refreshProduct();
 
       setReplyText((prev) => ({ ...prev, [commentId]: "" }));
     } catch (e) {
-      toast.error(e.message || "Failed to post reply");
+      // Handle API validation errors
+      const validationErrors = e?.data?.data || e?.response?.data?.data;
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(e?.message || "Failed to post reply");
+      }
     }
   };
   const handleDeleteComment = async (commentId) => {
@@ -380,10 +414,10 @@ export default function ProductDetailsClient({ product: initialProduct }) {
       const updatedComments = product.comments.filter((c) => c.id !== commentId);
       setProduct({ ...product, comments: updatedComments });
 
-      toast.success("Comment deleted successfully! ✅");
+      toast.success("Comment deleted successfully!");
     } catch (error) {
       console.error("Error deleting comment:", error);
-      toast.error("Failed to delete comment ❌");
+      toast.error("Failed to delete comment");
     }
   };
 
@@ -919,24 +953,47 @@ export default function ProductDetailsClient({ product: initialProduct }) {
                 className={`mt-4 sm:mt-0 sm:absolute sm:top-1/2 sm:-translate-y-1/2 w-full sm:w-auto ${i18n.language === "ar" ? "sm:left-4" : "sm:right-4"
                   } sm:order-3`}
               >
-                {isLoggedIn && !isLister && (
-                  <button
-                    className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-semibold transition"
-                    onClick={async () => {
-                      try {
-                        await userApi.addAndDeleteSeller(product.creator?.id);
-                        toast.success("Seller added to favorites!");
-                      } catch (e) {
-                        toast.error("Failed to add seller to favorites");
-                      }
-                    }}
-                  >
-                    {t("Add Seller to Favorites")}
-                  </button>
+                {isLoggedIn && !isLister && !isFavoritesLoading && (
+                  <>
+                    {isSellerFavorite ? (
+                      <div className="flex flex-col items-center sm:items-start gap-2">
+                        <p className="text-green-600 text-sm font-semibold text-center sm:text-left">
+                          {t("Seller added to favorites")}
+                        </p>
+                        <button
+                          className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-semibold transition"
+                          onClick={async () => {
+                            try {
+                              await toggleSellerFavorite(product.creator?.id);
+                              toast.success(t("Seller removed from favorites"));
+                            } catch (e) {
+                              toast.error(t("Failed to remove seller from favorites"));
+                            }
+                          }}
+                        >
+                          {t("Remove from Favorites")}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-semibold transition"
+                        onClick={async () => {
+                          try {
+                            await toggleSellerFavorite(product.creator?.id);
+                            toast.success(t("Seller added to favorites!"));
+                          } catch (e) {
+                            toast.error(t("Failed to add seller to favorites"));
+                          }
+                        }}
+                      >
+                        {t("Add Seller to Favorites")}
+                      </button>
+                    )}
+                  </>
                 )}
-                {favoriteStatus && (
-                  <p className="text-green-600 text-xs mt-1 text-center sm:text-left">
-                    {favoriteStatus}
+                {isFavoritesLoading && isLoggedIn && !isLister && (
+                  <p className="text-gray-500 text-xs text-center sm:text-left">
+                    {t("Loading...")}
                   </p>
                 )}
               </div>

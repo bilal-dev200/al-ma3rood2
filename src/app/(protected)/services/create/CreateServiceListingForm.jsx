@@ -204,16 +204,34 @@ export default function CreateServiceListingForm() {
         router.push(`/services/${slug}`);
       }
     } catch (error) {
-      const firstError =
-        error?.data?.errors &&
-        Object.values(error.data.errors)[0] &&
-        Object.values(error.data.errors)[0][0];
-      toast.error(
-        firstError ||
+      console.error("Error creating service listing:", error);
+      
+      // Handle API validation errors - check multiple possible error structures
+      const validationErrors = 
+        error?.data?.data || 
+        error?.data?.errors || 
+        error?.response?.data?.data || 
+        error?.response?.data?.errors;
+      
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
+        });
+      } else {
+        // Fallback to general error message
+        const errorMessage =
           error?.data?.message ||
+          error?.response?.data?.message ||
           error?.message ||
-          "Failed to create service listing."
-      );
+          "Failed to create service listing. Please try again.";
+        toast.error(errorMessage);
+      }
     }
   }
 

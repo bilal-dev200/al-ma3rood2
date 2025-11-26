@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next";
 import CategoryModal from "./CategoryModal";
 import GooglePlacesAutocomplete from "../GooglePlacesAutocomplete";
 import QuillEditor from "@/components/ui/QuillEditor";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 /**
  * Zod schema for property listing
@@ -35,8 +37,9 @@ const propertyListingSchema = z.object({
   ]),
   description: z.string().min(1, "Description is required"),
   category_id: z
-  .number({ required_error: "Category is Required" })
-  .int("Category must be a valid number"),
+    .number({ required_error: "Category is Required" })
+    .int("Category must be a valid number")
+    .min(1, "Category is Required"),
 
   // property_type: z.string().min(1, "Property type is required"),
   images: z.array(z.any()).min(1, "At least one image is required"),
@@ -81,23 +84,51 @@ const propertyListingSchema = z.object({
   loading_docks: z.string().optional(),
   water_availability: z.string().optional(),
   soil_type: z.string().optional(),
-});
-// .refine((data) => {
-//   // If buy_now_price filled -> ok
-//   if (data.buy_now_price && data.buy_now_price.trim() !== "") return true;
-//   // If both start and reserve present -> ok
-//   if (
-//     data.start_price &&
-//     data.start_price.trim() !== "" &&
-//     data.reserve_price &&
-//     data.reserve_price.trim() !== ""
-//   )
-//     return true;
-//   return false;
-// }, {
-//   message: "Either enter Buy Now Price, or both Start Price and Reserve Price",
-//   path: ["buy_now_price"],
-// });
+})
+  .refine(
+    (data) => {
+      // Start Price cannot be greater than Buy Now Price
+      if (
+        data.buy_now_price &&
+        data.buy_now_price.trim() !== "" &&
+        data.start_price &&
+        data.start_price.trim() !== ""
+      ) {
+        const buyNow = parseFloat(data.buy_now_price);
+        const start = parseFloat(data.start_price);
+        if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: "Start Price cannot be greater than Buy Now Price",
+      path: ["start_price"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Reserve Price cannot be greater than Buy Now Price
+      if (
+        data.buy_now_price &&
+        data.buy_now_price.trim() !== "" &&
+        data.reserve_price &&
+        data.reserve_price.trim() !== ""
+      ) {
+        const buyNow = parseFloat(data.buy_now_price);
+        const reserve = parseFloat(data.reserve_price);
+        if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: "Reserve Price cannot be greater than Buy Now Price",
+      path: ["reserve_price"],
+    }
+  );
 
 // Steps
 const steps = [
@@ -109,7 +140,14 @@ const steps = [
 const stepFields = {
     0: ["category_id", "title", "address", "floor_area", "condition", "property_type_field", "business_type", "land_area", "parking", "bedrooms", "bathrooms", "description"], // Property Details
     1: ["images"], // Photos
-    2: ["buy_now_price", "start_price", "reserve_price"], // Price & Payment (The Refine takes care of the OR logic on final submit)
+    2: ["buy_now_price", "start_price", "reserve_price", "expire_at"], // Price & Payment (The Refine takes care of the OR logic on final submit)
+};
+
+// Helper function to get max date (60 days from today)
+const getMaxDate = () => {
+  const today = new Date();
+  today.setDate(today.getDate() + 60);
+  return today;
 };
 
 // Helper: find type object by name
@@ -318,6 +356,14 @@ const Properties = ({ initialValues, mode = "create" }) => {
     }
   }, [watchedPropertyType, setValue]);
 
+  // Clear reserve_price when start_price is empty
+  const startPrice = watch("start_price");
+  useEffect(() => {
+    if (!startPrice || startPrice.trim() === "") {
+      setValue("reserve_price", "", { shouldValidate: false });
+    }
+  }, [startPrice, setValue]);
+
   const onSubmit = async (data) => {
     console.log(data);
     setIsSubmitting(true);
@@ -428,34 +474,70 @@ const Properties = ({ initialValues, mode = "create" }) => {
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error creating property listing:", error);
-      // toast.error("Failed to create property listing. Please try again.");
       setIsSubmitting(false);
-      const validationErrors = error.data.data;
+      
+      // Handle API validation errors
+      const validationErrors = error?.data?.data || error?.response?.data?.data;
       if (validationErrors && typeof validationErrors === "object") {
         Object.entries(validationErrors).forEach(([field, messages]) => {
-          messages.forEach((msg) => {
-            toast.error(`${msg}`);
-          });
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
         });
       } else {
-        toast.error(error.response.data.message || "Validation failed");
+        // Fallback to general error message
+        const errorMessage =
+          error?.data?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to create property listing. Please try again.";
+        toast.error(errorMessage);
       }
     }
   };
 
   const handleNextStep = async () => {
-        const fieldsToValidate = stepFields[activeStep];
+    const fieldsToValidate = stepFields[activeStep];
 
-        // Trigger validation for the current step's fields
-        const isValid = await trigger(fieldsToValidate, { shouldFocus: true });
+    // Explicitly check category_id for step 0 (Property Details) before validation
+    if (activeStep === 0) {
+      const categoryId = watch("category_id");
+      if (!categoryId || categoryId === null || categoryId === undefined) {
+        toast.error(t("Please select a category before continuing."));
+        return;
+      }
+    }
 
-        if (isValid) {
-            nextStep();
-        } else {
-            // Show a general error if any field in the current step failed validation
-            toast.error("Please fill out all required fields for this step.");
+    // Trigger validation for the current step's fields
+    const isValid = await trigger(fieldsToValidate, { shouldFocus: true });
+
+    if (isValid) {
+      // Final check: ensure category_id is still valid (in case it was cleared during validation)
+      if (activeStep === 0) {
+        const categoryId = watch("category_id");
+        if (!categoryId || categoryId === null || categoryId === undefined) {
+          toast.error(t("Please select a category before continuing."));
+          return;
         }
-    };
+      }
+      nextStep();
+    } else {
+      // Show specific validation errors if available, otherwise show general message
+      const errorMessages = Object.values(errors)
+        .filter((error) => error?.message)
+        .map((error) => error.message);
+      
+      if (errorMessages.length > 0) {
+        errorMessages.forEach((msg) => toast.error(msg));
+      } else {
+        toast.error(t("Please fill out all required fields for this step."));
+      }
+    }
+  };
 
   const nextStep = () => {
     if (activeStep < steps.length - 1) setActiveStep((s) => s + 1);
@@ -1165,6 +1247,8 @@ const Properties = ({ initialValues, mode = "create" }) => {
   const PricePaymentStep = () => {
     // category id is already in form via property type selector
     const categoryId = watchedCategoryId;
+    const startPrice = watch("start_price");
+    const isReservePriceDisabled = !startPrice || startPrice.trim() === "";
 
     return (
       <div className="space-y-8">
@@ -1251,26 +1335,46 @@ const Properties = ({ initialValues, mode = "create" }) => {
             </div> */}
           </div>
 
-          {/* <div className="space-y-4">
+          <div className="space-y-4">
             <h3 className="text-xl font-semibold text-gray-900">Additional Options</h3>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date & Time</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Expiry Date & Time
+              </label>
               <Controller
-                name="expire_at"
                 control={control}
+                name="expire_at"
                 render={({ field }) => (
-                  <input
-                    type="datetime-local"
-                    value={field.value ? toDateTimeLocalString(field.value) : ""}
-                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  <DatePicker
+                    {...field}
+                    selected={field.value}
+                    onChange={(date) =>
+                      setValue("expire_at", date, { shouldValidate: true })
+                    }
+                    showTimeSelect
+                    timeFormat="hh:mm aa"
+                    dateFormat="yyyy-MM-dd h:mm aa"
+                    minDate={new Date()}
+                    maxDate={getMaxDate()}
+                    className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring
+                          [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
+                          ${
+                            errors.expire_at
+                              ? "border-red-500 focus:border-red-500"
+                              : "border-gray-300 focus:border-green-400"
+                          }`}
+                    placeholderText={t("Select date and time")}
                   />
                 )}
               />
+              {errors.expire_at && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.expire_at.message}
+                </p>
+              )}
             </div>
-
-          </div> */}
+          </div>
         </div>
 
         {/* errors from refine show under buy_now_price (per schema) */}

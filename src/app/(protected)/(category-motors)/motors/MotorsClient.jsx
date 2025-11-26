@@ -178,12 +178,6 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
     fetchYears();
   }, [filters.make, filters.model, vehicleData, activeTab]);
 
-  const modelsByMake = {
-    Toyota: ["Corolla", "Camry", "Yaris"],
-    Honda: ["Civic", "Accord", "CR-V"],
-    BMW: ["X5", "3 Series", "5 Series"],
-    Ford: ["Mustang", "F-150", "Explorer"],
-  };
   const conditions = [
     {
       key: "new",
@@ -455,16 +449,16 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
         className="w-full h-64 sm:h-72 lg:h-80 rounded-b-[60px] text-white px-4 sm:px-8 py-4 sm:py-12 relative flex flex-col"
         style={{ background: "rgb(23, 95, 72)" }}
       >
-        <div className='pb-8'>
-        <Breadcrumbs
-        items={[{ label: "Home", href: "/" }, { label: "Motors" }]}
-        styles={{
-          nav: "flex justify-start px-2 md:px-10 pt4 text-sm font-medium",
-        }}
-      />
-      
+        <div className="pb-8">
+          <Breadcrumbs
+            items={[{ label: "Home", href: "/" }, { label: "Motors" }]}
+            styles={{
+              nav: "flex justify-start px-2 md:px-10 pt4 text-sm font-medium",
+            }}
+          />
+
           <div className="mt-3 border-b border-white opacity-40 mx-2 md:mx-8"></div>
-      </div>
+        </div>
         <div className="max-w-6xl mx-auto w-full">
           <h1
             className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-snug mb-6 sm:mb-8"

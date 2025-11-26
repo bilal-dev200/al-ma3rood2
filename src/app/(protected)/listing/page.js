@@ -158,7 +158,27 @@ const Page = () => {
         router.push(`/listing/viewlisting?slug=${newListing.slug}`);
       }
     } catch (err) {
-      toast.error("Failed to create listing.");
+      // Handle API validation errors
+      const validationErrors = err?.data?.data || err?.response?.data?.data;
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
+        });
+      } else {
+        // Fallback to general error message
+        const errorMessage =
+          err?.data?.message ||
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to create listing.";
+        toast.error(errorMessage);
+      }
     }
   };
 

@@ -9,6 +9,7 @@ import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Bre
 import Image from "next/image";
 import { Image_URL } from "@/config/constants";
 import { useTranslation } from "react-i18next";
+import { useSellerFavoritesStore } from "@/lib/stores/sellerFavoritesStore";
 
 const items = [
   { label: "Home", href: "/" },
@@ -21,7 +22,12 @@ const FavouriteClientPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [favouriteCategories, setFavouriteCategories] = useState([]);
-  const [favouriteSeller, setFavouriteSeller] = useState([]);
+  const { 
+    favoriteSellers, 
+    fetchSellerFavorites, 
+    toggleSellerFavorite 
+  } = useSellerFavoritesStore();
+  const favouriteSeller = favoriteSellers;
 
   useEffect(() => {
     fetchListings();
@@ -31,10 +37,9 @@ const FavouriteClientPage = () => {
     try {
       setLoading(true);
       const response = await userApi.categoryFavorites();
-      const response2 = await userApi.sellerFavorites();
+      await fetchSellerFavorites();
 
       setFavouriteCategories(response.data || []);
-      setFavouriteSeller(response2.data || []);
     } catch (error) {
       console.error("Failed to fetch listings:", error);
     } finally {
@@ -128,27 +133,29 @@ const FavouriteClientPage = () => {
                       <span className="text-black">({seller.rating}</span>
                       <span>{"🌟".repeat(seller.stars)})</span>
                     </p>
-                    <div className="text-green-500 text-sm underline cursor-not-allowed opacity-50">
+                    <div 
+                      className="text-green-500 text-sm underline cursor-pointer hover:text-green-700"
+                      onClick={() => {
+                        router.push(`/marketplace?seller_id=${seller.id}`);
+                      }}
+                    >
                       {t("View current listings")}
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-start sm:items-end text-sm text-green-600">
-                  <button className="mr-2 cursor-not-allowed opacity-50">
+                  {/* <button className="mr-2 cursor-not-allowed opacity-50">
                     {t("Email me weekly")}
-                  </button>
+                  </button> */}
                   <button
                     className="underline cursor-pointer"
                     onClick={async () => {
                       try {
-                        await userApi.addAndDeleteSeller(seller.id);
-                        setFavouriteSeller((prev) =>
-                          prev.filter((item) => item.id !== seller.id)
-                        );
-                        toast.success("Seller removed from favourites");
+                        await toggleSellerFavorite(seller.id);
+                        toast.success(t("Seller removed from favourites"));
                       } catch (error) {
                         console.error("Error removing Seller", error);
-                        toast.error("Failed to remove Seller");
+                        toast.error(t("Failed to remove Seller"));
                       }
                     }}
                   >

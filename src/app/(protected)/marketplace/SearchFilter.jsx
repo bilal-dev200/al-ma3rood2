@@ -252,6 +252,18 @@ onChange={(selected) => {
               className="text-xs"
               classNamePrefix="react-select"
               isClearable
+              styles={{
+                menu: (provided) => ({
+                  ...provided,
+                  maxHeight: 200,
+                  overflowY: 'auto',
+                }),
+                menuList: (provided) => ({
+                  ...provided,
+                  maxHeight: 200,
+                  overflowY: 'auto',
+                }),
+              }}
             />
                 </div>
 <div className="flex flex-col w-full md:w-1/4">
@@ -273,6 +285,18 @@ onChange={(selected) => {
               className="text-xs"
               classNamePrefix="react-select"
               isClearable
+              styles={{
+                menu: (provided) => ({
+                  ...provided,
+                  maxHeight: 200,
+                  overflowY: 'auto',
+                }),
+                menuList: (provided) => ({
+                  ...provided,
+                  maxHeight: 200,
+                  overflowY: 'auto',
+                }),
+              }}
             />
 </div>
 

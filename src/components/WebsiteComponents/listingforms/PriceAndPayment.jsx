@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -33,6 +33,13 @@ const PriceAndPayment = () => {
     });
   };
   const { t } = useTranslation();
+
+  // Clear reserve_price when start_price is empty
+  useEffect(() => {
+    if (!start_price || start_price.trim() === "") {
+      setValue("reserve_price", "", { shouldValidate: false });
+    }
+  }, [start_price, setValue]);
 
   return (
     // <div className="w-[800px]">
@@ -275,10 +282,26 @@ const PriceAndPayment = () => {
             <input
               type="number"
               {...register("start_price", {
-                validate: (value) =>
-                  !buy_now_price || value
-                    ? true
-                    : "Start price is required if Buy Now price is not provided",
+                validate: (value) => {
+                  // Required validation
+                  if (!buy_now_price && !value) {
+                    return "Start price is required if Buy Now price is not provided";
+                  }
+                  // Start Price cannot be greater than Buy Now Price
+                  if (
+                    buy_now_price &&
+                    buy_now_price.trim() !== "" &&
+                    value &&
+                    value.trim() !== ""
+                  ) {
+                    const buyNow = parseFloat(buy_now_price);
+                    const start = parseFloat(value);
+                    if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
+                      return "Start Price cannot be greater than Buy Now Price";
+                    }
+                  }
+                  return true;
+                },
               })}
               className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring 
     [&::-webkit-inner-spin-button]:appearance-none 
@@ -307,11 +330,28 @@ const PriceAndPayment = () => {
             </div>
             <input
               type="number"
+              disabled={!start_price || start_price.trim() === ""}
               {...register("reserve_price", {
-                validate: (value) =>
-                  !buy_now_price || value
-                    ? true
-                    : "Reserve price is required if Buy Now price is not provided",
+                validate: (value) => {
+                  // Required validation
+                  if (!buy_now_price && !value) {
+                    return "Reserve price is required if Buy Now price is not provided";
+                  }
+                  // Reserve Price cannot be greater than Buy Now Price
+                  if (
+                    buy_now_price &&
+                    buy_now_price.trim() !== "" &&
+                    value &&
+                    value.trim() !== ""
+                  ) {
+                    const buyNow = parseFloat(buy_now_price);
+                    const reserve = parseFloat(value);
+                    if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
+                      return "Reserve Price cannot be greater than Buy Now Price";
+                    }
+                  }
+                  return true;
+                },
               })}
               className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring
     [&::-webkit-inner-spin-button]:appearance-none 
@@ -321,12 +361,21 @@ const PriceAndPayment = () => {
       errors.reserve_price
         ? "border-red-500 focus:border-red-500"
         : "border-gray-300 focus:border-green-400"
-    } placeholder-price`}
+    } ${
+                !start_price || start_price.trim() === ""
+                  ? "bg-gray-100 cursor-not-allowed opacity-60"
+                  : ""
+              } placeholder-price`}
             />
           </div>
           {errors.reserve_price && (
             <p className="text-red-500 text-sm mt-1">
               {errors.reserve_price.message}
+            </p>
+          )}
+          {(!start_price || start_price.trim() === "") && (
+            <p className="text-gray-500 text-xs mt-1">
+              Please enter Start Price first
             </p>
           )}
         </div>

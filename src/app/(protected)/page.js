@@ -6,6 +6,7 @@ import Watchlist from "@/components/WebsiteComponents/Watchlistcards/Watchlist";
 import {
   fetchAllListings,
   fetchListingsByReservePrice,
+  fetchCoolAuctions,
 } from "@/lib/api/listings.server";
 import MarketplaceCard from "./marketplace/MarketplaceCard";
 import CoolAuctions from "@/components/WebsiteComponents/HomePageComponents/CoolAuctions";
@@ -78,14 +79,16 @@ export default async function Home({ params, searchParams }) {
   const city = searchParams?.city || "";
   console.log("For Test Category", categoryIdFilter);
 
-  const [catResult, listings] = await Promise.all([
+  const [catResult, listings, coolAuctions] = await Promise.all([
     fetchAllCategories(),
     fetchAllListings(categoryId, categoryIdFilter, search, city),
+    fetchCoolAuctions(),
   ]);
   const { token } = useAuthStore;
   // console.log('tok', token)
   console.log("aaa listings", listings);
   console.log("aaa reserveCards", reserveCards);
+  console.log("aaa coolAuctions", coolAuctions);
 
   return (
     <>
@@ -130,7 +133,7 @@ export default async function Home({ params, searchParams }) {
         <div className="mt-5" id="marketplace-deals">
           <MarketplaceCard
             heading="Cool Auction"
-            cards={listings?.data?.slice(0, 6) || []}
+            cards={Array.isArray(coolAuctions?.data) ? coolAuctions.data : (Array.isArray(coolAuctions) ? coolAuctions : [])}
           />
         </div>
         <LatestNews />

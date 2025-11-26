@@ -329,6 +329,17 @@ export const listingsApi = {
     );
     return response.data;
   },
+
+  getCoolAuctions: async (params = {}) => {
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined)
+    );
+    const searchParams = new URLSearchParams(filteredParams).toString();
+    const response = await axiosClient.get(
+      `/listings/coolAuctions${searchParams ? `?${searchParams}` : ""}`
+    );
+    return response.data;
+  },
 };
 
 

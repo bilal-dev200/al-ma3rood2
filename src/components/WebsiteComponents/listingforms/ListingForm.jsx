@@ -14,6 +14,7 @@ import { categoriesApi } from "@/lib/api/category";
 import CategoryModal from "@/components/WebsiteComponents/listingforms/CategoryModal";
 import { IoIosArrowForward } from "react-icons/io";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 
 export function toFieldName(label) {
   return label
@@ -125,6 +126,50 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
           message:
             "Start price and Reserve price are required if Buy now price is not provided",
           path: ["start_price"],
+        }
+      )
+      .refine(
+        (data) => {
+          // Start Price cannot be greater than Buy Now Price
+          if (
+            data.buy_now_price &&
+            data.buy_now_price.trim() !== "" &&
+            data.start_price &&
+            data.start_price.trim() !== ""
+          ) {
+            const buyNow = parseFloat(data.buy_now_price);
+            const start = parseFloat(data.start_price);
+            if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
+              return false;
+            }
+          }
+          return true;
+        },
+        {
+          message: "Start Price cannot be greater than Buy Now Price",
+          path: ["start_price"],
+        }
+      )
+      .refine(
+        (data) => {
+          // Reserve Price cannot be greater than Buy Now Price
+          if (
+            data.buy_now_price &&
+            data.buy_now_price.trim() !== "" &&
+            data.reserve_price &&
+            data.reserve_price.trim() !== ""
+          ) {
+            const buyNow = parseFloat(data.buy_now_price);
+            const reserve = parseFloat(data.reserve_price);
+            if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
+              return false;
+            }
+          }
+          return true;
+        },
+        {
+          message: "Reserve Price cannot be greater than Buy Now Price",
+          path: ["reserve_price"],
         }
       );
   }, [parentCategoryName]);
@@ -349,7 +394,28 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
       // TODO: Show success toast, redirect, or reset form as needed
     } catch (error) {
       console.error("Error submitting listing:", error);
-      // TODO: Show error toast or message
+      
+      // Handle API validation errors
+      const validationErrors = error?.data?.data || error?.response?.data?.data;
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => {
+              toast.error(msg);
+            });
+          } else {
+            toast.error(messages);
+          }
+        });
+      } else {
+        // Fallback to general error message
+        const errorMessage =
+          error?.data?.message ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to create listing. Please try again.";
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }

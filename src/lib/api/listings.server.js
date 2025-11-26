@@ -288,4 +288,25 @@ export async function fetchListingsByReservePrice(reservePrice) {
   } catch (error) {
     return [];
   }
+}
+
+export async function fetchCoolAuctions() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/coolAuctions`;
+    const res = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Failed to fetch cool auctions: ' + res.status);
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("fetchCoolAuctions error:", error);
+    return { data: [] }; // Return fallback structure
+  }
 } 

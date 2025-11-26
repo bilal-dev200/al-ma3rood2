@@ -84,6 +84,7 @@ const GridLayout = () => {
   };
 
   const handleSelectProduct = async (listing) => {
+
     const catSlug = listing.category?.slug?.includes("/")
       ? listing.category.slug.split("/").pop()
       : listing.category?.slug || "unknown";
@@ -98,6 +99,21 @@ const GridLayout = () => {
     } catch (error) {
       console.error("Error fetching product search:", error);
     }
+
+    console.log("listing clicked!", listing);
+    // Check listing.type first for service and job
+    if (listing.type === "service") {
+      console.log("service clicked!", listing);
+      router.push(`/services/${listing?.slug}`);
+      return;
+    }
+    
+    if (listing.type === "job") {
+      router.push(`/jobs/${listing?.slug}`);
+      return;
+    }
+
+    // Then check listing_type for marketplace, property, and motors
     switch (listing.listing_type) {
       case "marketplace":
         router.push(`/marketplace/${catSlug}/${listing?.slug}`);
@@ -107,14 +123,7 @@ const GridLayout = () => {
         router.push(`/${listing.listing_type}/${listing?.slug}`);
         break;
       default:
-        switch (listing.type) {
-          case "services":
-            router.push(`/services/${listing?.slug}`);
-            break;
-          case "jobs":
-            router.push(`/jobs/${listing?.slug}`);
-            break;
-        }
+        console.warn("Unknown listing type:", listing.listing_type, listing.type);
         break;
     }
   };
@@ -131,12 +140,12 @@ const GridLayout = () => {
     function getImageSrc() {
       if (item.type === "listing" || item.type === "service") {
         return item?.images?.[0]?.image_path
-          ? `${Image_URL}/${item.images[0].image_path}`
+          ? `${Image_URL}${item.images[0].image_path}`
           : Image_NotFound;
       }
       if (item.type === "job") {
         return item?.logo
-          ? `${Image_URL}/${item.logo}`
+          ? `${Image_URL}${item.logo}`
           : Image_NotFound;
       }
       return Image_NotFound;
@@ -144,7 +153,8 @@ const GridLayout = () => {
 
     return (
       <div
-        onClick={() => onSelect(item)}
+        onClick={() => {
+          onSelect(item)}}
         className="p-3 hover:bg-gray-100 cursor-pointer flex items-start gap-3 transition-all"
       >
         <img
@@ -223,6 +233,11 @@ const GridLayout = () => {
           <p className=" text-sm mb-4 opacity-90">
             {t(
               "Ma3rood — The Kingdom’s marketplace for everything from household items and cars to homes, jobs, and services."
+            )}
+          </p>
+          <p className="text-xs text-center text-amber-200 mb-4 opacity-90 w-3/4 mx-auto">
+            {t(
+              "Please note: Ma3rood is currently under development. This MVP website is a limited release to test core features and gather your feedback."
             )}
           </p>
 

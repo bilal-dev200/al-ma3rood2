@@ -372,18 +372,17 @@ const CoolAuctionPage = ({
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        const payload = {
-          listing_type: "marketplace",
-          page: 1,
-        };
-        const response = await listingsApi.getListingsByFilter({ payload });
-        console.log("Listings API Response:", response);
+        setLoading(true);
+        const response = await listingsApi.getCoolAuctions();
+        console.log("Cool Auctions API Response:", response);
 
-        setListings(response || []);
+        // Handle different response structures
+        setListings(response?.data || response || []);
       } catch (error) {
-        console.error("Error fetching listings:", error);
+        console.error("Error fetching cool auctions:", error);
+        setListings([]);
       } finally {
-        setLoading(false); // ✅ Loading khatam
+        setLoading(false);
       }
     };
 

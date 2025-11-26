@@ -10,8 +10,10 @@ import { toast } from "react-toastify";
 import { Image_NotFound, Image_URL } from "@/config/constants";
 import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Breadcrumbs";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 
 const NotificationClientPage = () => {
+  const router = useRouter();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,58 +95,94 @@ const NotificationClientPage = () => {
           {t("You have")} {notifications.length} {t("new notification(s).")}
         </p>
 
-        {notifications.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-md shadow p-4 relative w-full max-w-xl mb-6"
-          >
-            {/* <button
-              onClick={() => handleRemove(item.id)}
-              className="absolute top-2 right-2 text-[#469BDB] hover:text-[#469BDB]"
-              title={t("Mark as read")}
+        {notifications.map((item) => {
+          const handleNotificationClick = () => {
+            if (!item.listing) return;
+            
+            const listing = item.listing;
+
+            // console.log("notification listing", listing);
+            
+            // Check listing.type first for service and job
+            if (listing.type === "service") {
+              router.push(`/services/${listing?.slug}`);
+              return;
+            }
+            
+            if (listing.type === "job") {
+              router.push(`/jobs/${listing?.slug}`);
+              return;
+            }
+
+            // Then check listing_type for marketplace, property, and motors
+            const catSlug = listing.category?.slug?.includes("/")
+              ? listing.category.slug.split("/").pop()
+              : listing.category?.slug || "unknown";
+
+            switch (listing.listing_type) {
+              case "marketplace":
+                router.push(`/marketplace/${catSlug}/${listing?.slug}`);
+                break;
+              case "property":
+              case "motors":
+                router.push(`/${listing.listing_type}/${listing?.slug}`);
+                break;
+              default:
+                console.warn("Unknown listing type:", listing.listing_type, listing.type);
+                break;
+            }
+          };
+
+          return (
+            <div
+              key={item.id}
+              onClick={handleNotificationClick}
+              className="bg-white rounded-md shadow p-4 relative w-full max-w-xl mb-6 cursor-pointer hover:shadow-lg transition-shadow"
             >
-              <FaBell />
-            </button> */}
-            <button
-              onClick={() => handleRemove(item.id)}
-              className={`absolute top-2 ${
-                isRTL ? "left-2" : "right-2"
-              } text-green-600`}
-              title={t("Mark as read")}
-            >
-              <FaBell />
-            </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove(item.id);
+                }}
+                className={`absolute top-2 ${
+                  isRTL ? "left-2" : "right-2"
+                } text-green-600 hover:text-green-800 z-10`}
+                title={t("Mark as read")}
+              >
+                <FaBell />
+              </button>
 
-            <p className="text-sm font-semibold text-gray-600 mb-2">
-              {item.status}
-            </p>
+              {/* <p className="text-sm font-semibold text-gray-600 mb-2">
+                {item.status || item.type || t("Notification")}
+              </p> */}
 
-            <div className="flex flex-col sm:flex-row items-start gap-4">
-              <Image
-                src={
-                  item.listing?.images[0]?.image_path
-                    ? `${Image_URL}/${item.listing.images[0].image_path}`
-                    : Image_NotFound
-                }
-                alt={item.data?.title}
-                width={100}
-                height={100}
-                className="object-cover rounded"
-              />
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <Image
+                  src={
+                    item.listing?.images?.[0]?.image_path
+                      ? `${Image_URL}${item.listing.images[0].image_path}`
+                      : Image_NotFound
+                  }
+                  alt={item.data?.title || item.listing?.title || "Notification"}
+                  width={100}
+                  height={100}
+                  className="object-cover rounded"
+                />
 
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-bold text-md text-black mb-1">
-                    {item.data?.title}
-                  </h3>
-                  <p className="text-sm text-gray-700 mb-4">
-                    {item.data?.message}
-                  </p>
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-md text-black mb-1">
+                      {item.data?.title || item.listing?.title || t("Notification")}
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-4">
+                      {item.data?.message || item.message || item.listing?.title || t("No message available")}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

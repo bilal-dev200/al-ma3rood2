@@ -3,6 +3,7 @@ import "./globals.css";
 import { cookies } from "next/headers";
 import Toaster from "@/components/WebsiteComponents/Toaster";
 import AuthCleanup from "@/lib/common/AuthCleanup";
+import FeedbackButton from "@/components/WebsiteComponents/FeedbackForm/FeedbackButton";
 
 export const metadata = {
   title: "Ma3rood",
@@ -32,6 +33,7 @@ export default async function RootLayout({ children }) {
         <Toaster />
         <AuthCleanup />
         {children}
+        <FeedbackButton />
       </body>
     </html>
   );

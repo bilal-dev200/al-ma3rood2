@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { useLocationStore } from "@/lib/stores/locationStore";
 import { useSearchParams } from "next/navigation";
+import Select from "react-select";
 
 const FilterComponent = ({ categoryId, onResults }) => {
   const searchParams = useSearchParams();
@@ -15,6 +16,7 @@ const FilterComponent = ({ categoryId, onResults }) => {
   const [newUsed, setNewUsed] = useState("");
   const [priceFrom, setPriceFrom] = useState("");
   const [priceTo, setPriceTo] = useState("");
+  const [selectedPriceRange, setSelectedPriceRange] = useState(null);
   const [loading, setLoading] = useState(false);
   const [openTab, setOpenTab] = useState(null);
   const { t } = useTranslation();
@@ -43,19 +45,32 @@ const FilterComponent = ({ categoryId, onResults }) => {
   }, [regions, selectedRegion]);
 
   const conditions = [
-    { key: "brand_new_unused", label: "Brand New / Unused – never opened or used." },
-    { key: "like_new", label: "Like New – opened but looks and works like new." },
-    { key: "gently_used_excellent_condition", label: "Gently Used / Excellent Condition – minor signs of use." },
-    { key: "good_condition", label: "Good Condition – visible wear but fully functional." },
-    { key: "fair_condition", label: "Fair Condition – heavily used but still works." },
-    { key: "for_parts_or_not_working", label: "For Parts or Not Working – damaged or needs repair." },
+    { key: "brand_new_unused", label: "Brand New / Unused", fullLabel: "Brand New / Unused – never opened or used." },
+    { key: "like_new", label: "Like New", fullLabel: "Like New – opened but looks and works like new." },
+    { key: "gently_used_excellent_condition", label: "Gently Used / Excellent Condition", fullLabel: "Gently Used / Excellent Condition – minor signs of use." },
+    { key: "good_condition", label: "Good Condition", fullLabel: "Good Condition – visible wear but fully functional." },
+    { key: "fair_condition", label: "Fair Condition", fullLabel: "Fair Condition – heavily used but still works." },
+    { key: "for_parts_or_not_working", label: "For Parts or Not Working", fullLabel: "For Parts or Not Working – damaged or needs repair." },
   ];
 
-  const handleFilter = async (params) => {
+  // Price range options
+  const priceRanges = [
+    { value: "0-100", label: "$0 - $100", min: 0, max: 100 },
+    { value: "100-500", label: "$100 - $500", min: 100, max: 500 },
+    { value: "500-1000", label: "$500 - $1,000", min: 500, max: 1000 },
+    { value: "1000-5000", label: "$1,000 - $5,000", min: 1000, max: 5000 },
+    { value: "5000-10000", label: "$5,000 - $10,000", min: 5000, max: 10000 },
+    { value: "10000-50000", label: "$10,000 - $50,000", min: 10000, max: 50000 },
+    { value: "50000-", label: "$50,000+", min: 50000, max: null },
+  ];
+
+  const handleFilter = async (params, fromClear) => {
     try {
       const response = await listingsApi.getListingsByFilter(params);
       if (onResults) onResults(response.data || response);
-      toast.success("Listings filtered successfully!");
+      if (!fromClear) {
+        toast.success("Listings filtered successfully!");
+      }
     } catch {
       toast.error("Failed to filter listings.");
     }
@@ -65,12 +80,13 @@ const FilterComponent = ({ categoryId, onResults }) => {
     setNewUsed("");
     setPriceFrom("");
     setPriceTo("");
+    setSelectedPriceRange(null);
     setSelectedRegion(null);
     setSelectedGovernorate(null);
     setOpenTab(null);
 
     const params = { category_id: categoryId, ...(search ? { search } : {}) };
-    await handleFilter(params);
+    await handleFilter(params, true);
   };
 
   // const removeFilter = (type) => {
@@ -110,6 +126,7 @@ const FilterComponent = ({ categoryId, onResults }) => {
   if (type === "price") {
     setPriceFrom("");
     setPriceTo("");
+    setSelectedPriceRange(null);
     delete updatedFilters.min_price;
     delete updatedFilters.max_price;
   }
@@ -120,12 +137,34 @@ const FilterComponent = ({ categoryId, onResults }) => {
 
   return (
     <div className="w-full bg-white px-4 space-y4">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .filter-select .react-select__menu-list {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+          }
+          .filter-select .react-select__menu-list::-webkit-scrollbar {
+            width: 8px;
+          }
+          .filter-select .react-select__menu-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+          }
+          .filter-select .react-select__menu-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+          }
+          .filter-select .react-select__menu-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+          }
+        `
+      }} />
       {/* Header with Active Filters & Clear All */}
-      <div className="flex justify-between items-start mb-2 max-w-xl">
+      {/* <div className="flex justify-between items-start mb-2 max-w-xl">
         <div className="flex flex-wrap gap-2">
           {newUsed && (
             <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-sm">
-              {conditions.find((item) => item.key === newUsed)?.label.split("–")[0] || t("Condition")}
+              {conditions.find((item) => item.key === newUsed)?.label || t("Condition")}
               <IoClose className="cursor-pointer" onClick={() => removeFilter("condition")} />
             </span>
           )}
@@ -146,74 +185,270 @@ const FilterComponent = ({ categoryId, onResults }) => {
 
           {(priceFrom || priceTo) && (
             <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-sm">
-              {priceFrom || 0} - {priceTo || "∞"}
+              {selectedPriceRange ? selectedPriceRange.label : `${priceFrom || 0} - ${priceTo || "∞"}`}
               <IoClose className="cursor-pointer" onClick={() => removeFilter("price")} />
             </span>
           )}
         </div>
 
 
-      </div>
+      </div> */}
 
       {/* Filter Buttons */}
       <div className="flex gap-2 flex-wrap items-center">
-        {/* Condition */}
-        <button
-          type="button"
-          onClick={() => setOpenTab(openTab === "condition" ? null : "condition")}
-          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-medium transition ${
-            openTab === "condition"
-              ? "bg-green-100 text-green-700 border border-green-400"
-              : "bg-gray-50 border text-gray-700 hover:bg-green-50"
-          }`}
-        >
-          {newUsed
-            ? conditions.find((item) => item.key === newUsed)?.label.split("–")[0]
-            : t("Condition")}
-          <FiChevronDown size={14} />
-        </button>
+        {/* Condition Select */}
+        <div className="min-w-[200px]">
+          <Select
+            name="condition"
+            value={
+              newUsed
+                ? {
+                    value: newUsed,
+                    label: conditions.find((item) => item.key === newUsed)?.label || t("Condition"),
+                  }
+                : null
+            }
+            onChange={(selected) => {
+              if (selected) {
+                setNewUsed(selected.value);
+              } else {
+                setNewUsed("");
+              }
+            }}
+            options={conditions.map((item) => ({
+              value: item.key,
+              label: item.label,
+              fullLabel: item.fullLabel,
+            }))}
+            placeholder={t("Condition")}
+            className="text-sm filter-select"
+            classNamePrefix="react-select"
+            isClearable
+            formatOptionLabel={({ label, fullLabel }) => (
+              <div>
+                <div className="font-medium">{label}</div>
+                {fullLabel && (
+                  <div className="text-xs text-gray-500 mt-0.5">{fullLabel.split("–")[1]?.trim()}</div>
+                )}
+              </div>
+            )}
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                minHeight: '36px',
+                fontSize: '14px',
+                borderColor: newUsed ? '#10b981' : provided.borderColor,
+              }),
+              menu: (provided) => ({
+                ...provided,
+                maxHeight: 250,
+                overflowY: 'auto',
+                zIndex: 9999,
+              }),
+              menuList: (provided) => ({
+                ...provided,
+                maxHeight: 250,
+                overflowY: 'auto',
+                padding: '4px',
+              }),
+              option: (provided, state) => ({
+                ...provided,
+                padding: '10px 12px',
+                backgroundColor: state.isSelected
+                  ? '#10b981'
+                  : state.isFocused
+                  ? '#f0fdf4'
+                  : 'white',
+                color: state.isSelected ? 'white' : '#374151',
+                '&:hover': {
+                  backgroundColor: state.isSelected ? '#10b981' : '#f0fdf4',
+                },
+              }),
+            }}
+          />
+        </div>
 
-        {/* Region */}
-        <button
-          onClick={() => setOpenTab(openTab === "region" ? null : "region")}
-          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-medium transition ${
-            openTab === "region"
-              ? "bg-green-100 text-green-700 border border-green-400"
-              : "bg-gray-50 border text-gray-700 hover:bg-green-50"
-          }`}
-        >
-          {selectedRegion ? selectedRegion.name : t("Region")}
-          <FiChevronDown size={14} />
-        </button>
+        {/* Region Select */}
+        <div className="min-w-[150px]">
+          <Select
+            name="region"
+            value={
+              selectedRegion
+                ? { value: selectedRegion.name, label: selectedRegion.name }
+                : null
+            }
+            onChange={(selected) => {
+              if (selected) {
+                const region = regions.find((r) => r.name === selected.value);
+                setSelectedRegion(region ? { id: region.id, name: region.name } : null);
+                setSelectedGovernorate(null);
+              } else {
+                setSelectedRegion(null);
+                setSelectedGovernorate(null);
+              }
+            }}
+            options={regions.map((r) => ({ value: r.name, label: r.name }))}
+            placeholder={t("Region")}
+            className="text-sm filter-select"
+            classNamePrefix="react-select"
+            isClearable
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                minHeight: '36px',
+                fontSize: '14px',
+                borderColor: selectedRegion ? '#10b981' : provided.borderColor,
+              }),
+              menu: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                zIndex: 9999,
+              }),
+              menuList: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                padding: '4px',
+              }),
+              option: (provided, state) => ({
+                ...provided,
+                padding: '8px 12px',
+                backgroundColor: state.isSelected
+                  ? '#10b981'
+                  : state.isFocused
+                  ? '#f0fdf4'
+                  : 'white',
+                color: state.isSelected ? 'white' : '#374151',
+                '&:hover': {
+                  backgroundColor: state.isSelected ? '#10b981' : '#f0fdf4',
+                },
+              }),
+            }}
+          />
+        </div>
 
-        {/* Governorate */}
-        <button
-          onClick={() => setOpenTab(openTab === "governorate" ? null : "governorate")}
-          disabled={!selectedRegion}
-          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-medium transition ${
-            !selectedRegion
-              ? "bg-gray-100 cursor-not-allowed text-gray-400"
-              : openTab === "governorate"
-              ? "bg-green-100 text-green-700 border border-green-400"
-              : "bg-gray-50 border text-gray-700 hover:bg-green-50"
-          }`}
-        >
-          {selectedGovernorate ? selectedGovernorate.name : t("Governorate")}
-          <FiChevronDown size={14} />
-        </button>
+        {/* Governorate Select */}
+        <div className="min-w-[150px]">
+          <Select
+            name="governorate"
+            value={
+              selectedGovernorate
+                ? { value: selectedGovernorate.name, label: selectedGovernorate.name }
+                : null
+            }
+            onChange={(selected) => {
+              if (selected) {
+                const gov = governorates.find((g) => g.name === selected.value);
+                setSelectedGovernorate(gov ? { id: gov.id, name: gov.name } : null);
+              } else {
+                setSelectedGovernorate(null);
+              }
+            }}
+            options={governorates.map((g) => ({ value: g.name, label: g.name }))}
+            placeholder={t("Governorate")}
+            className="text-sm filter-select"
+            classNamePrefix="react-select"
+            isClearable
+            isDisabled={!selectedRegion}
+            styles={{
+              control: (provided, state) => ({
+                ...provided,
+                minHeight: '36px',
+                fontSize: '14px',
+                borderColor: selectedGovernorate ? '#10b981' : provided.borderColor,
+                backgroundColor: state.isDisabled ? '#f3f4f6' : provided.backgroundColor,
+              }),
+              menu: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                zIndex: 9999,
+              }),
+              menuList: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                padding: '4px',
+              }),
+              option: (provided, state) => ({
+                ...provided,
+                padding: '8px 12px',
+                backgroundColor: state.isSelected
+                  ? '#10b981'
+                  : state.isFocused
+                  ? '#f0fdf4'
+                  : 'white',
+                color: state.isSelected ? 'white' : '#374151',
+                '&:hover': {
+                  backgroundColor: state.isSelected ? '#10b981' : '#f0fdf4',
+                },
+              }),
+            }}
+          />
+        </div>
 
-        {/* Price */}
-        <button
-          onClick={() => setOpenTab(openTab === "price" ? null : "price")}
-          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-medium transition ${
-            openTab === "price"
-              ? "bg-green-100 text-green-700 border border-green-400"
-              : "bg-gray-50 border text-gray-700 hover:bg-green-50"
-          }`}
-        >
-          {priceFrom || priceTo ? `${priceFrom || 0} - ${priceTo || "∞"}` : t("Price")}
-          <FiChevronDown size={14} />
-        </button>
+        {/* Price Range Select */}
+        <div className="min-w-[180px]">
+          <Select
+            name="price"
+            value={selectedPriceRange}
+            onChange={(selected) => {
+              if (selected) {
+                setSelectedPriceRange(selected);
+                setPriceFrom(selected.min.toString());
+                setPriceTo(selected.max ? selected.max.toString() : "");
+              } else {
+                setSelectedPriceRange(null);
+                setPriceFrom("");
+                setPriceTo("");
+              }
+            }}
+            options={priceRanges.map((range) => ({
+              value: range.value,
+              label: range.label,
+              min: range.min,
+              max: range.max,
+            }))}
+            placeholder={t("Price")}
+            className="text-sm filter-select"
+            classNamePrefix="react-select"
+            isClearable
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                minHeight: '36px',
+                fontSize: '14px',
+                borderColor: selectedPriceRange ? '#10b981' : provided.borderColor,
+              }),
+              menu: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                zIndex: 9999,
+              }),
+              menuList: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                padding: '4px',
+              }),
+              option: (provided, state) => ({
+                ...provided,
+                padding: '8px 12px',
+                backgroundColor: state.isSelected
+                  ? '#10b981'
+                  : state.isFocused
+                  ? '#f0fdf4'
+                  : 'white',
+                color: state.isSelected ? 'white' : '#374151',
+                '&:hover': {
+                  backgroundColor: state.isSelected ? '#10b981' : '#f0fdf4',
+                },
+              }),
+            }}
+          />
+        </div>
 
         {/* Show Results */}
         <button
@@ -240,8 +475,8 @@ const FilterComponent = ({ categoryId, onResults }) => {
         >
           {loading ? t("Loading...") : t("Show Results")}
         </button>
-{/* Clear All */}
-                {(newUsed || selectedRegion || selectedGovernorate || priceFrom || priceTo) && (
+        {/* Clear All */}
+        {(newUsed || selectedRegion || selectedGovernorate || priceFrom || priceTo) && (
           <button
             onClick={clearFilters}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm text-gray-500 border border-red-400 hover:text-red-500 min-w-20"
@@ -251,89 +486,6 @@ const FilterComponent = ({ categoryId, onResults }) => {
           </button>
         )}
       </div>
-
-      {/* Dropdowns */}
-      {openTab === "condition" && (
-        <div className="absolute z-10 mt-2 w-80 md:w-1/3 bg-white border border-gray-200 rounded-lg shadow-md p-3">
-          <div className="space-y-2 grid grid-cols-1 md:grid-cols-2">
-            {conditions.map((item) => (
-              <label
-                key={item.key}
-                className="flex items-start gap-2 cursor-pointer p-2 rounded hover:bg-green-50 transition"
-              >
-                <input
-                  type="radio"
-                  value={item.key}
-                  onClick={() => {
-                    setNewUsed(item.key);
-                    setOpenTab(null);
-                  }}
-                  checked={newUsed === item.key}
-                  className="mt-1"
-                />
-                <span className="text-sm text-gray-700">{t(item.label)}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Region Dropdown */}
-      {openTab === "region" && (
-        <div className="mt-2 w-44 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto animate-fade-in">
-          {regions.map((region) => (
-            <button
-              key={region.id}
-              onClick={() => {
-                setSelectedRegion({ id: region.id, name: region.name });
-                setSelectedGovernorate(null);
-                setOpenTab(null);
-              }}
-              className="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-green-50 hover:text-green-700 transition"
-            >
-              {region.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Governorate Dropdown */}
-      {openTab === "governorate" && (
-        <div className="mt-2 w-44 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto animate-fade-in">
-          {governorates.map((gov) => (
-            <button
-              key={gov.id}
-              onClick={() => {
-                setSelectedGovernorate({ id: gov.id, name: gov.name });
-                setOpenTab(null);
-              }}
-              className="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-green-50 hover:text-green-700 transition"
-            >
-              {gov.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Price Dropdown */}
-      {openTab === "price" && (
-        <div className="mt-2 w-52 bg-white border rounded-lg shadow-lg p-3 space-y-2 animate-fade-in">
-          <input
-            type="number"
-            placeholder={t("From")}
-            value={priceFrom}
-            onChange={(e) => setPriceFrom(e.target.value)}
-            className="w-full px-2 py-1 border rounded-md text-sm focus:ring-1 focus:ring-green-500 outline-none"
-          />
-          <input
-            type="number"
-            placeholder={t("To")}
-            value={priceTo}
-            onChange={(e) => setPriceTo(e.target.value)}
-            className="w-full px-2 py-1 border rounded-md text-sm focus:ring-1 focus:ring-green-500 outline-none"
-          />
-        </div>
-      )}
     </div>
   );
 };
