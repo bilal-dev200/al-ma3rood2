@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
@@ -9,7 +9,7 @@ import {
   FaMapMarkerAlt,
   FaPhoneAlt,
   FaEnvelope,
-  FaBed,
+  FaBed,  
   FaBath,
   FaRulerCombined,
 } from "react-icons/fa";
