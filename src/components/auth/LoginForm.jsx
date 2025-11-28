@@ -141,18 +141,17 @@ export default function LoginForm({ onSubmit, isLoading, resetError, isForgotMod
       </div>
       )}
 
-            {/* Forgot Password Link */}
-      {/* {!isForgotMode && (
+      {/* Forgot Password Link */}
+      {!isForgotMode && (
         <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => setIsForgotMode(true)} // 👈 enable forgot mode
+          <Link
+            href="/forgot-password"
             className="text-sm text-green-600 hover:text-green-800 cursor-pointer"
           >
-            Forgot password?
-          </button>
+            {t("Forgot password?")}
+          </Link>
         </div>
-      )} */}
+      )}
 
       {/* Submit Button */}
       {!isForgotMode ? (

@@ -892,6 +892,8 @@ const Properties = ({ initialValues, mode = "create" }) => {
                     const numValue = parseFloat(value);
                     if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
                       field.onChange(value);
+                    } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
+                      field.onChange("");
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
@@ -998,7 +1000,16 @@ const Properties = ({ initialValues, mode = "create" }) => {
                       (option) =>
                         option.label.toLowerCase() === trimmed.toLowerCase()
                     );
-                    field.onChange(match ? match.value : trimmed);
+                    if (match) {
+                      field.onChange(match.value);
+                    } else {
+                      // Validate custom input - if it's a number, ensure it's non-negative
+                      const numValue = parseFloat(trimmed);
+                      if (trimmed === "" || (!isNaN(numValue) && numValue >= 0)) {
+                        field.onChange(trimmed);
+                      }
+                      // If negative number, don't update the field
+                    }
                   }}
                   placeholder="Select Land Area"
                   customLabel="Land area not in list? Type it yourself"
@@ -1305,6 +1316,8 @@ const Properties = ({ initialValues, mode = "create" }) => {
                         const numValue = parseFloat(value);
                         if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
                           field.onChange(value);
+                        } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
+                          field.onChange("");
                         }
                       }}
                       className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

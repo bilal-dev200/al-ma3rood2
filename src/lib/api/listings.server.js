@@ -1,26 +1,40 @@
 import { cookies } from "next/headers";
 
 export async function fetchProduct(productSlug) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-  console.log(
-    "URL",
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`
-  );
+  if (!productSlug) {
+    throw new Error("Product slug is required");
+  }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      cache: "no-store",
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+    console.log(
+      "URL",
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`
+    );
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        cache: "no-store",
+      }
+    );
+    
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => "Unknown error");
+      throw new Error(`Failed to fetch product: ${res.status} ${errorText}`);
     }
-  );
-  if (!res.ok) throw new Error("Failed to fetch product");
-  const data = await res.json();
-  return data.data;
+    
+    const data = await res.json();
+    return data.data;
+  } catch (error) {
+    console.error("fetchProduct error:", error);
+    throw error;
+  }
 }
 
 // export async function fetchProduct(productSlug) {
@@ -200,10 +214,15 @@ export async function fetchAllListingsByFilter(payload) {
       formattedPayload.max_price = payload.max_price;
     }
 
+    if (payload?.status) {
+      formattedPayload.status = payload.status;
+    }
+
     // ✅ add filters if present
     if (payload?.filters && Object.keys(payload.filters).length > 0) {
       formattedPayload.filters = { ...payload.filters };
     }
+    
     console.log("formattedPayload", JSON.stringify(formattedPayload));
 
     const res = await fetch(url, {

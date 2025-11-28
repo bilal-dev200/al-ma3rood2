@@ -136,7 +136,7 @@ const FavouriteClientPage = () => {
                     <div 
                       className="text-green-500 text-sm underline cursor-pointer hover:text-green-700"
                       onClick={() => {
-                        router.push(`/marketplace?creator_id=${seller.id}&status=3`);
+                        router.push(`/marketplace/creator?creator_id=${seller.id}&status=1`);
                       }}
                     >
                       {t("View current listings")}

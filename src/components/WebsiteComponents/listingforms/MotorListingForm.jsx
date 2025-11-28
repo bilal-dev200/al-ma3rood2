@@ -1635,6 +1635,8 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                       const numValue = parseFloat(value);
                       if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
                         field.onChange(value);
+                      } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
+                        field.onChange("");
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -1804,6 +1806,8 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                         const numValue = parseFloat(value);
                         if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
                           field.onChange(value);
+                        } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
+                          field.onChange("");
                         }
                       }}
                       className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
@@ -1860,6 +1864,8 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                           const numValue = parseFloat(value);
                           if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
                             field.onChange(value);
+                          } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
+                            field.onChange("");
                           }
                         }}
                         className={`w-full border rounded-md 
@@ -1899,6 +1905,8 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                           const numValue = parseFloat(value);
                           if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
                             field.onChange(value);
+                          } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
+                            field.onChange("");
                           }
                         }}
                         className={`w-full border rounded-md 

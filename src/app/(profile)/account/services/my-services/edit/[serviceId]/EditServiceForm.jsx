@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import Image from "next/image";
+import { X } from "lucide-react";
 import { servicesApi } from "@/lib/api/services";
 import { categoriesApi } from "@/lib/api/category";
 import { locationsApi } from "@/lib/api/location";
@@ -44,6 +46,8 @@ export default function EditServiceForm({ serviceId }) {
   const router = useRouter();
   const [isLoadingService, setIsLoadingService] = useState(true);
   const [serviceData, setServiceData] = useState(null);
+  const [existingImages, setExistingImages] = useState([]);
+  const [deletingImageId, setDeletingImageId] = useState(null);
   
   // Get categories and regions from Zustand store
   const categories = useServicesStore((state) => state.categories);
@@ -103,6 +107,10 @@ export default function EditServiceForm({ serviceId }) {
         }
         
         setServiceData(service);
+        
+        // Extract existing images
+        const images = Array.isArray(service.images) ? service.images : [];
+        setExistingImages(images);
       } catch (error) {
         toast.error(error?.message || "Unable to load service data.");
         router.push("/account/services/my-services");
@@ -242,6 +250,30 @@ export default function EditServiceForm({ serviceId }) {
       }
     }
   }, [selectedRegion, serviceData, setValue]);
+
+  async function handleDeleteImage(imageId) {
+    if (!imageId || !serviceId) return;
+    
+    try {
+      setDeletingImageId(imageId);
+      await servicesApi.deleteImage(serviceId, imageId);
+      setExistingImages((prev) => prev.filter((img) => img.id !== imageId && img.image_id !== imageId));
+      toast.success("Image deleted successfully");
+    } catch (error) {
+      const firstError =
+        error?.data?.errors &&
+        Object.values(error.data.errors)[0] &&
+        Object.values(error.data.errors)[0][0];
+      toast.error(
+        firstError ||
+          error?.data?.message ||
+          error?.message ||
+          "Failed to delete image."
+      );
+    } finally {
+      setDeletingImageId(null);
+    }
+  }
 
   async function onSubmit(values) {
     try {
@@ -517,24 +549,78 @@ export default function EditServiceForm({ serviceId }) {
 
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-slate-700">
-                Service Images (optional)
+                Service Images
               </label>
-              <input
-                {...register("images")}
-                type="file"
-                accept="image/*"
-                multiple
-                className="mt-1 w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 file:mr-3 file:rounded-full file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700"
-              />
-              <p className="mt-1 text-xs text-slate-500">
-                Upload new images to replace existing ones (JPG or PNG, 2&nbsp;MB max each).
-                Leave empty to keep current images.
-              </p>
-              {errors.images && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.images.message}
-                </p>
+              
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <div className="mt-3 mb-4">
+                  <p className="mb-2 text-xs font-medium text-slate-600">
+                    Current Images ({existingImages.length})
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                    {existingImages.map((image) => {
+                      const imageId = image.id || image.image_id;
+                      const imagePath = image.image_path || image.path;
+                      const imageUrl = imagePath && Image_URL 
+                        ? `${Image_URL}${imagePath}` 
+                        : image.url || "/placeholder.svg";
+                      const isDeleting = deletingImageId === imageId;
+                      
+                      return (
+                        <div
+                          key={imageId}
+                          className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+                        >
+                          <Image
+                            src={imageUrl}
+                            alt="Service image"
+                            fill
+                            className="object-cover"
+                            sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteImage(imageId)}
+                            disabled={isDeleting}
+                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white opacity-0 transition-opacity hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label="Delete image"
+                          >
+                            {isDeleting ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
+              
+              {/* Upload New Images */}
+              <div>
+                <p className="mb-2 text-xs font-medium text-slate-600">
+                  {existingImages.length > 0 ? "Add More Images" : "Upload Images"}
+                </p>
+                <input
+                  {...register("images")}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="mt-1 w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 file:mr-3 file:rounded-full file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Upload new images (JPG or PNG, 2&nbsp;MB max each).
+                  {existingImages.length > 0 && " New images will be added to existing ones."}
+                </p>
+                {errors.images && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.images.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </section>

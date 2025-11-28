@@ -66,5 +66,13 @@ export const servicesApi = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
+  deleteImage: async (serviceId, imageId) => {
+    const formData = new FormData();
+    formData.append("service_id", serviceId);
+    formData.append("image_id", imageId);
+    return axiosClient.post("/user/services/imageDelete", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 };
 

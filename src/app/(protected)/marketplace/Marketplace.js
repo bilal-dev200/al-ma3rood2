@@ -53,8 +53,6 @@ const popularCards =
     ? listings?.data?.slice(0, 4)
     : [];
 
-    console.log("deals-Cards", listings);
-  
 
   return (
     <div className="w-full">

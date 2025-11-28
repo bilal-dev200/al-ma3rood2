@@ -5,16 +5,12 @@ export const authApi = {
   login: (credentials) => axiosClient.post("/user/login", credentials),
   register: (userData) => axiosClient.post("/user/register", userData),
   logout: () => axiosClient.post("/user/logout"),
-    // Verification
+  // Verification
   checkusername: (payload) => axiosClient.post("user/username-check", payload),
   verifyuser: (payload) => axiosClient.post("user/email-verification", payload),
-    // ✅ Forgot & Reset Password
-  forgotPassword: (payload) => axiosClient.post("forgot-password", payload),
-  resetPassword: (data) => axiosClient.post("/user/reset-password", data),
-
-  // Password reset flows
+  // ✅ Forgot & Reset Password
   forgotPassword: (email) =>
-    axiosClient.post("/user/forgot-password", { email, from: "web" }),
+    axiosClient.post("/forgot-password", { email, from: "web" }),
   resetPassword: (data) => axiosClient.post("/user/reset-password", data),
 };
 

@@ -59,6 +59,9 @@ export const listingsApi = {
     if (payload?.governorate_id) {
       formattedPayload.governorates_id = payload.governorate_id;
     }
+    if (payload?.creator_id) {
+      formattedPayload.creator_id = payload.creator_id;
+    }
 
     // ✅ add condition if present
     if (payload?.condition) {

@@ -48,7 +48,7 @@ const schema = yup.object().shape({
   addressLine2: yup.string().nullable(),
   suburb: yup.string().nullable(),
   region: yup.string().nullable(),
-  governorate: yup.string().nullable(),
+  governorate: yup.string().required("Governorate is required"),
   postCode: yup.string().nullable(),
   closestDistrict: yup.string().nullable(),
 });
@@ -65,6 +65,7 @@ const EditContactDetails = () => {
     reset,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -73,7 +74,7 @@ const EditContactDetails = () => {
       lastname: user?.last_name || "",
       name: `${user?.firstname} ${user?.lastname}` || "",
       phone: user?.phone || "",
-      mobile: user?.mobile || "",
+      mobile: user?.mobile || user?.phone || "",
       gender: user?.gender || "",
       accountType: user?.account_type || "",
       country: user?.country || "",
@@ -98,6 +99,20 @@ const EditContactDetails = () => {
     const governorates_id = governorates.find(
       (r) => r.name == data.governorate
     );
+
+    // Validate region and governorate
+    if (!regions_id) {
+      toast.error("Please select a valid region");
+      setLoading(false);
+      return;
+    }
+
+    if (!governorates_id) {
+      toast.error("Please select a valid governorate");
+      setLoading(false);
+      return;
+    }
+
     formData.append("first_name", data.firstname);
     formData.append("last_name", data.lastname);
     formData.append("name", `${data.firstname} ${data.lastname}`);
@@ -157,7 +172,8 @@ const EditContactDetails = () => {
         governorates: res.data?.governorates || "",
         regions: res.data?.regions || "",
       });
-      // reset();
+      // Navigate back to previous page
+      hideComponent();
     } catch (err) {
       const errorMessage =
         err?.message ||
@@ -190,6 +206,19 @@ const EditContactDetails = () => {
   useEffect(() => {
     getAllLocations();
   }, [getAllLocations]);
+
+  // Watch region changes
+  const currentRegion = watch("region");
+  const prevRegionRef = React.useRef(currentRegion);
+
+  // Reset governorate when region changes
+  useEffect(() => {
+    // Only reset if region actually changed (not on initial mount)
+    if (prevRegionRef.current !== currentRegion && prevRegionRef.current !== undefined) {
+      setValue("governorate", "");
+    }
+    prevRegionRef.current = currentRegion;
+  }, [currentRegion, setValue]);
   // useEffect(() => {
   //   const allStates = State.getStatesOfCountry(selectedCountry.value);
   //   setStates(
@@ -343,12 +372,24 @@ const EditContactDetails = () => {
             <div className="mt-4">
               <h4 className="text-sm mb-2">{t("Landline")} (optional)</h4>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  {...register("phone")}
-                  className="w-full border border-gray-300 rounded-[10px] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                <Controller
+                  name="phone"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="text"
+                      {...field}
+                      value={field.value || ""}
+                      className="w-full border border-gray-300 rounded-[10px] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  )}
                 />
               </div>
+              {errors.phone && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.phone.message}
+                </p>
+              )}
             </div>
 
             {/* Mobile */}
@@ -484,7 +525,9 @@ const EditContactDetails = () => {
           </div>
 
           <div className="mb-4 w-full">
-            <label className="text-sm mb-1 block">{t("Governorate")}</label>
+            <label className="text-sm mb-1 block">
+              {t("Governorate")} <span className="text-red-500">*</span>
+            </label>
             <Controller
               name="governorate"
               control={control} // from useForm()
