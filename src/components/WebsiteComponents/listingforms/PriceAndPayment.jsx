@@ -26,6 +26,17 @@ const PriceAndPayment = () => {
   const start_price = watch("start_price");
   const reserve_price = watch("reserve_price");
   const expire_at = watch("expire_at");
+  
+  // Helper function to check if a date is today
+  const isToday = (date) => {
+    if (!date) return false;
+    const now = new Date();
+    return (
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
+  };
 
   const handleQuantityChange = (delta) => {
     setValue("quantity", Math.max(1, Number(quantity) + delta), {
@@ -236,7 +247,16 @@ const PriceAndPayment = () => {
         </div>
         <input
           type="number"
-          {...register("buy_now_price")}
+          min="0"
+          {...register("buy_now_price", {
+            onChange: (e) => {
+              const value = e.target.value;
+              const numValue = parseFloat(value);
+              if (value !== "" && (!isNaN(numValue) && numValue < 0)) {
+                e.target.value = "";
+              }
+            }
+          })}
           className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring appearance-none
         [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
         ${
@@ -281,7 +301,15 @@ const PriceAndPayment = () => {
             </div>
             <input
               type="number"
+              min="0"
               {...register("start_price", {
+                onChange: (e) => {
+                  const value = e.target.value;
+                  const numValue = parseFloat(value);
+                  if (value !== "" && (!isNaN(numValue) && numValue < 0)) {
+                    e.target.value = "";
+                  }
+                },
                 validate: (value) => {
                   // Required validation
                   if (!buy_now_price && !value) {
@@ -330,8 +358,16 @@ const PriceAndPayment = () => {
             </div>
             <input
               type="number"
+              min="0"
               disabled={!start_price || start_price.trim() === ""}
               {...register("reserve_price", {
+                onChange: (e) => {
+                  const value = e.target.value;
+                  const numValue = parseFloat(value);
+                  if (value !== "" && (!isNaN(numValue) && numValue < 0)) {
+                    e.target.value = "";
+                  }
+                },
                 validate: (value) => {
                   // Required validation
                   if (!buy_now_price && !value) {
@@ -403,6 +439,14 @@ const PriceAndPayment = () => {
               dateFormat="yyyy-MM-dd h:mm aa"
               minDate={new Date()}
               maxDate={getMaxDate()}
+              filterTime={(time) => {
+                const now = new Date();
+                const selectedDate = field.value;
+                if (selectedDate && isToday(selectedDate)) {
+                  return time.getTime() >= now.getTime();
+                }
+                return true;
+              }}
               className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring
             [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
             ${

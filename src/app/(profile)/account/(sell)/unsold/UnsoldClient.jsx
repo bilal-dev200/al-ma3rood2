@@ -215,7 +215,25 @@ export default function UnsoldClient() {
       ) : filteredListings.length === 0 ? (
         <p className="text-sm text-gray-500">{t("No listings found.")}</p>
       ) : (
-        filteredListings.map((listing) => (
+        filteredListings.map((listing) => {
+          const handleSeeSimilarClick = (listing) => {
+
+            switch (listing.listing_type) {
+              case "marketplace":
+                router.push(`/marketplace`);
+                break;
+                case "property":
+                router.push(`/property`);
+                break;
+              case "motors":
+                router.push(`/motors`);
+                break;
+            default:
+              console.warn("Unknown listing type:", listing.listing_type);
+              break;
+          }
+        };
+          return (
           <ListingCard
             key={listing.id}
             listing={{
@@ -270,14 +288,11 @@ export default function UnsoldClient() {
 
               {
                 label: t("See similar"),
-                onClick: () =>
-                  router.push(
-                    `/marketplace/${listing.category?.slug || "unknown"}`
-                  ),
+                onClick: () => handleSeeSimilarClick(listing),
               },
             ]}
           />
-        ))
+        )})
       )}
 
       <NoteModal

@@ -147,7 +147,13 @@ const PlaceBidModal = ({ isOpen, onClose, product, onBidPlaced }) => {
                 min="0"
                 step="0.01"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = parseFloat(value);
+                  if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                    setAmount(value);
+                  }
+                }}
                 placeholder={t("Enter bid amount")}
                 className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-10 py-2
       [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

@@ -160,7 +160,7 @@ const EditContactDetails = () => {
       // reset();
     } catch (err) {
       const errorMessage =
-        err?.response?.data?.message ||
+        err?.message ||
         "Something went wrong. Please try again.";
       toast.error(errorMessage);
       console.error("Contact Detail update error:", err);
@@ -307,10 +307,7 @@ const EditContactDetails = () => {
         <div className="mb-6 p-4 bg-white rounded">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label
-                htmlFor="firstname"
-                className="block text-sm mb-1"
-              >
+              <label htmlFor="firstname" className="block text-sm mb-1">
                 {t("Firstname")} <span className="text-red-500">*</span>
               </label>
               <input
@@ -325,10 +322,7 @@ const EditContactDetails = () => {
               )}
             </div>
             <div>
-              <label
-                htmlFor="lastname"
-                className="block text-sm mb-1"
-              >
+              <label htmlFor="lastname" className="block text-sm mb-1">
                 {t("Lastname")} <span className="text-red-500">*</span>
               </label>
               <input
@@ -347,9 +341,7 @@ const EditContactDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Landline */}
             <div className="mt-4">
-              <h4 className="text-sm mb-2">
-                {t("Landline")} (optional)
-              </h4>
+              <h4 className="text-sm mb-2">{t("Landline")} (optional)</h4>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -364,38 +356,39 @@ const EditContactDetails = () => {
               {/* <h4 className="text-sm font-semibold mb-2">
                 {t("Mobile")} (optional)
               </h4> */}
-  <Controller
-  name="mobile"
-  control={control}
-  render={({ field }) => (
-    <PhoneInput
-      country="sa"
-      onlyCountries={["sa"]}
-      disableDropdown
-      countryCodeEditable={false}
-      value={field.value || ""}
-      onChange={(value) => field.onChange(value)} // ✅ update field value properly
-      inputClass={`w-full p-2 border rounded-md ${
-        errors.mobile ? "border-red-500" : "border-gray-300"
-      }`}
-      inputStyle={{
-        width: "100%",
-        height: "40px",
-        fontSize: "14px",
-      }}
-      buttonStyle={{
-        border: "none",
-        backgroundColor: "transparent",
-      }}
-      placeholder="5XXXXXXXX"
-    />
-  )}
-/>
-
-</div>
-{errors.mobile && (
-  <p className="text-red-500 text-sm mt-1">{errors.mobile.message}</p>
-)}
+              <Controller
+                name="mobile"
+                control={control}
+                render={({ field }) => (
+                  <PhoneInput
+                    country="sa"
+                    onlyCountries={["sa"]}
+                    disableDropdown
+                    countryCodeEditable={false}
+                    value={field.value || ""}
+                    onChange={(value) => field.onChange(value)} // ✅ update field value properly
+                    inputClass={`w-full p-2 border rounded-md ${
+                      errors.mobile ? "border-red-500" : "border-gray-300"
+                    }`}
+                    inputStyle={{
+                      width: "100%",
+                      height: "40px",
+                      fontSize: "14px",
+                    }}
+                    buttonStyle={{
+                      border: "none",
+                      backgroundColor: "transparent",
+                    }}
+                    placeholder="5XXXXXXXX"
+                  />
+                )}
+              />
+            </div>
+            {errors.mobile && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.mobile.message}
+              </p>
+            )}
           </div>
 
           {/* Gender */}
@@ -448,9 +441,7 @@ const EditContactDetails = () => {
         <h3 className="text-md mb-2 font-semibold">{t("Street address")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 p-4 bg-white rounded">
           <div className="mb-4 w-full">
-            <label className="text-sm mb-1 block">
-              {t("Country")}
-            </label>
+            <label className="text-sm mb-1 block">{t("Country")}</label>
             <Select
               isDisabled
               value={selectedCountry}
@@ -461,9 +452,7 @@ const EditContactDetails = () => {
           </div>
 
           <div className="mb-4 w-full">
-            <label className="text-sm mb-1 block">
-              {t("Region")}
-            </label>
+            <label className="text-sm mb-1 block">{t("Region")}</label>
             <Controller
               name="region"
               control={control} // from useForm()
@@ -495,9 +484,7 @@ const EditContactDetails = () => {
           </div>
 
           <div className="mb-4 w-full">
-            <label className="text-sm mb-1 block">
-              {t("Governorate")}
-            </label>
+            <label className="text-sm mb-1 block">{t("Governorate")}</label>
             <Controller
               name="governorate"
               control={control} // from useForm()
@@ -527,7 +514,7 @@ const EditContactDetails = () => {
               </p>
             )}
           </div>
-          
+
           {/* <div className="mt-6 space-y-4"> */}
           {/* <div>
               <h4 className="text-sm mb-1">

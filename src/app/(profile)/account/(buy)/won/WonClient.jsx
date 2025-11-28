@@ -309,74 +309,87 @@ const WonClient = () => {
           ) : filteredListings.length === 0 ? (
             <p className="text-sm text-gray-500">{t("noListingsFound")}</p>
           ) : (
-            filteredListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={{
-                  id: listing.id,
-                  title: listing.title,
-                  price: listing.buy_now_price || "N/A",
-                  views: listing.view_count || 0,
-                  watchers: 0,
-                  closingDate: listing.expire_at,
-                  image: listing.images?.[0]?.image_path
-                    ? `${Image_URL}${listing.images[0].image_path}`
-                    : "/default-image.jpg",
-                  link: `/marketplace/${listing.category?.slug?.split("/").pop() || "unknown"}/${listing.slug
-                    }`,
-                }}
-                actions={[
-                  {
-                    label: (
-                      <span className="flex items-center gap-1">
-                        {listing.note
-                          ? listing.note.split(" ").slice(0, 3).join(" ") +
-                          "..."
-                          : t("Add note")}
-                        {listing.note && <FaEdit className="text-xs" />}
-                      </span>
-                    ),
-
-                    onClick: () => handleAddNote(listing),
-                  },
-                  {
-                    label: t("View new listing"),
-                    onClick: () =>
-                      router.push(
-                        `/marketplace/${listing.category?.slug || "unknown"}`
+            filteredListings.map((listing) => {
+              console.log("view listing", listing);
+              const catSlug = listing.category?.slug?.includes("/")
+                ? listing.category.slug.split("/").pop()
+                : listing.category?.slug || "unknown";
+              return (
+                <ListingCard
+                  key={listing.id}
+                  listing={{
+                    id: listing.id,
+                    title: listing.title,
+                    price: listing.buy_now_price || "N/A",
+                    views: listing.view_count || 0,
+                    watchers: 0,
+                    closingDate: listing.expire_at,
+                    image: listing.images?.[0]?.image_path
+                      ? `${Image_URL}${listing.images[0].image_path}`
+                      : "/default-image.jpg",
+                    link: `/marketplace/${
+                      listing.category?.slug?.split("/").pop() || "unknown"
+                    }/${listing.slug}`,
+                  }}
+                  actions={[
+                    {
+                      label: (
+                        <span className="flex items-center gap-1">
+                          {listing.note
+                            ? listing.note.split(" ").slice(0, 3).join(" ") +
+                              "..."
+                            : t("Add note")}
+                          {listing.note && <FaEdit className="text-xs" />}
+                        </span>
                       ),
-                  },
-                  // {
-                  //   label: t("Add feedback"),
-                  //   onClick: () => handleAddFeedback(listing),
-                  // },
-                  // {
-                  //   label: t(listing.feedback ? "Edit feedback" : "Add feedback"),
-                  //   onClick: () => handleAddFeedback(listing),
-                  // }
-                  // {
-                  //   label: t(
-                  //     listing.feedbacks && listing.feedbacks.length > 0 && listing.feedbacks[0].feedback_text
-                  //       ? "Edit feedback"
-                  //       : "Add feedback"
-                  //   ),
-                  //   onClick: () => handleAddFeedback(listing),
-                  // }
-                  {
-                    label: t(
-                      listing.feedbacks &&
-                        listing.feedbacks.length > 0 &&
-                        listing.feedbacks.some((fb) => fb.reviewer_id === user?.id) // ✅ check if logged in user already gave feedback
-                        ? "Edit feedback"
-                        : "Add feedback"
-                    ),
-                    onClick: () => handleAddFeedback(listing),
-                  }
 
-
-                ]}
-              />
-            ))
+                      onClick: () => handleAddNote(listing),
+                    },
+                    {
+                      label: t("View new listing"),
+                      onClick: () =>
+                        router.push(
+                          listing?.listing_type === "marketplace"
+                            ? `/marketplace`
+                            : listing?.listing_type === "property"
+                            ? `/property`
+                            : listing?.listing_type === "motors"
+                            ? `/motors`
+                            : `/${listing?.listing_type}`
+                        ),
+                    },
+                    // {
+                    //   label: t("Add feedback"),
+                    //   onClick: () => handleAddFeedback(listing),
+                    // },
+                    // {
+                    //   label: t(listing.feedback ? "Edit feedback" : "Add feedback"),
+                    //   onClick: () => handleAddFeedback(listing),
+                    // }
+                    // {
+                    //   label: t(
+                    //     listing.feedbacks && listing.feedbacks.length > 0 && listing.feedbacks[0].feedback_text
+                    //       ? "Edit feedback"
+                    //       : "Add feedback"
+                    //   ),
+                    //   onClick: () => handleAddFeedback(listing),
+                    // }
+                    {
+                      label: t(
+                        listing.feedbacks &&
+                          listing.feedbacks.length > 0 &&
+                          listing.feedbacks.some(
+                            (fb) => fb.reviewer_id === user?.id
+                          ) // ✅ check if logged in user already gave feedback
+                          ? "Edit feedback"
+                          : "Add feedback"
+                      ),
+                      onClick: () => handleAddFeedback(listing),
+                    },
+                  ]}
+                />
+              );
+            })
           )}
         </div>
         {/* 
@@ -397,13 +410,16 @@ const WonClient = () => {
           isOpen={isFeedbackModalOpen}
           onClose={() => setIsFeedbackModalOpen(false)}
           onSave={
-            selectedFeedbackListing?.feedbacks?.some((fb) => fb.reviewer_id === user?.id)
+            selectedFeedbackListing?.feedbacks?.some(
+              (fb) => fb.reviewer_id === user?.id
+            )
               ? (data) => {
-                const existingFeedback = selectedFeedbackListing.feedbacks.find(
-                  (fb) => fb.reviewer_id === user?.id
-                );
-                return handleUpdateFeedback(existingFeedback.id, data);
-              }
+                  const existingFeedback =
+                    selectedFeedbackListing.feedbacks.find(
+                      (fb) => fb.reviewer_id === user?.id
+                    );
+                  return handleUpdateFeedback(existingFeedback.id, data);
+                }
               : handleSaveFeedback
           }
           initialFeedback={
@@ -417,7 +433,6 @@ const WonClient = () => {
             )?.rating || 0
           }
         />
-
 
         {/* ✅ NoteModal */}
         <NoteModal

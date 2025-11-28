@@ -96,6 +96,8 @@ const NotificationClientPage = () => {
         </p>
 
         {notifications.map((item) => {
+          const isRead = item.read_at !== null;
+          
           const handleNotificationClick = () => {
             if (!item.listing) return;
             
@@ -137,7 +139,9 @@ const NotificationClientPage = () => {
             <div
               key={item.id}
               onClick={handleNotificationClick}
-              className="bg-white rounded-md shadow p-4 relative w-full max-w-xl mb-6 cursor-pointer hover:shadow-lg transition-shadow"
+              className={`bg-white rounded-md shadow p-4 relative w-full max-w-xl mb-6 cursor-pointer hover:shadow-lg transition-shadow ${
+                isRead ? "opacity-75" : ""
+              }`}
             >
               <button
                 onClick={(e) => {
@@ -146,7 +150,7 @@ const NotificationClientPage = () => {
                 }}
                 className={`absolute top-2 ${
                   isRTL ? "left-2" : "right-2"
-                } text-green-600 hover:text-green-800 z-10`}
+                } ${isRead ? "text-gray-400 hover:text-gray-600" : "text-green-600 hover:text-green-800"} z-10`}
                 title={t("Mark as read")}
               >
                 <FaBell />
@@ -171,7 +175,9 @@ const NotificationClientPage = () => {
 
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-md text-black mb-1">
+                    <h3 className={`font-bold text-md mb-1 ${
+                      isRead ? "text-gray-500" : "text-black"
+                    }`}>
                       {item.data?.title || item.listing?.title || t("Notification")}
                     </h3>
                     <p className="text-sm text-gray-700 mb-4">

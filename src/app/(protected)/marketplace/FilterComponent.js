@@ -136,7 +136,7 @@ const FilterComponent = ({ categoryId, onResults }) => {
 
 
   return (
-    <div className="w-full bg-white px-4 space-y4">
+    <div className="w-full bg-white px-4">
       <style dangerouslySetInnerHTML={{
         __html: `
           .filter-select .react-select__menu-list {

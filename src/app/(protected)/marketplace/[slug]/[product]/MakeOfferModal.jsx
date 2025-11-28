@@ -95,12 +95,15 @@ function MakeOfferModal({ isOpen, onClose, product, onOfferMade }) {
               value={amount}
               onChange={e => {
                 const value = e.target.value;
-                setAmount(value);
-                setError('');
-                const offerAmount = parseFloat(value);
-                const buyNowPrice = parseFloat(product?.buy_now || 0);
-                if (value && !isNaN(offerAmount) && buyNowPrice > 0 && offerAmount > buyNowPrice) {
-                  setError(`Your offer cannot exceed the Buy Now price ($${buyNowPrice}).`);
+                const numValue = parseFloat(value);
+                if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                  setAmount(value);
+                  setError('');
+                  const offerAmount = parseFloat(value);
+                  const buyNowPrice = parseFloat(product?.buy_now || 0);
+                  if (value && !isNaN(offerAmount) && buyNowPrice > 0 && offerAmount > buyNowPrice) {
+                    setError(`Your offer cannot exceed the Buy Now price ($${buyNowPrice}).`);
+                  }
                 }
               }}
               onBlur={() => {

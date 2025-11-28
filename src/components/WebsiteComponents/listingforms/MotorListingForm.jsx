@@ -589,6 +589,18 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { t } = useTranslation();
   const router = useRouter();
+  
+  // Helper function to check if a date is today
+  const isToday = (date) => {
+    if (!date) return false;
+    const now = new Date();
+    return (
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modals, setModals] = useState([]);
   const [categoryStack, setCategoryStack] = useState([]);
@@ -1617,6 +1629,14 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                   <input
                     {...field}
                     type="number"
+                    min="0"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseFloat(value);
+                      if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                        field.onChange(value);
+                      }
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="e.g., 50000"
                   />
@@ -1778,6 +1798,14 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                     <input
                       {...field}
                       type="number"
+                      min="0"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numValue = parseFloat(value);
+                        if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                          field.onChange(value);
+                        }
+                      }}
                       className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
       [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="Enter price"
@@ -1826,6 +1854,14 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                       <input
                         {...field}
                         type="number"
+                        min="0"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const numValue = parseFloat(value);
+                          if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                            field.onChange(value);
+                          }
+                        }}
                         className={`w-full border rounded-md 
       focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
       [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
@@ -1856,7 +1892,15 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                       <input
                         {...field}
                         type="number"
+                        min="0"
                         disabled={isReservePriceDisabled}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const numValue = parseFloat(value);
+                          if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                            field.onChange(value);
+                          }
+                        }}
                         className={`w-full border rounded-md 
       focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
       [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
@@ -1935,6 +1979,14 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
                     dateFormat="yyyy-MM-dd h:mm aa"
                     minDate={new Date()}
                     maxDate={getMaxDate()}
+                    filterTime={(time) => {
+                      const now = new Date();
+                      const selectedDate = field.value;
+                      if (selectedDate && isToday(selectedDate)) {
+                        return time.getTime() >= now.getTime();
+                      }
+                      return true;
+                    }}
                     className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring
                           [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
                           ${

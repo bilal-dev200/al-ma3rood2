@@ -84,7 +84,13 @@ function MakeOfferModal({ isOpen, onClose, product, onOfferMade }) {
               min="0"
               step="0.01"
               value={amount}
-              onChange={e => setAmount(e.target.value)}
+              onChange={e => {
+                const value = e.target.value;
+                const numValue = parseFloat(value);
+                if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                  setAmount(value);
+                }
+              }}
               placeholder="0.00"
               className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-8 pr-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition
 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

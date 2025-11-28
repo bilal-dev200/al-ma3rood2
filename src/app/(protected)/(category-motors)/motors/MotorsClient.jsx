@@ -523,7 +523,7 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
           </div> */}
 
           {/* Main Filter Content */}
-          <div className="p-4 sm:p-6">
+          <div className="p-4 sm:px-6 py-8 ">
             {/* Initial Filter Grid */}
             {activeTab !== "allcat" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">

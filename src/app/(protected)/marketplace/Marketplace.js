@@ -18,6 +18,9 @@ export default async function Marketplace({ searchParams }) {
   const city = searchParams?.city || "";
   const region_id = searchParams?.region_id || "";
   const governorate_id = searchParams?.governorate_id || "";
+  const creator_id = searchParams?.creator_id || "";
+
+  console.log("creator_id", creator_id);
 
 
   const [catResult, listings] = await Promise.all([
@@ -29,6 +32,7 @@ export default async function Marketplace({ searchParams }) {
       region_id: region_id,
       governorate_id: governorate_id,
       city: city,
+      creator_id: creator_id,
       page: 1,
     }),
   ]);
@@ -48,6 +52,8 @@ const popularCards =
   Array.isArray(listings?.data)
     ? listings?.data?.slice(0, 4)
     : [];
+
+    console.log("deals-Cards", listings);
   
 
   return (

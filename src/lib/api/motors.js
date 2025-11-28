@@ -185,9 +185,9 @@ export const motorSearchFilters = {
   
   fuelTypes: ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'LPG'],
   
-  transmissions: ['Automatic', 'Manual', 'CVT', 'Semi-Auto'],
+  transmissions: ['Automatic', 'Manual'],
   
-  bodyStyles: ['Sedan', 'SUV', 'Hatchback', 'Ute', 'Van', 'Coupe', 'Wagon', 'Convertible'],
+  bodyStyles: ['Sedan', 'SUV', 'Hatchback', 'Crossover', 'Truck', 'Ute', 'Van', 'Coupe', 'Wagon', 'Convertible'],
   
   priceRanges: [
     { label: 'Under $5,000', min: 0, max: 5000 },

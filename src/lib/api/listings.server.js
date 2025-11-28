@@ -2,21 +2,26 @@ import { cookies } from "next/headers";
 
 export async function fetchProduct(productSlug) {
   const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
-  console.log('URL', `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`);
-  
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error('Failed to fetch product');
+  const token = cookieStore.get("token")?.value;
+  console.log(
+    "URL",
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`
+  );
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/${productSlug}/show`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch product");
   const data = await res.json();
   return data.data;
 }
-
 
 // export async function fetchProduct(productSlug) {
 //   const cookieStore = await cookies();
@@ -54,12 +59,17 @@ export async function fetchProduct(productSlug) {
 //   const data = await res.json();
 //   return data;
 // }
-export async function fetchProductsForCategory(categoryId, search = "", city = "", page = 1) {
+export async function fetchProductsForCategory(
+  categoryId,
+  search = "",
+  city = "",
+  page = 1
+) {
   const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  const token = cookieStore.get("token")?.value;
 
   let url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings?status=1&page=${page}`;
-  
+
   if (categoryId) {
     url += `&category_id=${categoryId}`;
   }
@@ -72,20 +82,19 @@ export async function fetchProductsForCategory(categoryId, search = "", city = "
     url += `&city=${encodeURIComponent(city)}`;
   }
 
-  console.log(url)
+  console.log(url);
   const res = await fetch(url, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    cache: 'no-store',
+    cache: "no-store",
   });
 
-  if (!res.ok) throw new Error('Failed to fetch products');
+  if (!res.ok) throw new Error("Failed to fetch products");
   const data = await res.json();
   return data;
 }
-
 
 // export async function fetchAllListings(categoryId, categoryIdFilter, search) {
 //   try {
@@ -103,7 +112,12 @@ export async function fetchProductsForCategory(categoryId, search = "", city = "
 //     return [];
 //   }
 // }
-export async function fetchAllListings(categoryId, categoryIdFilter, search, city) {
+export async function fetchAllListings(
+  categoryId,
+  categoryIdFilter,
+  search,
+  city
+) {
   try {
     const params = new URLSearchParams();
 
@@ -117,13 +131,15 @@ export async function fetchAllListings(categoryId, categoryIdFilter, search, cit
 
     if (city) params.set("city", city);
 
-    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings?${params.toString()}`;
+    const url = `${
+      process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD
+    }listings?${params.toString()}`;
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
     });
 
-    if (!res.ok) throw new Error('Failed to fetch listings: ' + res.status);
+    if (!res.ok) throw new Error("Failed to fetch listings: " + res.status);
     return await res.json();
   } catch (error) {
     console.error("fetchAllListings error:", error);
@@ -132,7 +148,6 @@ export async function fetchAllListings(categoryId, categoryIdFilter, search, cit
 }
 
 export async function fetchAllListingsByFilter(payload) {
-  console.log('chk',payload)
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/filters`;
 
@@ -144,14 +159,14 @@ export async function fetchAllListingsByFilter(payload) {
       },
     };
 
-      // ✅ add category_id conditionally
+    // ✅ add category_id conditionally
     if (payload?.category_id !== undefined && payload?.category_id !== null) {
       const categoryId = parseInt(payload.category_id, 10);
       if (!Number.isNaN(categoryId)) {
         formattedPayload.category_id = categoryId;
       }
     }
-     // ✅ add city if present
+    // ✅ add city if present
     if (payload?.city) {
       formattedPayload.city = payload.city;
     }
@@ -160,6 +175,9 @@ export async function fetchAllListingsByFilter(payload) {
     }
     if (payload?.governorate_id) {
       formattedPayload.governorates_id = payload.governorate_id;
+    }
+    if (payload?.creator_id) {
+      formattedPayload.creator_id = payload.creator_id;
     }
 
     // ✅ add condition if present
@@ -186,7 +204,7 @@ export async function fetchAllListingsByFilter(payload) {
     if (payload?.filters && Object.keys(payload.filters).length > 0) {
       formattedPayload.filters = { ...payload.filters };
     }
-console.log("formattedPayload", formattedPayload);
+    console.log("formattedPayload", JSON.stringify(formattedPayload));
 
     const res = await fetch(url, {
       method: "POST",
@@ -197,8 +215,6 @@ console.log("formattedPayload", formattedPayload);
 
     if (!res.ok) throw new Error("Failed to fetch listings: " + res.status);
 
-    console.log(res.data);
-    
     return await res.json();
   } catch (error) {
     console.error("fetchAllListings error:", error);
@@ -207,7 +223,6 @@ console.log("formattedPayload", formattedPayload);
 }
 
 export async function fetchAllMotorsApi(payload) {
-  
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/filters`;
 
@@ -219,14 +234,14 @@ export async function fetchAllMotorsApi(payload) {
       },
     };
 
-      // ✅ add category_id conditionally
+    // ✅ add category_id conditionally
     if (payload?.category_id !== undefined && payload?.category_id !== null) {
       const categoryId = parseInt(payload.category_id, 10);
       if (!Number.isNaN(categoryId)) {
         formattedPayload.category_id = categoryId;
       }
     }
-     // ✅ add city if present
+    // ✅ add city if present
     if (payload?.city) {
       formattedPayload.city = payload.city;
     }
@@ -255,7 +270,7 @@ export async function fetchAllMotorsApi(payload) {
     if (payload?.filters && Object.keys(payload.filters).length > 0) {
       formattedPayload.filters = { ...payload.filters };
     }
-console.log("formattedPayload", formattedPayload);
+    console.log("formattedPayload", formattedPayload);
 
     const res = await fetch(url, {
       method: "POST",
@@ -267,7 +282,7 @@ console.log("formattedPayload", formattedPayload);
     if (!res.ok) throw new Error("Failed to fetch listings: " + res.status);
 
     console.log(res.data);
-    
+
     return await res.json();
   } catch (error) {
     console.error("fetchAllListings error:", error);
@@ -279,10 +294,10 @@ export async function fetchListingsByReservePrice(reservePrice) {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings?reserve_price=${reservePrice}&status=1`;
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
     });
-    if (!res.ok) throw new Error('Failed to fetch listings: ' + res.status);
+    if (!res.ok) throw new Error("Failed to fetch listings: " + res.status);
     const data = await res.json();
     return data;
   } catch (error) {
@@ -293,20 +308,21 @@ export async function fetchListingsByReservePrice(reservePrice) {
 export async function fetchCoolAuctions() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const token = cookieStore.get("token")?.value;
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}listings/coolAuctions`;
     const res = await fetch(url, {
       headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      cache: 'no-store',
+      cache: "no-store",
     });
-    if (!res.ok) throw new Error('Failed to fetch cool auctions: ' + res.status);
+    if (!res.ok)
+      throw new Error("Failed to fetch cool auctions: " + res.status);
     const data = await res.json();
     return data;
   } catch (error) {
     console.error("fetchCoolAuctions error:", error);
     return { data: [] }; // Return fallback structure
   }
-} 
+}

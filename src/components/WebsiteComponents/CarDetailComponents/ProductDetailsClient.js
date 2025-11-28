@@ -1580,7 +1580,7 @@ export default function ProductDetailsClient({
           <img
             src={
               images[modalImageIndex]
-                ? `${Image_URL}${images[modalImageIndex]}`
+                ? `${images[modalImageIndex]}`
                 : Image_NotFound
             }
             alt={`Full Image ${modalImageIndex + 1}`}

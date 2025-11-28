@@ -138,8 +138,11 @@ export default function Page() {
       />
 
       <h1 className="text-2xl font-bold text-green-600 uppercase mb-1 mt-5">
- {t("Selling")}      </h1>
-      <p className="text-sm mb-4 mt-3">{filteredListings.length}{" "}{t("listings")}</p>
+        {t("Selling")}{" "}
+      </h1>
+      <p className="text-sm mb-4 mt-3">
+        {filteredListings.length} {t("listings")}
+      </p>
 
       <div className="mb-4">
         <select
@@ -149,7 +152,8 @@ export default function Page() {
         >
           {filters.map((item) => (
             <option key={item.value} value={item.value}>
-{t(item.label)}             </option>
+              {t(item.label)}{" "}
+            </option>
           ))}
         </select>
       </div>
@@ -160,40 +164,74 @@ export default function Page() {
       ) : filteredListings.length === 0 ? (
         <p className="text-sm text-gray-500">{t("No listings found.")}</p>
       ) : (
-        filteredListings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={{
-              id: listing.id,
-              listing_type: listing.listing_type,
-              bids: listing.bids || [],
-              offers: listing.selling_offers || [],
-              title: listing.title,
-              price: listing.buy_now_price || "N/A",
-              views: listing.view_count || 0,
-              watchers: 0,
-              slug: listing.slug,
-              closingDate: listing.expire_at || "",
-              image: listing.images?.[0]?.image_path
-                ? `${Image_URL}${listing.images[0].image_path}`
-                : "/default-image.jpg",
-              link: `/marketplace/${listing.category?.slug?.split("/").pop() || "unknown"}/${
-                listing.slug
-              }`,
-            }}
-            actions={[
-              // { label: "Promote listing", href: `/promote/${listing?.id}` },
-              { label:  t("Edit listing"), href: `/listing/viewlisting?slug=${listing?.slug}` },
-              {
-                label: t("See similar"),
-                onClick: () =>
-                  router.push(
-                    `/marketplace/${listing.category?.slug || "unknown"}`
-                  ),
-              },
-            ]}
-          />
-        ))
+        filteredListings.map((listing) => {
+          const handleSeeSimilar = async (listing) => {
+            const catSlug = listing.category?.slug?.includes("/")
+              ? listing.category.slug.split("/").pop()
+              : listing.category?.slug || "unknown";
+
+            // Check listing.type first for service and job
+            if (listing.type === "service") {
+              router.push(`/services/${listing?.slug}`);
+              return;
+            }
+
+            if (listing.type === "job") {
+              router.push(`/jobs/${listing?.slug}`);
+              return;
+            }
+
+            // Then check listing_type for marketplace, property, and motors
+            switch (listing.listing_type) {
+              case "marketplace":
+                router.push(`/marketplace/${catSlug}/${listing?.slug}`);
+                break;
+              case "property":
+              case "motors":
+                router.push(`/${listing.listing_type}/${listing?.slug}`);
+                break;
+              default:
+                console.warn(
+                  "Unknown listing type:",
+                  listing.listing_type,
+                  listing.type
+                );
+                break;
+            }
+          };
+          return (
+            <ListingCard
+              key={listing.id}
+              listing={{
+                id: listing.id,
+                listing_type: listing.listing_type,
+                bids: listing.bids || [],
+                offers: listing.selling_offers || [],
+                title: listing.title,
+                price: listing.buy_now_price || "N/A",
+                views: listing.view_count || 0,
+                watchers: 0,
+                slug: listing.slug,
+                closingDate: listing.expire_at || "",
+                image: listing.images?.[0]?.image_path
+                  ? `${Image_URL}${listing.images[0].image_path}`
+                  : "/default-image.jpg",
+                link: `/marketplace/${catSlug}/${listing.slug}`,
+              }}
+              actions={[
+                // { label: "Promote listing", href: `/promote/${listing?.id}` },
+                {
+                  label: t("Edit listing"),
+                  href: `/listing/viewlisting?slug=${listing?.slug}`,
+                },
+                {
+                  label: t("See similar"),
+                  onClick: () => handleSeeSimilar(listing),
+                },
+              ]}
+            />
+          );
+        })
       )}
 
       <WithdrawDialog

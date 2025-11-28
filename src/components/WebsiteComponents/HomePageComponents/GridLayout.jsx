@@ -99,8 +99,7 @@ const GridLayout = () => {
     } catch (error) {
       console.error("Error fetching product search:", error);
     }
-
-    console.log("listing clicked!", listing);
+    
     // Check listing.type first for service and job
     if (listing.type === "service") {
       console.log("service clicked!", listing);

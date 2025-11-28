@@ -398,8 +398,17 @@ export default function CreateServiceListingForm() {
                   <span className="text-gray-500 price">$</span>
                 </div>
                 <input
-                  {...register("price")}
+                  {...register("price", {
+                    onChange: (e) => {
+                      const value = e.target.value;
+                      const numValue = parseFloat(value);
+                      if (value !== "" && (!isNaN(numValue) && numValue < 0)) {
+                        e.target.value = "";
+                      }
+                    }
+                  })}
                   type="number"
+                  min="0"
                   className="w-full mt-1 rounded-2xl border border-slate-200 bg-white py-3 text-slate-900 shadow-sm text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 pl-8 pr-3
       [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="Enter price e,g, 150"

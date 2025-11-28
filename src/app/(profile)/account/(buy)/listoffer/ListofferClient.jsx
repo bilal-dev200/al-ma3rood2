@@ -194,66 +194,77 @@ const ListofferClient = () => {
           ) : filteredListings.length === 0 ? (
             <p className="text-sm text-gray-500">{t("NoListingsFound")}</p>
           ) : (
-            filteredListings.map((listing, index) => (
-              <ListingCard
-                key={index}
-                listing={{
-                  id: listing.listing.id,
-                  title: listing.listing.title,
-                  price: listing.amount || "N/A",
-                  offerStatus: listing.status,
-                  views: 0,
-                  watchers: 0,
-                  closingDate: listing.expires_at,
-                  image: listing.listing.images?.[0]?.image_path
-                    ? `${Image_URL}${listing.listing.images[0].image_path}`
-                    : "/default-image.jpg",
-                  link: `/marketplace/${
-                    listing.listing.category?.slug?.split("/").pop() || "unknown"
-                  }/${listing.listing.slug}`,
-                }}
-                //               actions={[
-                //                 {
-                //                   label: t("Add note"),
-                //                   onClick: () => handleOpenNoteModal(listing),
-                //                 },
-                //                 {
-                //                   label: t("View new listing"),
-                // onClick: () =>
-                //   router.push(`/marketplace/${listing?.listing?.category?.slug}/${listing?.listing?.id}`),
-                //                 },
-                //               ]}
-                actions={[
-                  {
-                    label: (
-                      <span className="flex items-center gap-1">
-                        {listing?.listing.note
-                          ? listing.listing.note
-                              .split(" ")
-                              .slice(0, 3)
-                              .join(" ") + "..."
-                          : t("Add note")}
-                        {listing?.listing.note && (
-                          <FaEdit className="text-xs" />
-                        )}
-                      </span>
-                    ),
+            filteredListings.map((listing, index) => {
+              const catSlug = listing?.listing?.category?.slug?.includes("/")
+                ? listing?.listing.category.slug.split("/").pop()
+                : listing?.listing.category?.slug || "unknown";
+              return (
+                <ListingCard
+                  key={index}
+                  listing={{
+                    id: listing.listing.id,
+                    title: listing.listing.title,
+                    price: listing.amount || "N/A",
+                    offerStatus: listing.status,
+                    views: 0,
+                    watchers: 0,
+                    closingDate: listing.expires_at,
+                    image: listing.listing.images?.[0]?.image_path
+                      ? `${Image_URL}${listing.listing.images[0].image_path}`
+                      : "/default-image.jpg",
+                    link: `/marketplace/${catSlug}/${listing.listing.slug}`,
+                  }}
+                  //               actions={[
+                  //                 {
+                  //                   label: t("Add note"),
+                  //                   onClick: () => handleOpenNoteModal(listing),
+                  //                 },
+                  //                 {
+                  //                   label: t("View new listing"),
+                  // onClick: () =>
+                  //   router.push(`/marketplace/${listing?.listing?.category?.slug}/${listing?.listing?.id}`),
+                  //                 },
+                  //               ]}
+                  actions={[
+                    {
+                      label: (
+                        <span className="flex items-center gap-1">
+                          {listing?.listing.note
+                            ? listing.listing.note
+                                .split(" ")
+                                .slice(0, 3)
+                                .join(" ") + "..."
+                            : t("Add note")}
+                          {listing?.listing.note && (
+                            <FaEdit className="text-xs" />
+                          )}
+                        </span>
+                      ),
 
-                    onClick: () => handleOpenNoteModal(listing),
-                  },
-                  {
-                    label: (
-                      <Link
-                        href={`/marketplace/${listing?.listing?.category?.slug}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {t("View new listing")}
-                      </Link>
-                    ),
-                  },
-                ]}
-              />
-            ))
+                      onClick: () => handleOpenNoteModal(listing),
+                    },
+                    {
+                      label: (
+                        <Link
+                          href={
+                            listing?.listing_type === "marketplace"
+                              ? `/marketplace`
+                              : listing?.listing_type === "property"
+                              ? `/property`
+                              : listing?.listing_type === "motors"
+                              ? `/motors`
+                              : `/${listing?.listing_type}`
+                          }
+                          className="text-blue-600 hover:underline"
+                        >
+                          {t("View new listing")}
+                        </Link>
+                      ),
+                    },
+                  ]}
+                />
+              );
+            })
           )}
         </div>
 

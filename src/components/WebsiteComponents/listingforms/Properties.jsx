@@ -184,6 +184,17 @@ const Properties = ({ initialValues, mode = "create" }) => {
   const router = useRouter();
   const { t } = useTranslation();
 
+  // Helper function to check if a date is today
+  const isToday = (date) => {
+    if (!date) return false;
+    const now = new Date();
+    return (
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryStack, setCategoryStack] = useState([]);
   const [currentCategories, setCurrentCategories] = useState([]);
@@ -875,6 +886,14 @@ const Properties = ({ initialValues, mode = "create" }) => {
                 <input
                   {...field}
                   type="number"
+                  min="0"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = parseFloat(value);
+                    if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                      field.onChange(value);
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
                 />
               )}
@@ -1280,6 +1299,14 @@ const Properties = ({ initialValues, mode = "create" }) => {
                     <input
                       {...field}
                       type="number"
+                      min="0"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numValue = parseFloat(value);
+                        if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                          field.onChange(value);
+                        }
+                      }}
                       className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="Enter price"
                     />
@@ -1311,6 +1338,14 @@ const Properties = ({ initialValues, mode = "create" }) => {
                   <input
                     {...field}
                     type="number"
+                    min="0"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseFloat(value);
+                      if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                        field.onChange(value);
+                      }
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder="Enter start price"
                   />
@@ -1327,6 +1362,14 @@ const Properties = ({ initialValues, mode = "create" }) => {
                   <input
                     {...field}
                     type="number"
+                    min="0"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = parseFloat(value);
+                      if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                        field.onChange(value);
+                      }
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder="Enter reserve price"
                   />
@@ -1357,6 +1400,14 @@ const Properties = ({ initialValues, mode = "create" }) => {
                     dateFormat="yyyy-MM-dd h:mm aa"
                     minDate={new Date()}
                     maxDate={getMaxDate()}
+                    filterTime={(time) => {
+                      const now = new Date();
+                      const selectedDate = field.value;
+                      if (selectedDate && isToday(selectedDate)) {
+                        return time.getTime() >= now.getTime();
+                      }
+                      return true;
+                    }}
                     className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring
                           [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
                           ${
