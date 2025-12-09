@@ -1,0 +1,92 @@
+import React, { useState } from "react";
+import { FiChevronDown } from "react-icons/fi";
+import { useForm } from "react-hook-form";
+
+const ConditionSelector = ({ t }) => {
+  const [openTab, setOpenTab] = useState(null);
+  const { register, setValue, watch } = useForm();
+  const condition = watch("condition");
+
+  const conditions = [
+    {
+      key: "brand_new_unused",
+      label: "Brand New / Unused – never opened or used.",
+    },
+    {
+      key: "like_new",
+      label: "Like New – opened but looks and works like new.",
+    },
+    {
+      key: "gently_used_excellent_condition",
+      label: "Gently Used / Excellent Condition – minor signs of use.",
+    },
+    {
+      key: "good_condition",
+      label: "Good Condition – visible wear but fully functional.",
+    },
+    {
+      key: "fair_condition",
+      label: "Fair Condition – heavily used but still works.",
+    },
+    {
+      key: "for_parts_or_not_working",
+      label: "For Parts or Not Working – damaged or needs repair.",
+    },
+    {
+      key: "not_applicable",
+      label: "Not Applicable – condition does not apply to this item.",
+    },
+  ];
+
+  return (
+    <div className="relative">
+      {/* Condition Tab */}
+      <button
+        type="button"
+        onClick={() => setOpenTab(openTab === "condition" ? null : "condition")}
+        className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-medium transition border 
+          ${
+            openTab === "condition"
+              ? "bg-green-100 text-green-700 border-green-400"
+              : "bg-gray-50 text-gray-700 hover:bg-green-50"
+          }`}
+      >
+        {condition
+          ? conditions
+              .find((item) => item.key === condition)
+              ?.label.split("–")[0] // show short text
+          : t("Condition")}
+        <FiChevronDown size={14} />
+      </button>
+
+      {/* Dropdown Options */}
+      {openTab === "condition" && (
+        <div className="absolute z-10 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-md p-3">
+          <div className="space-y-2 grid grid-cols-1 md:grid-cols-2">
+            {conditions.map((item) => (
+              <label
+                key={item.key}
+                className="flex items-start gap-2 cursor-pointer p-2 rounded hover:bg-green-50 transition"
+              >
+                <input
+                  type="radio"
+                  value={item.key}
+                  {...register("condition")}
+                  checked={condition === item.key}
+                  onChange={() => {
+                    setValue("condition", item.key);
+                    setOpenTab(null); // close after selection
+                  }}
+                  className="mt-1"
+                />
+                <span className="text-sm text-gray-700">{t(item.label)}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ConditionSelector;

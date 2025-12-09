@@ -1,0 +1,155 @@
+{
+    "Name": "Ma3rood Motors",
+    "Number": "0001-",
+    "Path": "\/Trade-Me-Motors",
+    "Subcategories": [
+        {
+            "Name": "Cars",
+            "Number": "0001-0268-",
+            "Path": "\/Trade-Me-Motors\/Cars",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/cars"
+        },
+        {
+            "Name": "Motorbikes",
+            "Number": "0001-0026-",
+            "Path": "\/Trade-Me-Motors\/Motorbikes",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/motorbikes"
+        },
+        {
+            "Name": "Boats & marine",
+            "Number": "0001-0348-",
+            "Path": "\/Trade-Me-Motors\/Boats-marine",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/boats-marine"
+        },
+        {
+            "Name": "Car parts & accessories",
+            "Number": "0001-0877-",
+            "Path": "\/Trade-Me-Motors\/Car-parts-accessories",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/car-parts-accessories"
+        },
+        {
+            "Name": "Aircraft",
+            "Number": "0001-1484-",
+            "Path": "\/Trade-Me-Motors\/Aircraft",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/aircraft"
+        },
+        {
+            "Name": "Buses",
+            "Number": "0001-1954-",
+            "Path": "\/Trade-Me-Motors\/Buses",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/buses"
+        },
+        {
+            "Name": "Car stereos",
+            "Number": "0001-1245-",
+            "Path": "\/Trade-Me-Motors\/Car-stereos",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/car-stereos"
+        },
+        {
+            "Name": "Caravans & motorhomes",
+            "Number": "0001-0028-",
+            "Path": "\/Trade-Me-Motors\/Caravans-motorhomes",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/caravans-motorhomes"
+        },
+        {
+            "Name": "Horse floats",
+            "Number": "0001-3930-",
+            "Path": "\/Trade-Me-Motors\/Horse-floats",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "IsLeaf": true,
+            "CanonicalPath": "\/motors\/horse-floats"
+        },
+        {
+            "Name": "Specialist cars",
+            "Number": "0001-3931-",
+            "Path": "\/Trade-Me-Motors\/Specialist-cars",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/specialist-cars"
+        },
+        {
+            "Name": "Trailers",
+            "Number": "0001-1259-",
+            "Path": "\/Trade-Me-Motors\/Trailers",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/trailers"
+        },
+        {
+            "Name": "Trucks",
+            "Number": "0001-1260-",
+            "Path": "\/Trade-Me-Motors\/Trucks",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/motors\/trucks"
+        },
+        {
+            "Name": "Wrecked cars",
+            "Number": "0001-8532-",
+            "Path": "\/Trade-Me-Motors\/Wrecked-cars",
+            "HasClassifieds": true,
+            "AreaOfBusiness": 3,
+            "IsLeaf": true,
+            "CanonicalPath": "\/motors\/wrecked-cars"
+        }
+    ],
+    "HasClassifieds": true,
+    "AreaOfBusiness": 3,
+    "CanHaveSecondCategory": true,
+    "CanBeSecondCategory": true,
+    "IsLeaf": false,
+    "CanonicalPath": "\/motors",
+    "Breadcrumbs": [
+        {
+            "DisplayName": "Motors",
+            "CanonicalPath": "\/motors",
+            "CanonicalPathFragment": "motors",
+            "Name": "category",
+            "Value": "1"
+        }
+    ]
+}

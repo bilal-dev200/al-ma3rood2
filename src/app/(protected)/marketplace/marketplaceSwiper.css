@@ -1,0 +1,33 @@
+/* marketplaceSwiper.css */
+
+/* Arrows ko green aur image se neeche push karo */
+.swiper-button-next,
+.swiper-button-prev {
+  color: #16a34a !important; /* Tailwind green-600 */
+  top: 55% !important;       /* arrows ka vertical position niche le ao */
+  transform: translateY(-50%);
+}
+
+/* arrows ko product ke side se thoda bahar rakho */
+.swiper-button-prev {
+  left: -30px; /* thoda bahar left */
+}
+.swiper-button-next {
+  right: -30px; /* thoda bahar right */
+}
+
+/* Pagination dots green aur neeche margin */
+.swiper-pagination-bullet {
+  background: #16a34a !important; /* green-600 */
+  opacity: 0.5;
+}
+.swiper-pagination-bullet-active {
+  background: #16a34a !important; /* active green */
+  opacity: 1;
+}
+
+/* dots ke niche space */
+.swiper-pagination {
+  margin-top: 20px !important;
+  position: relative !important;
+}

@@ -1,0 +1,96 @@
+// app/motors/page.jsx  (or wherever your page lives)
+import Link from "next/link";
+import { ChevronDown, Search, Grid, List } from "lucide-react";
+import MotorListingCard from "@/components/WebsiteComponents/MotorListingCard";
+import { fetchProductsForCategory } from "../../../../lib/api/listings.server";
+
+// ✅ Server Component
+export default async function MotorSearchPage({ searchParams }) {
+  const {
+    category_id,
+    search = "",
+    city = "",
+    page = 1,
+  } = searchParams || {};
+
+  let motorListings = [];
+  let totalResults = 0;
+
+  try {
+    const response = await fetchProductsForCategory(category_id, search, city, page);
+    motorListings = response?.data || [];
+    totalResults = response?.total || 0;
+  } catch (err) {
+    console.error("Error loading motor listings:", err);
+  }
+
+  return (
+    <div className="bg-white min-h-screen relative">
+      {/* Example: Header */}
+      <div className="border-b border-gray-800 text-black relative z-20 mx-auto px-3 sm:px-6 lg:px-8 flex justify-between items-center py-1 md:py-1 text-sm">
+                  {/* <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex justify-between items-center py-1 md:py-1 text-sm"> */}
+            {/* Left section - Desktop */}
+            <div className="hidden sm:flex items-center space-x-6">
+              <div className="relative group flex items-center cursor-pointer">
+                <span className="hover:text-blue-500 flex items-center">
+                  Browse Motors
+                </span>
+                <ChevronDown className="w-4 h-4 ml-1" />
+                <div className="absolute top-full left-0 mt-2 w-48 rounded-md shadow-lg hidden group-hover:block bg-gray-100 z-10">
+                  <Link
+                    href="/motors/cars"
+                    className="block px-4 py-2 text-sm text-black hover:bg-gray-200"
+                  >
+                    Cars
+                  </Link>
+                  <Link
+                    href="/motors/motorbikes"
+                    className="block px-4 py-2 text-sm text-black hover:bg-gray-200"
+                  >
+                    Motorbikes
+                  </Link>
+                </div>
+              </div>
+
+              <Link href="/reviews-&-advice" className="hover:text-blue-500">
+                Reviews & Advice
+              </Link>
+              <Link href="/dealer-directory" className="hover:text-blue-500">
+                Dealer Directory
+              </Link>
+              <Link href="/value-my-car" className="hover:text-blue-500">
+                Value my Car
+              </Link>
+              <Link href='/find-a-mechanic'>
+                Find a Mechanic
+              </Link>
+              <Link href='/new-car-showroom'>
+                New Car showroom
+              </Link>
+            </div>
+
+            {/* Right section - Desktop */}
+            <div className="hidden sm:flex items-center space-x-6">
+              <Link href="/listing" className="hover:text-blue-500">
+                Sell my Vehicle
+              </Link>
+            </div>
+      </div>
+
+      {/* Listings */}
+      <div className="p-4 md:px-24 mt-7">
+        {motorListings.length > 0 ? (
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {motorListings.map((listing) => (
+              <MotorListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            No motors found
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

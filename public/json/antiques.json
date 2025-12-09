@@ -1,0 +1,328 @@
+{
+    "Name": "Antiques & collectables",
+    "Number": "0187-",
+    "Path": "\/Antiques-collectables",
+    "Subcategories": [
+        {
+            "Name": "Advertising",
+            "Number": "0187-1443-",
+            "Path": "\/Antiques-collectables\/Advertising",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/advertising"
+        },
+        {
+            "Name": "Alcohol related",
+            "Number": "0187-0442-",
+            "Path": "\/Antiques-collectables\/Alcohol-related",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/alcohol-related"
+        },
+        {
+            "Name": "Appliances",
+            "Number": "0187-3209-",
+            "Path": "\/Antiques-collectables\/Appliances",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/appliances"
+        },
+        {
+            "Name": "Art deco & retro",
+            "Number": "0187-2192-",
+            "Path": "\/Antiques-collectables\/Art-deco-retro",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/art-deco-retro"
+        },
+        {
+            "Name": "Automotive & transport",
+            "Number": "0187-0443-",
+            "Path": "\/Antiques-collectables\/Automotive-transport",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/automotive-transport"
+        },
+        {
+            "Name": "Banknotes",
+            "Number": "0187-4342-",
+            "Path": "\/Antiques-collectables\/Banknotes",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/banknotes"
+        },
+        {
+            "Name": "Bottles",
+            "Number": "0187-2890-",
+            "Path": "\/Antiques-collectables\/Bottles",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/bottles"
+        },
+        {
+            "Name": "Clocks & scientific instruments",
+            "Number": "0187-3210-",
+            "Path": "\/Antiques-collectables\/Clocks-scientific-instruments",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/clocks-scientific-instruments"
+        },
+        {
+            "Name": "Coins",
+            "Number": "0187-4353-",
+            "Path": "\/Antiques-collectables\/Coins",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/coins"
+        },
+        {
+            "Name": "Cultural & ethnic",
+            "Number": "0187-0446-",
+            "Path": "\/Antiques-collectables\/Cultural-ethnic",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/cultural-ethnic"
+        },
+        {
+            "Name": "Documents & maps",
+            "Number": "0187-3232-",
+            "Path": "\/Antiques-collectables\/Documents-maps",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/documents-maps"
+        },
+        {
+            "Name": "Flags",
+            "Number": "0187-6491-",
+            "Path": "\/Antiques-collectables\/Flags",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/flags"
+        },
+        {
+            "Name": "Food & drink",
+            "Number": "0187-0447-",
+            "Path": "\/Antiques-collectables\/Food-drink",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/food-drink"
+        },
+        {
+            "Name": "Furniture & woodenware",
+            "Number": "0187-3215-",
+            "Path": "\/Antiques-collectables\/Furniture-woodenware",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/furniture-woodenware"
+        },
+        {
+            "Name": "Jewellery",
+            "Number": "0187-3212-",
+            "Path": "\/Antiques-collectables\/Jewellery",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/jewellery"
+        },
+        {
+            "Name": "Militaria",
+            "Number": "0187-0451-",
+            "Path": "\/Antiques-collectables\/Militaria",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/militaria"
+        },
+        {
+            "Name": "Movie & TV memorabilia",
+            "Number": "0187-6216-",
+            "Path": "\/Antiques-collectables\/Movie-TV-memorabilia",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/movie-tv-memorabilia"
+        },
+        {
+            "Name": "Museum pieces & artifacts",
+            "Number": "0187-5288-",
+            "Path": "\/Antiques-collectables\/Museum-pieces-artifacts",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/museum-pieces-artifacts"
+        },
+        {
+            "Name": "New Zealand & Maori",
+            "Number": "0187-0449-",
+            "Path": "\/Antiques-collectables\/New-Zealand-Maori",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/new-zealand-maori"
+        },
+        {
+            "Name": "Ornaments & figurines",
+            "Number": "0187-2724-",
+            "Path": "\/Antiques-collectables\/Ornaments-figurines",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/ornaments-figurines"
+        },
+        {
+            "Name": "Phonecards",
+            "Number": "0187-0453-",
+            "Path": "\/Antiques-collectables\/Phonecards",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/phonecards"
+        },
+        {
+            "Name": "Pins, badges & patches",
+            "Number": "0187-0454-",
+            "Path": "\/Antiques-collectables\/Pins-badges-patches",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/pins-badges-patches"
+        },
+        {
+            "Name": "Postcards & writing",
+            "Number": "0187-0455-",
+            "Path": "\/Antiques-collectables\/Postcards-writing",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/postcards-writing"
+        },
+        {
+            "Name": "Royal family",
+            "Number": "0187-6492-",
+            "Path": "\/Antiques-collectables\/Royal-family",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/royal-family"
+        },
+        {
+            "Name": "Silver, metalware & tins",
+            "Number": "0187-3224-",
+            "Path": "\/Antiques-collectables\/Silver-metalware-tins",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/silver-metalware-tins"
+        },
+        {
+            "Name": "Stamps",
+            "Number": "0187-4383-",
+            "Path": "\/Antiques-collectables\/Stamps",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/stamps"
+        },
+        {
+            "Name": "Textiles & linen",
+            "Number": "0187-3236-",
+            "Path": "\/Antiques-collectables\/Textiles-linen",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/textiles-linen"
+        },
+        {
+            "Name": "Tobacco related",
+            "Number": "0187-2104-",
+            "Path": "\/Antiques-collectables\/Tobacco-related",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/tobacco-related"
+        },
+        {
+            "Name": "Tools",
+            "Number": "0187-6083-",
+            "Path": "\/Antiques-collectables\/Tools",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/tools"
+        },
+        {
+            "Name": "Other",
+            "Number": "0187-0192-",
+            "Path": "\/Antiques-collectables\/Other",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": true,
+            "CanonicalPath": "\/marketplace\/antiques-collectables\/other"
+        }
+    ],
+    "AreaOfBusiness": 1,
+    "CanHaveSecondCategory": true,
+    "CanBeSecondCategory": true,
+    "IsLeaf": false,
+    "CanonicalPath": "\/marketplace\/antiques-collectables",
+    "Breadcrumbs": [
+        {
+            "DisplayName": "Marketplace",
+            "CanonicalPath": "\/marketplace",
+            "CanonicalPathFragment": "marketplace",
+            "Name": "category",
+            "Value": "0"
+        },
+        {
+            "DisplayName": "Antiques & collectables",
+            "CanonicalPath": "\/marketplace\/antiques-collectables",
+            "CanonicalPathFragment": "antiques-collectables",
+            "Name": "category",     
+            "Value": "187"
+        }
+    ]
+}

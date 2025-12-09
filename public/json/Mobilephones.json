@@ -1,0 +1,67 @@
+{
+    "Name": "Mobile phones",
+    "Number": "0344-",
+    "Path": "\/Mobile-phones",
+    "Subcategories": [
+        {
+            "Name": "Accessories",
+            "Number": "0344-0899-",
+            "Path": "\/Mobile-phones\/Accessories",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/mobile-phones\/accessories"
+        },
+        {
+            "Name": "Mobile phones",
+            "Number": "0344-0422-",
+            "Path": "\/Mobile-phones\/Mobile-phones",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/mobile-phones\/mobile-phones"
+        },
+        {
+            "Name": "Replacement parts & components",
+            "Number": "0344-0379-",
+            "Path": "\/Mobile-phones\/Replacement-parts-components",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/mobile-phones\/replacement-parts-components"
+        },
+        {
+            "Name": "SIM cards",
+            "Number": "0344-0345-",
+            "Path": "\/Mobile-phones\/SIM-cards",
+            "AreaOfBusiness": 1,
+            "CanHaveSecondCategory": true,
+            "CanBeSecondCategory": true,
+            "IsLeaf": false,
+            "CanonicalPath": "\/marketplace\/mobile-phones\/sim-cards"
+        }
+    ],
+    "AreaOfBusiness": 1,
+    "CanHaveSecondCategory": true,
+    "CanBeSecondCategory": true,
+    "IsLeaf": false,
+    "CanonicalPath": "\/marketplace\/mobile-phones",
+    "Breadcrumbs": [
+        {
+            "DisplayName": "Marketplace",
+            "CanonicalPath": "\/marketplace",
+            "CanonicalPathFragment": "marketplace",
+            "Name": "category",
+            "Value": "0"
+        },
+        {
+            "DisplayName": "Mobile phones",
+            "CanonicalPath": "\/marketplace\/mobile-phones",
+            "CanonicalPathFragment": "mobile-phones",
+            "Name": "category",
+            "Value": "344"
+        }
+    ]
+}
