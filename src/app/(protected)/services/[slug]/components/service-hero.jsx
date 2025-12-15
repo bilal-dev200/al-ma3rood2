@@ -35,6 +35,7 @@ export default function ServiceHero({ service }) {
       10
     ) || 0;
   const experience = service.experience || service.experience_summary || "";
+  const user = service.user?.name || "";
   const responseTime =
     service.responseTime || service.response_time || "";
   const subcategory =
@@ -98,6 +99,12 @@ export default function ServiceHero({ service }) {
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
                   {formatRating(rating, reviews)}
                 </span>
+              )}
+              {user && (
+                <>
+                  <span className="hidden h-1.5 w-1.5 rounded-full bg-white/40 sm:block" />
+                  <span>{user}</span>
+                </>
               )}
               {experience && (
                 <>

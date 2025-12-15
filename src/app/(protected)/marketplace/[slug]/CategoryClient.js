@@ -22,7 +22,7 @@ export default function CategoryClient({
   const observerRef = useRef();
   const router = useRouter();
   const searchParams = useSearchParams();
-
+console.log("Check Category", category);  
   // Params
   const search = searchParams.get("search") || "";
   const minPrice = searchParams.get("min_price");
@@ -269,6 +269,7 @@ export default function CategoryClient({
       <MarketplaceCategories
         heading={slug}
         categories={category || {}}
+        description={category?.description}
         isLoading={false}
         error={null}
       />

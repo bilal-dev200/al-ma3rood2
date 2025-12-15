@@ -68,13 +68,13 @@ export default function ServiceOverview({ service }) {
       <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
           <div>
-            <p className="text-sm text-slate-500">Starting from</p>
+            {/* <p className="text-sm text-slate-500">Starting from</p>
             <p className="text-2xl font-semibold text-slate-900">
               {formatCurrency(priceValue)}{" "}
               <span className="text-sm font-medium text-slate-500">
                 {priceUnit}
               </span>
-            </p>
+            </p> */}
           </div>
           <a
             href="#service-booking"

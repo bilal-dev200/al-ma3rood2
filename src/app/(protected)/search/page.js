@@ -2,6 +2,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { listingsApi } from "@/lib/api/listings";
+import { categoriesApi } from "@/lib/api/category";
 import SearchResultCard from "@/components/WebsiteComponents/Searchpageco/SearchResultCard";
 import SearchPageFilters from "@/components/WebsiteComponents/Searchpageco/SearchPageFilters";
 import { useTranslation } from "react-i18next";
@@ -18,7 +19,7 @@ const SearchPageContent = () => {
     const condition = searchParams.get("condition");
     const minPrice = searchParams.get("min_price");
     const maxPrice = searchParams.get("max_price");
-    const selectedCategory = searchParams.get("selected_category");
+    const categoryId = searchParams.get("category_id") || searchParams.get("selected_category");
     const sortBy = searchParams.get("sort_by") || "latest";
 
     const [results, setResults] = useState([]);
@@ -107,7 +108,7 @@ const SearchPageContent = () => {
                     limit: limit,
                     offset: offset,
                     sort_by: sortBy,
-                    ...(selectedCategory && { selected_category: selectedCategory }),
+                    ...(categoryId && { selected_category: categoryId }),
                     ...(condition && { condition: condition }),
                     ...(minPrice && { min_price: minPrice }),
                     ...(maxPrice && { max_price: maxPrice }),
@@ -118,7 +119,7 @@ const SearchPageContent = () => {
                 console.log("Search Page Results:", res);
 
                 setResults(res.data || []);
-                setCategories(res.categories || []);
+                // setCategories(res.categories || []); // Don't rely on search results for categories dropdown
 
                 // Handle pagination
                 setPagination({
@@ -136,7 +137,20 @@ const SearchPageContent = () => {
         };
 
         fetchResults();
-    }, [keyword, pageParam, selectedCategory, condition, minPrice, maxPrice, sortBy]);
+    }, [keyword, pageParam, categoryId, condition, minPrice, maxPrice, sortBy]);
+
+    // Fetch Categories Separately to ensure dropdown always has data
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const res = await categoriesApi.getAllCategories();
+                setCategories(res.data || []); // Assuming API returns { data: [...] } or array
+            } catch (err) {
+                console.error("Failed to load categories", err);
+            }
+        };
+        loadCategories();
+    }, []);
 
     const handlePageChange = (newPage) => {
         if (newPage < 1 || newPage > pagination.last_page) return;
@@ -216,7 +230,7 @@ const SearchPageContent = () => {
                 {/* 3. Filters & Toggles Row */}
                 <div className="flex flex-col md:flex-row gap-4 mb-8 items-center bg-white/80 pt-4 pb-4 sticky top-0 z-30">
                     <div className="flex-grow w-full md:w-auto pb-2 md:pb-0">
-                        <SearchPageFilters categories={categories} />
+                        <SearchPageFilters categoryId={categoryId} categories={categories} />
                     </div>
                 </div>
 

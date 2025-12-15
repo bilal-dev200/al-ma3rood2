@@ -124,7 +124,7 @@ export default function ServiceCard({ listing, viewMode = "grid" }) {
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
               {subcategoryLabel}
             </p>
-            <h3 className="mt-1 text-lg font-semibold text-slate-900 group-hover:text-blue-600">
+            <h3 className="mt-1 text-lg font-semibold text-slate-900 group-hover:text-blue-600 line-clamp-2 h-14">
               {listing.title}
             </h3>
           </div>
@@ -139,7 +139,7 @@ export default function ServiceCard({ listing, viewMode = "grid" }) {
           )}
         </div>
 
-        <p className="text-sm leading-relaxed text-slate-600 line-clamp-2">
+        <p className="text-sm leading-relaxed text-slate-600 line-clamp-2 h-12">
           {subtitle}
         </p>
 
@@ -166,14 +166,14 @@ export default function ServiceCard({ listing, viewMode = "grid" }) {
 
         <div className="mt-auto flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500">From</p>
+            {/* <p className="text-xs text-slate-500">From</p>
             <p className="text-lg font-semibold text-slate-900">
               {formatPrice(priceValue)}
               <span className="text-xs font-medium text-slate-500">
                 {" "}
                 {priceUnit}
               </span>
-            </p>
+            </p> */}
           </div>
           <span className="inline-flex items-center gap-2 text-sm font-medium text-blue-600">
             View details

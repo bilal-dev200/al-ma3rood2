@@ -182,7 +182,7 @@ export default function FilterBar({
           />
         </div>
 
-        <div className="sm:col-span-3">
+        {/* <div className="sm:col-span-3">
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Price range (SAR)
           </label>
@@ -220,11 +220,11 @@ export default function FilterBar({
             />
           </div>
 
-          {/* <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500">
             Typical range {boundMin.toLocaleString("en-SA")} –{" "}
             {boundMax.toLocaleString("en-SA")} SAR
-          </p> */}
-        </div>
+          </p>
+        </div> */}
 
         <div className="sm:col-span-12">
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">

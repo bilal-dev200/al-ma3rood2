@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
-function MarketplaceCategories({ heading, categories, isLoading, error }) {
-  const { setSelectedCategory, selectedCategory } = useCategoryStore();
+function MarketplaceCategories({ heading, categories, isLoading, error, description }) {
+  const { setSelectedCategory } = useCategoryStore();
   const { t } = useTranslation();
   const router = useRouter();
   useEffect(() => {
@@ -32,7 +32,8 @@ function MarketplaceCategories({ heading, categories, isLoading, error }) {
     const lastSlug = slugParts[slugParts.length - 1];
 
     // Example usage with router
-    router.push(`/marketplace/${lastSlug}?categoryId=${category.id}`);
+    const url = `/marketplace/${lastSlug}${category.id ? `?categoryId=${category.id}` : ""}?listing_type=marketplace`;
+    router.push(url);
 
     // Redirect to search page with category_id
     // router.push(`/search?category_id=${category.id}&listing_type=marketplace`);
@@ -51,8 +52,8 @@ function MarketplaceCategories({ heading, categories, isLoading, error }) {
         </h2>
 
         {/* Description */}
-        {selectedCategory?.description && <p className="text-sm text-gray-600 mb-2">
-          {selectedCategory?.description}
+        {description && <p className="text-sm text-gray-600 mb-2">
+          {description}
         </p>}
       </div>
 

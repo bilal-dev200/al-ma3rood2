@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -131,7 +132,7 @@ export default function BookServiceForm({ service }) {
         const countries = await getAllLocations();
         const saudi = Array.isArray(countries)
           ? countries.find((country) => country.name === "Saudi Arabia") ||
-            countries[0]
+          countries[0]
           : null;
         const derivedRegions =
           saudi?.regions?.map((region) => ({
@@ -176,6 +177,8 @@ export default function BookServiceForm({ service }) {
     }
   }, [regionOptions, selectedRegionId, selectedGovernorateId, setValue]);
 
+  const router = useRouter(); // Initialize router
+
   async function onSubmit(values) {
     try {
       const booking = await bookService({
@@ -187,16 +190,29 @@ export default function BookServiceForm({ service }) {
           end: values.endTime,
         },
       });
-      toast.success("Booking created. We'll notify the provider.");
-      if (booking) {
-        setRecentBooking(booking);
-      }
-      reset({
-        ...values,
-        regionId: values.regionId,
-        governorateId: values.governorateId,
-        projectDetails: defaultDetails,
-      });
+      // toast.success("Booking created. We'll notify the provider.");
+
+      // Extract provider details
+      // Assuming service structure has user/creator info
+      const providerEmail = service.user?.email || service.creator?.email || service.email || "";
+      const providerPhone = service.user?.mobile || service.creator?.mobile || service.mobile || service.phone || "";
+
+      // Redirect to success page
+      const params = new URLSearchParams();
+      if (providerEmail) params.set("email", providerEmail);
+      if (providerPhone) params.set("phone", providerPhone);
+
+      router.push(`/services/booking-success?${params.toString()}`);
+
+      // if (booking) {
+      //   setRecentBooking(booking);
+      // }
+      // reset({
+      //   ...values,
+      //   regionId: values.regionId,
+      //   governorateId: values.governorateId,
+      //   projectDetails: defaultDetails,
+      // });
     } catch (error) {
       toast.error(error?.message || "Unable to create booking right now.");
     }
@@ -256,7 +272,7 @@ export default function BookServiceForm({ service }) {
           )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700">
               From
@@ -287,7 +303,7 @@ export default function BookServiceForm({ service }) {
               </p>
             )}
           </div>
-        </div>
+        </div> */}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -391,7 +407,7 @@ export default function BookServiceForm({ service }) {
           )}
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-slate-700">
             Budget (optional)
           </label>
@@ -407,7 +423,7 @@ export default function BookServiceForm({ service }) {
               placeholder="e.g. up to 1,200 SAR"
             />
           </div>
-        </div>
+        </div> */}
 
         <button
           type="submit"

@@ -44,7 +44,7 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
     const { t } = useTranslation();
 
     // -- State from URL --
-    const [selectedCategory, setSelectedCategory] = useState(searchParams.get("selected_category") || "");
+    const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category_id") || categoryId || "");
     const [newUsed, setNewUsed] = useState(searchParams.get("condition") || "");
     const [priceFrom, setPriceFrom] = useState(searchParams.get("min_price") || "");
     const [priceTo, setPriceTo] = useState(searchParams.get("max_price") || "");
@@ -80,7 +80,7 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
 
     // Sync state with URL
     useEffect(() => {
-        setSelectedCategory(searchParams.get("selected_category") || "");
+        setSelectedCategory(searchParams.get("category_id") || categoryId || "");
         setNewUsed(searchParams.get("condition") || "");
         setPriceFrom(searchParams.get("min_price") || "");
         setPriceTo(searchParams.get("max_price") || "");
@@ -88,7 +88,7 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
         // Find region/gov if IDs are present (handled by store usually, but ensuring sync here if needed)
         // Note: The store persists state, but ideally we should sync from URL parameters to store if deep linking.
         // For brevity assuming store is handled or user interactions drive it.
-    }, [searchParams]);
+    }, [searchParams, categoryId]);
 
 
     // -- Options --
@@ -228,7 +228,7 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                             options={categories.map(c => ({ value: c.id, label: c.name }))}
                             value={selectedCategory ? { value: selectedCategory, label: categories.find(c => c.id == selectedCategory)?.name } : null}
                             onChange={(val) => {
-                                updateUrl({ selected_category: val?.value });
+                                updateUrl({ category_id: val?.value });
                             }}
                             placeholder="Select Category"
                             styles={selectStyles}
