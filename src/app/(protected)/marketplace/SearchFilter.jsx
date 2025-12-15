@@ -17,34 +17,12 @@ export const SearchFilter = () => {
   const searchParams = useSearchParams();
   const [keyword, setKeyword] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(
-    searchParams.get("category_id") || ""
+    searchParams.get("selected_category") || ""
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
-  const [cities, setCities] = useState([]);
-  // const [selectedCity, setSelectedCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const {
-    locations,
-    getAllLocations,
-    selectedCountry,
-    selectedRegion,
-    selectedGovernorate,
-    setSelectedCountry,
-    setSelectedRegion,
-    setSelectedGovernorate,
-  } = useLocationStore();
-  const country = locations.find((c) => c.id == 1);
-  const regions = country?.regions || [];
-
-  const governorates = useMemo(() => {
-    // guard clause — prevents error if selectedRegion is null
-    if (!selectedRegion || !selectedRegion.name) return [];
-
-    const region = regions.find((r) => r.name === selectedRegion.name);
-    return region?.governorates || [];
-  }, [regions, selectedRegion]);
 
   const {
     categories,
@@ -53,27 +31,9 @@ export const SearchFilter = () => {
     setSelectedCategory,
   } = useCategoryStore();
 
-  const {
-    selectedCity,
-    setSelectedCity,
-  } = useCityStore();
-
   useEffect(() => {
     getAllCategories();
-    const defaultCities = City.getCitiesOfCountry("SA");
-    // Remove duplicate cities by name
-    const uniqueCities = defaultCities.filter(
-      (city, index, self) =>
-        index === self.findIndex((c) => c.name === city.name)
-    );
-
-    setCities(uniqueCities);
-
   }, [getAllCategories]);
-
-  useEffect(() => {
-    getAllLocations();
-  }, [getAllLocations]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -139,10 +99,7 @@ export const SearchFilter = () => {
     params.set("listing_type", "marketplace");
 
     // Include other filters if needed/requested, but user focused on "search button... redirect to search page"
-    if (selectedCity) params.set("city", selectedCity);
-    if (selectedRegion) params.set("region_id", selectedRegion.id);
-    if (selectedGovernorate) params.set("governorate_id", selectedGovernorate.id);
-    if (selectedCategory) params.set("category_id", selectedCategory);
+    if (selectedCategory) params.set("selected_category", selectedCategory);
 
     router.push(`/search?${params.toString()}`);
   };
@@ -165,106 +122,6 @@ export const SearchFilter = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-gray-300 px-4 py-1.5 rounded-md focus:outline-none"
-          />
-        </div>
-
-        {/* <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-sm text-gray-500 mb-1">
-            {t("City")}
-          </label>
-           {cities.length > 0 && (
-          <Select
-          name="city"
-          value={
-            cities.find((option) => option.name === selectedCity)
-              ? { value: selectedCity, label: selectedCity }
-              : null
-          }
-          onChange={(selected) => {
-            setSelectedCity(selected?.value);
-          }}
-          options={cities.map((city) => ({
-            value: city.name,
-            label: city.name,
-          }))}
-          placeholder={t("Select a city")}
-          className="text-sm"
-          classNamePrefix="react-select"
-          isClearable
-        />
-        )}
-        </div> */}
-
-        <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-sm text-gray-500 mb-1">{t("Region")}</label>
-          {/* {states.length > 0 && ( */}
-          <Select
-            name="region"
-            instanceId="region"
-            value={
-              selectedRegion
-                ? { value: selectedRegion.name, label: selectedRegion.name }
-                : null
-            }
-            onChange={(selected) => {
-              if (selected) {
-                const region = regions.find((r) => r.name === selected.value);
-                setSelectedRegion(region ? { id: region.id, name: region.name } : null);
-              } else {
-                setSelectedRegion(null);
-              }
-            }}
-            options={regions.map((r) => ({ value: r.name, label: r.name }))}
-            placeholder={t("Select a Region")}
-            className="text-xs"
-            classNamePrefix="react-select"
-            isClearable
-            styles={{
-              menu: (provided) => ({
-                ...provided,
-                maxHeight: 200,
-                overflowY: 'auto',
-              }),
-              menuList: (provided) => ({
-                ...provided,
-                maxHeight: 200,
-                overflowY: 'auto',
-              }),
-            }}
-          />
-        </div>
-        <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-sm text-gray-500 mb-1">{t("Governorate")}</label>
-          {/* {cities.length > 0 && ( */}
-          <Select
-            name="governorate"
-            instanceId="governorate"
-            value={
-              selectedGovernorate
-                ? { value: selectedGovernorate.name, label: selectedGovernorate.name }
-                : null
-            }
-            onChange={(selected) => {
-              const gov = governorates.find((g) => g.name === selected?.value);
-              setSelectedGovernorate(gov ? { id: gov.id, name: gov.name } : null);
-            }}
-            options={governorates.map((g) => ({ value: g.name, label: g.name }))}
-            placeholder={t("Select a Governorate")}
-            className="text-xs"
-            classNamePrefix="react-select"
-            isClearable
-            styles={{
-              menu: (provided) => ({
-                ...provided,
-                maxHeight: 200,
-                overflowY: 'auto',
-              }),
-              menuList: (provided) => ({
-                ...provided,
-                maxHeight: 200,
-                overflowY: 'auto',
-              }),
-            }}
           />
         </div>
 
@@ -315,9 +172,9 @@ export const SearchFilter = () => {
 
         <div className="w-full md:w-auto ">
           <button
-            className={`bg-green-600 text-white px-6 md:mt-6 py-2 rounded-md w-full md:w-auto
-                            ${loading ? "text-white cursor-not-allowed" : ""}`}
-            disabled={loading}
+            className={`px-6 md:mt-6 py-2 rounded-md w-full md:w-auto
+                            ${loading || !searchTerm ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white"}`}
+            disabled={loading || !searchTerm}
             onClick={handleSearch}
           >
             {loading ? (

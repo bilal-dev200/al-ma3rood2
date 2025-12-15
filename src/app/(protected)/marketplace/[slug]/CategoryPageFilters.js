@@ -1,17 +1,14 @@
 "use client";
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { listingsApi } from "@/lib/api/listings";
-import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { useLocationStore } from "@/lib/stores/locationStore";
 import { useRouter, useSearchParams } from "next/navigation";
-import Select, { components } from "react-select";
+import Select from "react-select";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 /**
  * FilterPill Component
- * Renders a button that toggles a dropdown/popover.
  */
 const FilterPill = ({ label, isActive, isOpen, onClick, children, className = "" }) => {
     return (
@@ -38,19 +35,18 @@ const FilterPill = ({ label, isActive, isOpen, onClick, children, className = ""
     );
 };
 
-const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
+const CategoryPageFilters = ({ categoryId, categories = [] }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { t } = useTranslation();
 
     // -- State from URL --
-    const [selectedCategory, setSelectedCategory] = useState(searchParams.get("selected_category") || "");
     const [newUsed, setNewUsed] = useState(searchParams.get("condition") || "");
     const [priceFrom, setPriceFrom] = useState(searchParams.get("min_price") || "");
     const [priceTo, setPriceTo] = useState(searchParams.get("max_price") || "");
 
-    // -- Internal Popover Logic (Open/Close) --
-    const [openFilter, setOpenFilter] = useState(""); // "category", "location", "condition", "price"
+    // -- Internal Popover Logic --
+    const [openFilter, setOpenFilter] = useState("");
     const containerRef = useRef(null);
 
     // -- Location Store --
@@ -80,16 +76,11 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
 
     // Sync state with URL
     useEffect(() => {
-        setSelectedCategory(searchParams.get("selected_category") || "");
         setNewUsed(searchParams.get("condition") || "");
         setPriceFrom(searchParams.get("min_price") || "");
         setPriceTo(searchParams.get("max_price") || "");
-
-        // Find region/gov if IDs are present (handled by store usually, but ensuring sync here if needed)
-        // Note: The store persists state, but ideally we should sync from URL parameters to store if deep linking.
-        // For brevity assuming store is handled or user interactions drive it.
+        // Region/Gov sync omitted for brevity, usually handled by store/URL consistency
     }, [searchParams]);
-
 
     // -- Options --
     const country = locations.find((c) => c.id == 1);
@@ -132,9 +123,11 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                 params.delete(key);
             }
         });
-        params.delete("page");
-        router.push(`/search?${params.toString()}`);
-        setOpenFilter(""); // Close all
+
+        // Ensure regular router push is used to trigger re-fetches
+        const path = window.location.pathname;
+        router.push(`${path}?${params.toString()}`);
+        setOpenFilter("");
     };
 
     const handleApplyPrice = () => {
@@ -148,30 +141,25 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
         setNewUsed("");
         setPriceFrom("");
         setPriceTo("");
-        setSelectedCategory("");
         setSelectedRegion(null);
         setSelectedGovernorate(null);
 
         const params = new URLSearchParams(searchParams.toString());
-        // Keep keyword
-        const keyword = params.get("keyword");
+        // Keep search term
+        const search = params.get("search");
 
         const newParams = new URLSearchParams();
-        if (keyword) newParams.set("keyword", keyword);
+        if (search) newParams.set("search", search);
+        if (categoryId) newParams.set("categoryId", categoryId);
+        // Keep sort if exists
+        // const sort = params.get("sort_by");
+        // if (sort) newParams.set("sort_by", sort);
 
-        router.push(`/search?${newParams.toString()}`);
+        const path = window.location.pathname;
+        router.push(`${path}?${newParams.toString()}`);
     };
 
-    // -- Derived Labels for Pills --
-    const categoryLabel = selectedCategory
-        ? (categories.find(c => c.id == selectedCategory)?.name || "Category")
-        : "Category";
-
-    // Default label: "Category: All" or "Category: [Name]"
-    const categoryButtonLabel = selectedCategory
-        ? `Category: ${categories.find(c => c.id == selectedCategory)?.name || "Selected"}`
-        : "Category: All categories";
-
+    // -- Derived Labels --
     const conditionLabel = newUsed
         ? `Condition: ${conditions.find(c => c.key === newUsed)?.label || "Selected"}`
         : "New & Used";
@@ -196,7 +184,6 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
         menuPortal: (base) => ({ ...base, zIndex: 9999 }),
     };
 
-    // Specific styles for price inputs to accommodate prefix
     const priceSelectStyles = {
         ...selectStyles,
         control: (base) => ({
@@ -205,40 +192,19 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
             borderColor: '#e5e7eb',
             boxShadow: 'none',
             '&:hover': { borderColor: '#d1d5db' },
-            paddingLeft: '28px' // Space for currency symbol
+            paddingLeft: '28px'
         }),
     };
 
-    const hasActiveFilters = newUsed || selectedRegion || selectedCategory || priceFrom || priceTo;
+    const hasActiveFilters = newUsed || selectedRegion || priceFrom || priceTo;
 
     return (
         <div className="w-full relative" ref={containerRef}>
             <div className="flex gap-3 flex-wrap items-center">
 
-                {/* 1. Category Pill */}
-                <FilterPill
-                    label={categoryButtonLabel}
-                    isOpen={openFilter === "category"}
-                    isActive={!!selectedCategory}
-                    onClick={() => toggleFilter("category")}
-                >
-                    <div className="w-64">
-                        <h4 className="font-semibold mb-2 text-gray-700">{t("Category")}</h4>
-                        <Select
-                            options={categories.map(c => ({ value: c.id, label: c.name }))}
-                            value={selectedCategory ? { value: selectedCategory, label: categories.find(c => c.id == selectedCategory)?.name } : null}
-                            onChange={(val) => {
-                                updateUrl({ selected_category: val?.value });
-                            }}
-                            placeholder="Select Category"
-                            styles={selectStyles}
-                            isClearable
-                            menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-                        />
-                    </div>
-                </FilterPill>
+                {/* NOTE: Category Filter removed as we are ON a category page */}
 
-                {/* 2. Location Pill */}
+                {/* 1. Location Pill */}
                 <FilterPill
                     label={locationLabel}
                     isOpen={openFilter === "location"}
@@ -256,10 +222,6 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                                         const r = regions.find(reg => reg.name === val.value);
                                         setSelectedRegion(r);
                                         setSelectedGovernorate(null);
-                                        // Auto apply? Or wait? 
-                                        // Let's auto apply for location like standard filters, or create "View Results" if preferred.
-                                        // For UX consistency with Price, maybe auto apply is better for single selects?
-                                        // TradeMe applies immediately for dropdowns usually.
                                         updateUrl({ region_id: r?.id, governorate_id: null });
                                     } else {
                                         setSelectedRegion(null);
@@ -299,7 +261,7 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                     </div>
                 </FilterPill>
 
-                {/* 3. Condition Pill */}
+                {/* 2. Condition Pill */}
                 <FilterPill
                     label={conditionLabel}
                     isOpen={openFilter === "condition"}
@@ -328,7 +290,7 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                     </div>
                 </FilterPill>
 
-                {/* 4. Price Pill */}
+                {/* 3. Price Pill */}
                 <FilterPill
                     label={priceLabel}
                     isOpen={openFilter === "price"}
@@ -339,7 +301,6 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="font-bold text-lg text-gray-800">{t("Price")}</h4>
                         </div>
-
                         <div className="flex items-center gap-2 mb-6">
                             <div className="flex-1 relative">
                                 <label className="text-xs font-semibold text-gray-500 mb-1 block">From</label>
@@ -353,7 +314,6 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                                         onChange={(val) => setPriceFrom(val ? val.value : "")}
                                         placeholder=""
                                         styles={priceSelectStyles}
-                                        // isClearable
                                         menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                                     />
                                 </div>
@@ -371,7 +331,6 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                                         onChange={(val) => setPriceTo(val ? val.value : "")}
                                         placeholder=""
                                         styles={priceSelectStyles}
-                                        // isClearable
                                         menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                                     />
                                 </div>
@@ -402,7 +361,6 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                     </div>
                 </FilterPill>
 
-
                 {/* Clear All Link */}
                 {hasActiveFilters && (
                     <button
@@ -419,4 +377,4 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
     );
 };
 
-export default SearchPageFilters;
+export default CategoryPageFilters;

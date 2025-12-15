@@ -129,7 +129,7 @@ import { useAuthStore } from "@/lib/stores/authStore";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 function LoginPageContent() {
@@ -137,6 +137,8 @@ function LoginPageContent() {
   const [isForgotMode, setIsForgotMode] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   // useEffect(() => {
   //   const token = localStorage.getItem("token");
@@ -164,7 +166,11 @@ function LoginPageContent() {
       console.log("Res", res);
       "Login response:", res;
       if (res.success && res.user) {
-        window.location.href = "/";
+        if (callbackUrl) {
+          window.location.href = callbackUrl;
+        } else {
+          window.location.href = "/";
+        }
       } else if (res.error == "Emails is not verified yet" && res.email) {
         router.push(`/verification?email=${encodeURIComponent(res.email)}`);
       }

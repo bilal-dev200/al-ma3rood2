@@ -2,21 +2,19 @@
 import React from 'react';
 import Link from 'next/link';
 
-// Mock Data behaving like Aggregations
-const mockCategories = [
-    { id: 1, name: "Motors", count: 1240, slug: "motors" },
-    { id: 2, name: "Property", count: 850, slug: "property" },
-    { id: 3, name: "Marketplace", count: 15420, slug: "marketplace" },
-    { id: 4, name: "Jobs", count: 120, slug: "jobs" },
-    { id: 5, name: "Services", count: 340, slug: "services" },
-    { id: 6, name: "Home & Living", count: 2223, slug: "marketplace/home-living" },
-    { id: 7, name: "Electronics & Photography", count: 1257, slug: "marketplace/electronics-photography" },
-    { id: 8, name: "Computers", count: 1826, slug: "marketplace/computers" },
-    { id: 9, name: "Clothing & Fashion", count: 151, slug: "marketplace/clothing-fashion" },
-];
+import { useSearchParams } from 'next/navigation';
 
 const CategoryBreakdown = ({ categories = [] }) => {
+    const searchParams = useSearchParams();
+
     if (!categories || categories.length === 0) return null;
+
+    const createCategoryLink = (categoryId) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('selected_category', categoryId);
+        params.delete('page'); // Reset to page 1 when changing category
+        return `/search?${params.toString()}`;
+    };
 
     return (
         <div className="mb-8">
@@ -27,12 +25,11 @@ const CategoryBreakdown = ({ categories = [] }) => {
                 {categories.map((cat, index) => (
                     <Link
                         key={index}
-                        // For now, linking to a generic search for that category name since we don't have slug
-                        href={`/search?keyword=${encodeURIComponent(cat.category_name)}`}
+                        href={createCategoryLink(cat.id)}
                         className="text-green-700 hover:underline flex items-baseline group"
                     >
-                        <span className="text-base font-medium">{cat.category_name}</span>
-                        <span className="ml-1 text-gray-500 text-sm group-hover:text-gray-700">({cat.count.toLocaleString()})</span>
+                        <span className="text-base font-medium">{cat.name}</span>
+                        <span className="ml-1 text-gray-500 text-sm group-hover:text-gray-700">({cat.listing_count !== undefined ? cat.listing_count.toLocaleString() : 0})</span>
                     </Link>
                 ))}
             </div>

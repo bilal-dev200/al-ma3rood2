@@ -1576,7 +1576,7 @@ export default function MotorDetailsClient({ product: initialProduct, feedbackPe
         onClose={() => setShowLoginModal(false)}
         onLogin={() => {
           setShowLoginModal(false);
-          router.push("/login");
+          router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
         }}
       />
       {isImageModalOpen && (

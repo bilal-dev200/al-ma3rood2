@@ -223,7 +223,6 @@ const MarketplaceCard = ({
   const [isAtEnd, setIsAtEnd] = useState(false);
 
   const visibleCards = cards?.slice(0, 19) || [];
-  console.log("aaa visibleCards", visibleCards);
 
   const checkScroll = () => {
     if (scrollRef.current) {
@@ -287,11 +286,10 @@ const MarketplaceCard = ({
         disabled={isAtStart}
         className={`hidden sm:flex absolute top-1/2 -translate-y-1/2 rounded-full p-2 z-10
             ${isRTL ? "-right-7" : "-left-10"} 
-            ${
-              isAtStart
-                ? "bg-gray-200 cursor-not-allowed"
-                : "bg-white shadow-md hover:bg-gray-100"
-            }`}
+            ${isAtStart
+            ? "bg-gray-200 cursor-not-allowed"
+            : "bg-white shadow-md hover:bg-gray-100"
+          }`}
       >
         {isRTL ? <FaChevronRight size={22} /> : <FaChevronLeft size={22} />}
       </button>
@@ -397,8 +395,8 @@ const MarketplaceCard = ({
                   card.listing_type === "motors"
                     ? `/motors/${card.slug}`
                     : card.listing_type === "property"
-                    ? `/property/${card.slug}`
-                    : `/marketplace/${lastSlug}/${card.slug}`
+                      ? `/property/${card.slug}`
+                      : `/marketplace/${lastSlug}/${card.slug}`
                 }
                 className="min-w-[250px] max-w-[250px] bg-[#FBFBFB] p-2 rounded hover:shadow-lg transition-shadow flex-shrink-0"
               >
@@ -449,48 +447,47 @@ const MarketplaceCard = ({
                   <div className="flex justify-between mt-1">
                     <div className="text-gray-700">
                       {(card.creator?.regions?.name ||
-                        card.creator?.billing_address) && (
-                        <>
-                          <div className="text-[10px] text-gray-400 tracking-wide">
-                            {t("Location")}:
-                          </div>
-                          <div className="font-bold text-xs">
-                            {`${
-                              card?.creator?.address_1
+                        card.creator?.billing_address ||
+                        card.creator?.address_1) && (
+                          <>
+                            <div className="text-[10px] text-gray-400 tracking-wide">
+                              {t("Location")}:
+                            </div>
+                            <div className="font-bold text-xs">
+                              {`${card?.creator?.address_1
                                 ? `${card?.creator?.address_1}, `
                                 : ""
-                            } ${card?.creator?.governorates?.name}, ${
-                              card?.creator?.regions?.name
-                            }`}
-                          </div>
-                        </>
-                      )}
+                                } ${card?.creator?.governorates?.name}, ${card?.creator?.regions?.name
+                                }`}
+                            </div>
+                          </>
+                        )}
                     </div>
 
                     {card.bids_count === 0
                       ? card.buy_now_price && (
-                          <div className="text-right text-gray-700 flex flex-col items-end">
-                            <div className="text-[9px] text-gray-400 uppercase tracking-wide">
-                              {t("Buy Now")}:
-                            </div>
-                            <div className="font-bold">
-                              <span className="price">$</span>
-                              {card.buy_now_price}
-                            </div>
+                        <div className="text-right text-gray-700 flex flex-col items-end">
+                          <div className="text-[9px] text-gray-400 uppercase tracking-wide">
+                            {t("Buy Now")}:
                           </div>
-                        )
+                          <div className="font-bold">
+                            <span className="price">$</span>
+                            {card.buy_now_price}
+                          </div>
+                        </div>
+                      )
                       : card.bids_count &&
-                        card.bids?.length > 0 && (
-                          <div className="text-right text-gray-700 flex flex-col items-end">
-                            <div className="text-[9px] text-gray-400 uppercase tracking-wide">
-                              {t("Current Bid")}:
-                            </div>
-                            <div className="font-bold">
-                              <span className="price">$</span>
-                              {card.bids?.[0]?.amount}
-                            </div>
+                      card.bids?.length > 0 && (
+                        <div className="text-right text-gray-700 flex flex-col items-end">
+                          <div className="text-[9px] text-gray-400 uppercase tracking-wide">
+                            {t("Current Bid")}:
                           </div>
-                        )}
+                          <div className="font-bold">
+                            <span className="price">$</span>
+                            {card.bids?.[0]?.amount}
+                          </div>
+                        </div>
+                      )}
                   </div>
                 </div>
               </Link>
@@ -544,11 +541,10 @@ const MarketplaceCard = ({
         disabled={isAtEnd}
         className={`hidden sm:flex absolute top-1/2 -translate-y-1/2 rounded-full p-2 z-10
              ${isRTL ? "-left-10" : "-right-7"} 
-             ${
-               isAtEnd
-                 ? "bg-gray-200 cursor-not-allowed"
-                 : "bg-white shadow-md hover:bg-gray-100"
-             }`}
+             ${isAtEnd
+            ? "bg-gray-200 cursor-not-allowed"
+            : "bg-white shadow-md hover:bg-gray-100"
+          }`}
       >
         {isRTL ? <FaChevronLeft size={22} /> : <FaChevronRight size={22} />}
       </button>

@@ -5,7 +5,7 @@ import React from "react";
 import CategoryClient from "./CategoryClient";
 import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Breadcrumbs";
 
-export async function generateMetadata({ params, searchParams}) {
+export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const { categoryId } = await searchParams;
   const allCategories = await fetchAllCategories();
@@ -37,16 +37,16 @@ export async function generateMetadata({ params, searchParams}) {
 
 export default async function CategoryPage({ params, searchParams }) {
   const { slug } = await params;
-  const { categoryId, search, city, page = 1, region_id, governorate_id } = await searchParams;
+  const { categoryId, search, city, page = 1, region_id, governorate_id, min_price, max_price, condition, sort_by } = await searchParams;
   const category = await fetchCategory(categoryId);
   const allCategories = await fetchAllCategories();
   const currentCategory = allCategories?.categories?.data?.find((cat) => cat.id == categoryId);
-  console.log("Check Category On Front", categoryId)
-  const products = await fetchAllListingsByFilter({ 
-    listing_type: "marketplace", 
-    category_id: categoryId, 
-    search: search, city: city, page: 1, region_id, governorate_id
-   });
+  const products = await fetchAllListingsByFilter({
+    listing_type: "marketplace",
+    category_id: categoryId,
+    search, city, page: 1, region_id, governorate_id,
+    min_price, max_price, condition, sort_by
+  });
 
   // Extract pagination info from API response
   const pagination = {
@@ -56,33 +56,31 @@ export default async function CategoryPage({ params, searchParams }) {
     totalItems: products?.pagination?.total || 1000,
   };
 
-// Function to flatten the category tree into an array
-const getCategoryBreadcrumbs = (category) => {
-  const breadcrumbs = [];
-  let current = category;
+  // Function to flatten the category tree into an array
+  const getCategoryBreadcrumbs = (category) => {
+    const breadcrumbs = [];
+    let current = category;
 
-  while (current) {
-    const lastSlugPart = current.slug.split("/").pop();
-    breadcrumbs.unshift({
-      label: current.name,
-      href: `/marketplace/${lastSlugPart}?categoryId=${current.id}`,
-    });
-    current = current.parent_recursive;
-  }
+    while (current) {
+      const lastSlugPart = current.slug.split("/").pop();
+      breadcrumbs.unshift({
+        label: current.name,
+        href: `/marketplace/${lastSlugPart}?categoryId=${current.id}`,
+      });
+      current = current.parent_recursive;
+    }
 
-  return breadcrumbs;
-};
+    return breadcrumbs;
+  };
 
-// Static breadcrumbs
-const staticItems = [
-  { label: "Home", href: "/" },
-  { label: "Marketplace", href: "/marketplace" },
-];
+  // Static breadcrumbs
+  const staticItems = [
+    { label: "Home", href: "/" },
+    { label: "Marketplace", href: "/marketplace" },
+  ];
 
-// Combine static and dynamic breadcrumbs
-const items = [...staticItems, ...getCategoryBreadcrumbs(products?.category_tree)];
-
-console.log("category", category);
+  // Combine static and dynamic breadcrumbs
+  const items = [...staticItems, ...getCategoryBreadcrumbs(products?.category_tree)];
 
   return (
     <>

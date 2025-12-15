@@ -1416,7 +1416,7 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
         onClose={() => setShowLoginModal(false)}
         onLogin={() => {
           setShowLoginModal(false);
-          router.push("/login");
+          router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
         }}
       />
       {isImageModalOpen && (

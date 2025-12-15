@@ -20,7 +20,6 @@ export default async function Marketplace({ searchParams }) {
   const governorate_id = searchParams?.governorate_id || "";
   const creator_id = searchParams?.creator_id || "";
 
-  console.log("creator_id", creator_id);
 
 
   const [catResult, listings] = await Promise.all([
@@ -36,8 +35,6 @@ export default async function Marketplace({ searchParams }) {
       page: 1,
     }),
   ]);
-
-  console.log("deals-list", listings);
 
   const { categories, isLoading, error } = catResult;
 
@@ -56,7 +53,7 @@ export default async function Marketplace({ searchParams }) {
 
   return (
     <div className="w-full">
-      <div className="bg-gray-50">
+      <div className="">
         <div
           className="w-full rounded-b-[80px] text-white text-left"
           style={{ background: "#175f48" }}
@@ -73,7 +70,7 @@ export default async function Marketplace({ searchParams }) {
 
         <SearchFilter />
 
-        <div className="md:p-10 p-3">
+        <div className="md:p-10 p-3 bg-white">
           <MarketplaceCategories
             heading="Marketplace"
             categories={categories}
@@ -84,6 +81,12 @@ export default async function Marketplace({ searchParams }) {
       </div>
 
       <div className="md:px-20" id="marketplace-deals">
+        {/* <div className="md:px-20 mb-4 px-3">
+          <p className="text-gray-600">
+            Show {listings?.total_record || 0} results for{" "}
+            <span className="font-semibold">{search || "all"}</span>
+          </p>
+        </div> */}
         <MarketplaceCard
           heading="Deals"
           // cards={listings?.data?.slice(0, 8) || []}

@@ -23,12 +23,12 @@ export async function fetchProduct(productSlug) {
         cache: "no-store",
       }
     );
-    
+
     if (!res.ok) {
       const errorText = await res.text().catch(() => "Unknown error");
       throw new Error(`Failed to fetch product: ${res.status} ${errorText}`);
     }
-    
+
     const data = await res.json();
     return data.data;
   } catch (error) {
@@ -145,9 +145,8 @@ export async function fetchAllListings(
 
     if (city) params.set("city", city);
 
-    const url = `${
-      process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD
-    }listings?${params.toString()}`;
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD
+      }listings?${params.toString()}`;
     const res = await fetch(url, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
@@ -169,7 +168,7 @@ export async function fetchAllListingsByFilter(payload) {
       listing_type: payload?.listing_type || "marketplace",
       pagination: {
         page: payload?.pagination?.page || 1,
-        per_page: payload?.pagination?.per_page || 8,
+        per_page: payload?.pagination?.per_page || 16,
       },
     };
 
@@ -222,7 +221,7 @@ export async function fetchAllListingsByFilter(payload) {
     if (payload?.filters && Object.keys(payload.filters).length > 0) {
       formattedPayload.filters = { ...payload.filters };
     }
-    
+
     console.log("formattedPayload", JSON.stringify(formattedPayload));
 
     const res = await fetch(url, {

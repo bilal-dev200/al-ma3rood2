@@ -15,7 +15,7 @@ const SearchResultCard = ({ item, viewMode = "grid" }) => {
                 : Image_NotFound;
         }
         if (item.type === "job") {
-            return item?.logo ? `${Image_URL}${item.logo}` : Image_NotFound;
+            return item?.media_files?.[0]?.file_path ? `${Image_URL}${item.media_files[0].file_path}` : Image_NotFound;
         }
         return Image_NotFound;
     };

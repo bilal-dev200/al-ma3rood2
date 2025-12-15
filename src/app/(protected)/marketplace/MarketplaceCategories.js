@@ -2,9 +2,8 @@
 import { Image_NotFound, Image_URL } from "@/config/constants";
 import { useCategoryStore } from "@/lib/stores/categoryStore";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";  // 👈 useEffect import karna na bhoolna
+import React, { useEffect } from "react";
 
 function MarketplaceCategories({ heading, categories, isLoading, error }) {
   const { setSelectedCategory, selectedCategory } = useCategoryStore();
@@ -27,20 +26,20 @@ function MarketplaceCategories({ heading, categories, isLoading, error }) {
   // };
   const handleClick = async (category) => {
     setSelectedCategory(category)
+
     // Extract last part of slug
     const slugParts = category.slug.split("/");
     const lastSlug = slugParts[slugParts.length - 1];
 
     // Example usage with router
     router.push(`/marketplace/${lastSlug}?categoryId=${category.id}`);
+
+    // Redirect to search page with category_id
+    // router.push(`/search?category_id=${category.id}&listing_type=marketplace`);
   };
   return (
     <section className="p-1  rounded-lg">
-      {/* <div className="bg-white rounded-md py-2 flex justify-between">
-        <h3 className="text-lg font-semibold px-5">Marketplace</h3>
-        <p className="text-md px-5">ab</p>
-      </div> */}
-      <div className="bg-white rounded-md shadow-sm p-2 mb-4">
+      <div className="bg-white p-2 mb-4">
         {/* Heading */}
         <h2 className="text-lg font-semibold text-gray-800 mb-1">
           {t(
@@ -55,17 +54,6 @@ function MarketplaceCategories({ heading, categories, isLoading, error }) {
         {selectedCategory?.description && <p className="text-sm text-gray-600 mb-2">
           {selectedCategory?.description}
         </p>}
-        {/* Optional navigation buttons (agar chahiye to uncomment karna) */}
-        {/* 
-  <div className="flex justify-end space-x-2 mt-2">
-    <button className="p-2 rounded hover:bg-gray-100">
-      <ChevronLeft size={18} />
-    </button>
-    <button className="p-2 rounded hover:bg-gray-100">
-      <ChevronRight size={18} />
-    </button>
-  </div> 
-  */}
       </div>
 
       <div className="mt-6">
@@ -126,6 +114,9 @@ function MarketplaceCategories({ heading, categories, isLoading, error }) {
                     }`}
                 >
                   {cat.name}
+                  {cat.total_listing_count !== undefined && (
+                    <span className="text-gray-500 ml-1">({cat.total_listing_count})</span>
+                  )}
                 </p>
               </div>
 
