@@ -394,9 +394,9 @@ const EditContactDetails = () => {
 
             {/* Mobile */}
             <div className="mt-4 pt-1">
-              {/* <h4 className="text-sm font-semibold mb-2">
+              <h4 className="text-sm font-semibold mb-2">
                 {t("Mobile")} (optional)
-              </h4> */}
+              </h4>
               <Controller
                 name="mobile"
                 control={control}

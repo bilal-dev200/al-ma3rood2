@@ -14,7 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import { listingsApi } from "@/lib/api/listings";
-import { motorsApi } from "@/lib/api/motors";
+import { motorsApi, motorSearchFilters } from "@/lib/api/motors";
 import { toast } from "react-toastify";
 import UploadPhotos from "./UploadPhotos";
 import { categoriesApi } from "@/lib/api/category";
@@ -2097,8 +2097,8 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
             <div key={step.key} className="flex items-center">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${index <= activeStep
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 text-gray-600"
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-600"
                   }`}
               >
                 {index + 1}

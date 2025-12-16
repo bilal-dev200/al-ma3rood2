@@ -11,6 +11,8 @@ import { Country, City, State } from "country-state-city";
 import Select from "react-select";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useLocationStore } from "@/lib/stores/locationStore";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const ContactForm = () => {
   const { t } = useTranslation();
@@ -50,23 +52,23 @@ const ContactForm = () => {
     subject: yup.string().required("Subject is required"),
     message: yup.string().required("Message is required"),
     region: yup
-.mixed()
-    .test("region-type", "Region is required", function (value) {
-      // allow string or object but not null/undefined
-      if (!value) return false;
-      if (typeof value === "string" && value.trim() !== "") return true;
-      if (typeof value === "object" && Object.keys(value).length > 0) return true;
-      return false;
-    }),
-governorate: yup
-    .mixed()
-    .test("governorate-type", "Governorate is required", function (value) {
-      if (!value) return false;
-      if (typeof value === "string" && value.trim() !== "") return true;
-      if (typeof value === "object" && Object.keys(value).length > 0) return true;
-      return false;
-    }),
-});
+      .mixed()
+      .test("region-type", "Region is required", function (value) {
+        // allow string or object but not null/undefined
+        if (!value) return false;
+        if (typeof value === "string" && value.trim() !== "") return true;
+        if (typeof value === "object" && Object.keys(value).length > 0) return true;
+        return false;
+      }),
+    governorate: yup
+      .mixed()
+      .test("governorate-type", "Governorate is required", function (value) {
+        if (!value) return false;
+        if (typeof value === "string" && value.trim() !== "") return true;
+        if (typeof value === "object" && Object.keys(value).length > 0) return true;
+        return false;
+      }),
+  });
 
   const {
     control,
@@ -76,51 +78,51 @@ governorate: yup
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
-defaultValues: {
-name: "",
-email: "",
-phone: "",
-subject: "",
-message: "",
-country: "Saudi Arabia",
-region: "",
-governorate: "",
-},
-});
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+      country: "Saudi Arabia",
+      region: "",
+      governorate: "",
+    },
+  });
 
 
 
 
-// ✅ Populate form when user data is available
-useEffect(() => {
-if (user) {
-reset({
-name: user.name || "",
-email: user.email || "",
-phone: user.phone || "",
-subject: "",
-message: "",
-country: "Saudi Arabia",
-region: user.regions,
-governorate: user.governorates,
-});
+  // ✅ Populate form when user data is available
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.mobile || "",
+        subject: "",
+        message: "",
+        country: "Saudi Arabia",
+        region: user.regions,
+        governorate: user.governorates,
+      });
 
-setSelectedRegion(
-user.regions
-? { label: user.regions.name, value: user.regions?.id }
-: null
-);
+      setSelectedRegion(
+        user.regions
+          ? { label: user.regions.name, value: user.regions?.id }
+          : null
+      );
 
-setSelectedGovernorate(
-user.governorates
-? {
-label: user.governorates.name,
-value: user.governorates?.id,
-}
-: null
-);
-}
-}, [user, reset]);
+      setSelectedGovernorate(
+        user.governorates
+          ? {
+            label: user.governorates.name,
+            value: user.governorates?.id,
+          }
+          : null
+      );
+    }
+  }, [user, reset]);
 
   const [formData, setFormData] = useState({
     state: "",
@@ -243,11 +245,31 @@ value: user.governorates?.id,
               <label className="block text-green-600 font-semibold mb-1">
                 {t("Phone Number")}
               </label>
-              <input
-                type="text"
-                {...register("phone")}
-                className="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-                placeholder={t("Enter your phone number")}
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <PhoneInput
+                    country="sa"
+                    onlyCountries={["sa"]}
+                    disableDropdown
+                    countryCodeEditable={false}
+                    value={field.value || ""}
+                    onChange={(value) => field.onChange(value)}
+                    inputClass={`w-full p2 py-6 border border-green-300 rounded-md ${errors.phone ? "border-red-500" : "border-green-300"
+                      }`}
+                    inputStyle={{
+                      width: "100%",
+                      height: "44px", // Adjusted height to match other inputs (p-3 usually ~44-48px)
+                      fontSize: "16px",
+                    }}
+                    buttonStyle={{
+                      border: "none",
+                      backgroundColor: "transparent",
+                    }}
+                    placeholder={t("Enter your phone number")}
+                  />
+                )}
               />
               {errors.phone && (
                 <p className="text-red-600 text-sm mt-1">
