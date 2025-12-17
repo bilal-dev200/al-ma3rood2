@@ -108,90 +108,6 @@ const Sidebar = () => {
             <span>{t("Favourites")}</span>
           </Link>
 
-          {/* Jobs Dropdown */}
-          <div>
-            <div
-              onClick={() => setShowJobOptions(!showJobOptions)}
-              className="flex items-center justify-between cursor-pointer text-green-500"
-            >
-              <div className="flex items-center gap-2">
-                <MdWorkHistory />
-                <span>{t("Jobs")}</span>
-              </div>
-              {showJobOptions ? <FaChevronUp /> : <FaChevronDown />}
-            </div>
-
-            {showJobOptions && (
-              <div className="ml-6 mt-2 space-y-2">
-                <Link href="/listing" className={subLinkClass("/listing")}>
-                  <LiaFileUploadSolid />
-                  <span>{t("List a Job")}</span>
-                </Link>
-                <Link
-                  href="/account/jobs-list"
-                  className={subLinkClass("/account/jobs-list")}
-                >
-                  <FaClipboardList />
-                  <span>{t("Jobs List")}</span>
-                </Link>
-                <Link
-                  href="/account/applied-jobs"
-                  className={subLinkClass("/applied-jobs")}
-                >
-                  <FaClipboardList />
-                  <span>{t("Applied Jobs")}</span>
-                </Link>
-                <Link
-                  href="/account/job-profile"
-                  className={subLinkClass("/job-profile")}
-                >
-                  <IoIosDocument />
-                  <span>{t("Job Profile")}</span>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Services Dropdown */}
-          <div>
-            <div
-              onClick={() => setShowServicesOptions(!showServicesOptions)}
-              className="flex items-center justify-between cursor-pointer text-green-500"
-            >
-              <div className="flex items-center gap-2">
-                <FaHandsHelping />
-                <span>{t("Services")}</span>
-              </div>
-              {showServicesOptions ? <FaChevronUp /> : <FaChevronDown />}
-            </div>
-
-            {showServicesOptions && (
-              <div className="ml-6 mt-2 space-y-2">
-                <Link
-                  href="/account/services"
-                  className={subLinkClass("/account/services")}
-                >
-                  <FaClipboardList />
-                  <span>{t("My bookings")}</span>
-                </Link>
-                <Link
-                  href="/account/services/clients"
-                  className={subLinkClass("/account/services/clients")}
-                >
-                  <FaClipboardList />
-                  <span>{t("My clients")}</span>
-                </Link>
-                <Link
-                  href="/account/services/my-services"
-                  className={subLinkClass("/account/services/my-services")}
-                >
-                  <FaClipboardList />
-                  <span>{t("My Services")}</span>
-                </Link>
-              </div>
-            )}
-          </div>
-
           {/* Buying Dropdown */}
           <div>
             <div
@@ -282,6 +198,90 @@ const Sidebar = () => {
                 >
                   <FaChartBar />
                   <span>{t("Sales summary")}</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Jobs Dropdown */}
+          <div>
+            <div
+              onClick={() => setShowJobOptions(!showJobOptions)}
+              className="flex items-center justify-between cursor-pointer text-green-500"
+            >
+              <div className="flex items-center gap-2">
+                <MdWorkHistory />
+                <span>{t("Jobs")}</span>
+              </div>
+              {showJobOptions ? <FaChevronUp /> : <FaChevronDown />}
+            </div>
+
+            {showJobOptions && (
+              <div className="ml-6 mt-2 space-y-2">
+                <Link href="/listing" className={subLinkClass("/listing")}>
+                  <LiaFileUploadSolid />
+                  <span>{t("List a Job")}</span>
+                </Link>
+                <Link
+                  href="/account/jobs-list"
+                  className={subLinkClass("/account/jobs-list")}
+                >
+                  <FaClipboardList />
+                  <span>{t("Jobs List")}</span>
+                </Link>
+                <Link
+                  href="/account/applied-jobs"
+                  className={subLinkClass("/applied-jobs")}
+                >
+                  <FaClipboardList />
+                  <span>{t("Applied Jobs")}</span>
+                </Link>
+                <Link
+                  href="/account/job-profile"
+                  className={subLinkClass("/job-profile")}
+                >
+                  <IoIosDocument />
+                  <span>{t("Job Profile")}</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Services Dropdown */}
+          <div>
+            <div
+              onClick={() => setShowServicesOptions(!showServicesOptions)}
+              className="flex items-center justify-between cursor-pointer text-green-500"
+            >
+              <div className="flex items-center gap-2">
+                <FaHandsHelping />
+                <span>{t("Services")}</span>
+              </div>
+              {showServicesOptions ? <FaChevronUp /> : <FaChevronDown />}
+            </div>
+
+            {showServicesOptions && (
+              <div className="ml-6 mt-2 space-y-2">
+                <Link
+                  href="/account/services"
+                  className={subLinkClass("/account/services")}
+                >
+                  <FaClipboardList />
+                  <span>{t("My bookings")}</span>
+                </Link>
+                <Link
+                  href="/account/services/clients"
+                  className={subLinkClass("/account/services/clients")}
+                >
+                  <FaClipboardList />
+                  <span>{t("My clients")}</span>
+                </Link>
+                <Link
+                  href="/account/services/my-services"
+                  className={subLinkClass("/account/services/my-services")}
+                >
+                  <FaClipboardList />
+                  <span>{t("My Services")}</span>
                 </Link>
               </div>
             )}

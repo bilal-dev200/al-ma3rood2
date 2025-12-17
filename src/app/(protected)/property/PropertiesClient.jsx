@@ -465,9 +465,13 @@ const PropertiesClient = ({
                     }
                     options={regions.map((r) => ({ value: r.name, label: r.name }))}
                     placeholder={t("Select a Region")}
-                    className="text-sm"
+                    className="text-sm z-20"
                     classNamePrefix="react-select"
                     isClearable
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                   />
                 </div>
 
@@ -619,7 +623,7 @@ const PropertiesClient = ({
                   />
                 </div>
 
-                
+
               </div>
             )}
             {/* ✅ BOTTOM Search Box for cars */}

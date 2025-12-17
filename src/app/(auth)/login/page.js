@@ -169,7 +169,15 @@ function LoginPageContent() {
         if (callbackUrl) {
           window.location.href = callbackUrl;
         } else {
-          window.location.href = "/";
+          const previousPage = document.referrer;
+          const isInternal =
+            previousPage &&
+            new URL(previousPage).origin === window.location.origin;
+          if (isInternal && previousPage !== window.location.href) {
+            router.back();
+          } else {
+            router.push("/");
+          }
         }
       } else if (res.error == "Emails is not verified yet" && res.email) {
         router.push(`/verification?email=${encodeURIComponent(res.email)}`);

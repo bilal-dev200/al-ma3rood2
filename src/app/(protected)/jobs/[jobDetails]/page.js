@@ -9,7 +9,7 @@ import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Bre
 
 // ✅ Dynamic Metadata (for SEO)
 export async function generateMetadata({ params }) {
-  const { jobDetails } = params;
+  const { jobDetails } = await  params;
 
   try {
     const product = await fetchProduct(jobDetails);
@@ -29,7 +29,7 @@ console.log("Metadata Product:", product);
 
 // ✅ Main Page Component
 export default async function Page({ params }) {
-  const { jobDetails } = params;
+  const { jobDetails } = await  params;
 
   let product;
   try {

@@ -1703,7 +1703,7 @@ export default function ProductDetailsClient({
                   <strong>Phone:</strong> {dealer?.phone}
                 </p>
                 <p>
-                  <strong>City:</strong> {dealer?.city}
+                  <strong>Region:</strong> {dealer?.city}
                 </p>
                 <p>
                   <strong>Country:</strong> {dealer?.country}
