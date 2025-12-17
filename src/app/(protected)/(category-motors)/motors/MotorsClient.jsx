@@ -476,15 +476,15 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
           {/* Tabs section - blended with hero color */}
           <div className="bg-white rounded-lg  overflow-hidden">
             {/* Tabs section - flush with top of card */}
-            <div className="flex w-full border-b border-gray-200 overflow-x-auto no-scrollbar">
-              {tabs.map((tab) => (
+            <div className="flex flex-wrap border-b border-gray-200">
+              {tabs.map((tab, index) => (
                 <button
-                  key={tab.key}
+                  key={tab?.key}
                   onClick={() => {
                     const selectedCat = categories.find(
-                      (cat) => cat.name.toLowerCase() === tab.name.toLowerCase()
+                      (cat) => cat?.name.toLowerCase() === tab?.name.toLowerCase()
                     );
-                    setActiveTab(tab.key);
+                    setActiveTab(tab?.key);
                     setFilters({
                       ...filters,
                       category_id:
@@ -495,22 +495,20 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
                             : null,
                     });
                   }}
-                  className={`flex-1 min-w-[fit-content] sm:min-w-0 text-sm font-medium h-10 px-4 text-center
-      ${activeTab.toLowerCase() === tab.key.toLowerCase()
+                  className={`flex flex-col md:flex-row items-center justify-center gap-2 p-3 md:px-5 md:py-3 flex-1 min-w-[110px] sm:min-w-[130px] border-r border-b border-gray-200 last:border-r-0 transition-colors
+      ${activeTab === tab.key
                       ? "bg-white text-[#175f48]"
                       : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                    } border-r border-gray-200 last:border-r-0`}
+                    }`}
                 >
-                  <div className="flex items-center justify-center gap-2 h-full">
-                    <img
-                      src={tab.icon}
-                      alt={tab.name}
-                      className="w-4 h-4 object-contain"
-                    />
-                    <span className="whitespace-nowrap text-sm">
-                      {tab.name}
-                    </span>
-                  </div>
+                  <img
+                    src={tab.icon}
+                    alt={tab.name}
+                    className="w-5 h-5 object-contain"
+                  />
+                  <span className="text-xs sm:text-sm font-medium text-center md:text-left leading-tight">
+                    {tab.name}
+                  </span>
                 </button>
               ))}
             </div>
@@ -527,6 +525,7 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
             {/* Initial Filter Grid */}
             {activeTab !== "allcat" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                
                 {/* Condition */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -808,7 +807,7 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
                     </div>
                   )}
 
-                <div>
+<div>
                   <label className="block mb-1 text-sm font-medium">
                     {t("Region")}
                   </label>
@@ -900,6 +899,11 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
                     onChange={(e) =>
                       setFilters({ ...filters, search: e.target.value })
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        loadMotorListings();
+                      }
+                    }}
                     className="pl-10 pr-4 py-2 w-full rounded-md bg-[#FAFAFA] text-sm text-gray-700 focus:outline-none transition"
                   />
                 </div>
@@ -992,7 +996,7 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
               <option value="year_old">{t("Oldest First")}</option>
               {/* <option value="odometer_low">Mileage: Low to High</option> */}
             </select>
-            <div className="flex justify-center gap-2">
+            <div className="justify-center gap-2 hidden md:flex">
               <button
                 className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm ${viewMode === "list"
                   ? "bg-green-100 text-green-700"

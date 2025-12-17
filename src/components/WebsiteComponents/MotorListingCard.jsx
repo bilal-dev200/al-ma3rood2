@@ -79,7 +79,7 @@ const MotorListingCard = ({ listing, viewMode }) => {
     <Link
       href={`/motors/${listing.slug}`}
       className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${
-        viewMode !== "grid" ? "flex flex-row" : "flex flex-col"
+        viewMode !== "grid" ? "flex flex-col md:flex-row" : "flex flex-col"
       }`}
     >
       <div

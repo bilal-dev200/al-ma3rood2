@@ -189,11 +189,11 @@ const SearchPageContent = () => {
             <div className="container mx-auto px-4 py-8 max-w-7xl">
 
                 {/* 1. Page Title */}
-                <h1 className="text-3xl font-bold mb-6 text-gray-800">{t("Search Results")} {keyword && `for "${keyword}"`}</h1>
+                {/* <h1 className="text-3xl font-bold mb-6 text-gray-800">{t("Search Results")} {keyword && `for "${keyword}"`}</h1> */}
 
                 {/* 2. Search Input (Styled like TradeMe) */}
-                <div className="mb-4">
-                    <div className="flex w-full shadow-sm rounded-md overflow-hidden border border-gray-300 bg-white">
+                {/* <div className="mb-4">
+                    <form onSubmit={handleSearchSubmit} className="flex w-full shadow-sm rounded-md overflow-hidden border border-gray-300 bg-white">
                         <div className="relative flex-grow">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -218,14 +218,13 @@ const SearchPageContent = () => {
                             )}
                         </div>
                         <button
-                            type="button"
-                            onClick={handleSearchSubmit}
+                            type="submit"
                             className="bg-green-600 px-6 text-white font-medium hover:bg-green-700 transition-colors"
                         >
                             {t("Search")}
                         </button>
-                    </div>
-                </div>
+                    </form>
+                </div> */}
 
                 {/* 3. Filters & Toggles Row */}
                 <div className="flex flex-col md:flex-row gap-4 mb-8 items-center bg-white/80 pt-4 pb-4 sticky top-0 z-30">

@@ -21,10 +21,10 @@ const listingSchema = z.object({
   category: z.string().min(1, "Choose a service category"),
   region: z.string().min(1, "Select a region"),
   area: z.string().min(1, "Select a governorate"),
-  price: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price (numbers only)"),
-  priceUnit: z.string().min(3, "Add a price unit, e.g. per project"),
+  // price: z
+  //   .string()
+  //   .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price (numbers only)"),
+  // priceUnit: z.string().min(3, "Add a price unit, e.g. per project"),
   experience: z.string().optional(),
   nextAvailability: z.string().optional(),
   images: z
@@ -169,8 +169,8 @@ export default function CreateServiceListingForm() {
       if (!Number.isNaN(governorateId)) {
         formData.append("governorate_id", governorateId);
       }
-      formData.append("price", values.price);
-      formData.append("price_unit", values.priceUnit.trim());
+      // formData.append("price", values.price);
+      // formData.append("price_unit", values.priceUnit.trim());
       if (values.experience) {
         formData.append("experience", values.experience.trim());
       }
@@ -386,10 +386,11 @@ export default function CreateServiceListingForm() {
 
         <section className="space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Pricing & availability
+            {/* Pricing &  */}
+            Availability
           </h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-slate-700">
                 Starting price
               </label>
@@ -438,7 +439,7 @@ export default function CreateServiceListingForm() {
                   {errors.priceUnit.message}
                 </p>
               )}
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-sm font-medium text-slate-700">

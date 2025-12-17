@@ -121,6 +121,11 @@ export const SearchFilter = () => {
             placeholder={t("What are you looking for?")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchTerm?.trim()) {
+                handleSearch();
+              }
+            }}
             className="border border-gray-300 px-4 py-1.5 rounded-md focus:outline-none"
           />
         </div>

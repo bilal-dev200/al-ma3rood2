@@ -175,7 +175,7 @@ const ContactForm = () => {
       console.log("API response:", response);
 
       if (response?.status) {
-        toast.success("Message sent successfully! ✅");
+        toast.success("Message sent successfully! ");
         reset();
       } else {
         const errorMsg = response?.message || "Something went wrong ❌";

@@ -269,7 +269,7 @@ console.log("Check Category", category);
       <MarketplaceCategories
         heading={slug}
         categories={category || {}}
-        description={category?.description}
+        description={category?.parent_category?.description}
         isLoading={false}
         error={null}
       />

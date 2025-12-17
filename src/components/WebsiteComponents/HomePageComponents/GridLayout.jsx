@@ -255,7 +255,7 @@ const GridLayout = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={handleFocus}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && searchTerm?.trim()) {
                   handleSearch();
                 }
               }}

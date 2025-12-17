@@ -134,12 +134,12 @@ const Footer = () => {
         <p>{t("Copyright 2025 © All rights reserved")}</p>
         <div className="flex items-center gap-3">
           <img
-            src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiNwLg5q5AETDBbqhSaI7gdCYcWvicii6UCw&s"
             className="h-5"
-            alt="Visa"
+            alt="Tabby"
           />
           <img
-            src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5KpGG8CYq9sJTMohKt_76EyG7VaYa9KyCg&s"
             className="h-5"
             alt="Paypal"
           />

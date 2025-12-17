@@ -449,6 +449,53 @@ const PropertiesClient = ({
             {activeTab !== "allcat" && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
+                <div>
+                  <label className="block mb-1 text-sm font-medium">{t("Region")}</label>
+                  {/* {states.length > 0 && ( */}
+                  <Select
+                    name="region"
+                    value={filters.region ? { value: filters.region, label: filters.region } : null}
+                    onChange={(selected) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        region: selected?.value || "",
+                        governorate: "",
+                        city: "",
+                      }))
+                    }
+                    options={regions.map((r) => ({ value: r.name, label: r.name }))}
+                    placeholder={t("Select a Region")}
+                    className="text-sm"
+                    classNamePrefix="react-select"
+                    isClearable
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">{t("Governorate")}</label>
+                  {/* {cities.length > 0 && ( */}
+                  <Select
+                    name="governorate"
+                    value={
+                      filters.governorate
+                        ? { value: filters.governorate, label: filters.governorate }
+                        : null
+                    }
+                    onChange={(selected) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        governorate: selected?.value || "",
+                        city: "",
+                      }))
+                    }
+                    options={governorates.map((g) => ({ value: g.name, label: g.name }))}
+                    placeholder={t("Select a Governorate")}
+                    className="text-sm"
+                    classNamePrefix="react-select"
+                    isClearable
+                  />
+                </div>
+
                 {[6157, 6156, 6154].includes(filters.category_id) && (
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700">
@@ -572,52 +619,7 @@ const PropertiesClient = ({
                   />
                 </div>
 
-                <div>
-                  <label className="block mb-1 text-sm font-medium">{t("Region")}</label>
-                  {/* {states.length > 0 && ( */}
-                  <Select
-                    name="region"
-                    value={filters.region ? { value: filters.region, label: filters.region } : null}
-                    onChange={(selected) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        region: selected?.value || "",
-                        governorate: "",
-                        city: "",
-                      }))
-                    }
-                    options={regions.map((r) => ({ value: r.name, label: r.name }))}
-                    placeholder={t("Select a Region")}
-                    className="text-sm"
-                    classNamePrefix="react-select"
-                    isClearable
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-1 text-sm font-medium">{t("Governorate")}</label>
-                  {/* {cities.length > 0 && ( */}
-                  <Select
-                    name="governorate"
-                    value={
-                      filters.governorate
-                        ? { value: filters.governorate, label: filters.governorate }
-                        : null
-                    }
-                    onChange={(selected) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        governorate: selected?.value || "",
-                        city: "",
-                      }))
-                    }
-                    options={governorates.map((g) => ({ value: g.name, label: g.name }))}
-                    placeholder={t("Select a Governorate")}
-                    className="text-sm"
-                    classNamePrefix="react-select"
-                    isClearable
-                  />
-                </div>
+                
               </div>
             )}
             {/* ✅ BOTTOM Search Box for cars */}
@@ -638,6 +640,11 @@ const PropertiesClient = ({
                     onChange={(e) =>
                       setFilters({ ...filters, search: e.target.value })
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleViewListings();
+                      }
+                    }}
                     className="pl-10 pr-4 py-2 w-full rounded-sm bg-[#FAFAFA] border border-gray-300  text-sm text-gray-700 focus:outline-none transition"
                   />
                 </div>
