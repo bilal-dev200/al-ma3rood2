@@ -75,8 +75,9 @@ async function fetchRelatedServices(service) {
 }
 
 export async function generateMetadata({ params }) {
+  const { slug } = await params;
   try {
-    const response = await servicesApi.getServiceBySlug(params.slug);
+    const response = await servicesApi.getServiceBySlug(slug);
     const service = mapServiceResponse(response?.data?.service);
     if (!service) {
       return {
@@ -95,7 +96,8 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function Page({ params }) {
-  const response = await servicesApi.getServiceBySlug(params.slug);
+  const { slug } = await params;
+  const response = await servicesApi.getServiceBySlug(slug);
   const mappedService = mapServiceResponse(response?.data?.service);
 
   if (!mappedService) {

@@ -105,8 +105,11 @@ export const SearchFilter = () => {
   };
 
   const handleSelectProduct = (listing) => {
+    const catSlug = listing.category?.slug?.includes("/")
+      ? listing.category.slug.split("/").pop()
+      : listing.category?.slug || "unknown";
     setShowDropdown(false);
-    router.push(`/marketplace/${listing.category?.slug}/${listing?.slug}`);
+    router.push(`/marketplace/${catSlug}/${listing?.slug}`);
   };
 
   return (
