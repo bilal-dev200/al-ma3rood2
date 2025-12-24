@@ -494,9 +494,13 @@ const PropertiesClient = ({
                     }
                     options={governorates.map((g) => ({ value: g.name, label: g.name }))}
                     placeholder={t("Select a Governorate")}
-                    className="text-sm"
+                    className="text-sm z-20"
                     classNamePrefix="react-select"
                     isClearable
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                   />
                 </div>
 

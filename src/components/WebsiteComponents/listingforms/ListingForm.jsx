@@ -23,27 +23,65 @@ const attributeSchema = z.object({
   placeholder: z.string().optional(),
 });
 
+const priceField = z.preprocess((val) => {
+  // Convert empty strings to null, numeric strings to numbers, pass through numbers
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed === "") return 0;
+    const n = Number(trimmed);
+    return isNaN(n) ? val : n;
+  }
+  return val;
+}, z.number().nullable().optional());
+
+
 const baseListingSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z.string({
+    required_error: "Title is required",
+    invalid_type_error: "Title is required"
+  }).min(1, "Title is required"),
   subtitle: z.string().optional().nullable(),
-  category_id: z.number({ invalid_type_error: "Category is required" }),
-  description: z.string().min(1, "Description is required"),
+  category_id: z.number({
+    required_error: "Please select a category",
+    invalid_type_error: "Please select a category"
+  }),
+  description: z.string({
+    required_error: "Description is required",
+    invalid_type_error: "Description is required"
+  }).min(1, "Description is required"),
   // condition: z.enum(["new", "used"]),
   condition: z.enum([
-  "brand_new_unused",
-  "like_new",
-  "gently_used_excellent_condition",
-  "good_condition",
-  "fair_condition",
-  "for_parts_or_not_working",
-  "not_applicable",
-]),
-  images: z.array(z.any()).min(1, "At least one image is required"),
-  buy_now_price: z.string().optional(),
+    "brand_new_unused",
+    "like_new",
+    "gently_used_excellent_condition",
+    "good_condition",
+    "fair_condition",
+    "for_parts_or_not_working",
+    "not_applicable",
+  ],
+    {
+      errorMap: () => ({
+        message: "Please select the condition of the item",
+      }),
+    }),
+  images: z
+    .array(z.any())
+    .optional()
+    .nullable()
+    .refine((val) => Array.isArray(val) && val.length > 0, {
+      message: "Please upload at least one image",
+    }),
+  selling_type: z.enum(["auction", "buy_now", "both"], {
+    errorMap: () => ({ message: "Please select how you would like to sell" }),
+  }),
+  buy_now_price: priceField,
   allow_offers: z.boolean().optional(),
-  start_price: z.string().optional(),
-  reserve_price: z.string().optional(),
-  expire_at: z.date().optional(),
+  start_price: priceField,
+  reserve_price: priceField,
+  expire_at: z.date({
+    required_error: "Please select an expiry date and time",
+    invalid_type_error: "Please select a valid expiry date and time"
+  }),
   payment_method_id: z.string().optional(),
   quantity: z.number().optional(),
   parentCategoryName: z.string().optional(),
@@ -97,66 +135,135 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
   //     );
   // }, [parentCategoryName]);
 
+  // const fullSchema = useMemo(() => {
+  //   return baseListingSchema.superRefine((data, ctx) => {
+  //     console.log("SUPER_REFINE: data =", data);
+  //     const isAuction =
+  //       data.selling_type === "auction" || data.selling_type === "both";
+  //     const isBuyNow =
+  //       data.selling_type === "buy_now" || data.selling_type === "both";
+
+  //     console.log("SUPER_REFINE: isAuction =", isAuction, "isBuyNow =", isBuyNow, "selling_type =", data.selling_type);
+
+  //     if (isAuction) {
+  //       if (!data.start_price || String(data.start_price).trim() === "") {
+  //         console.log("SUPER_REFINE: Adding Start Price error");
+  //         ctx.addIssue({
+  //           code: z.ZodIssueCode.custom,
+  //           message: "Start price is required",
+  //           path: ["start_price"],
+  //         });
+  //       }
+  //       if (!data.reserve_price || String(data.reserve_price).trim() === "") {
+  //         console.log("SUPER_REFINE: Adding Reserve Price error");
+  //         ctx.addIssue({
+  //           code: z.ZodIssueCode.custom,
+  //           message: "Reserve price is required",
+  //           path: ["reserve_price"],
+  //         });
+  //       }
+  //     }
+
+  //     if (isBuyNow) {
+  //       if (!data.buy_now_price || String(data.buy_now_price).trim() === "") {
+  //         console.log("SUPER_REFINE: Adding Buy Now Price error");
+  //         ctx.addIssue({
+  //           code: z.ZodIssueCode.custom,
+  //           message: "Buy now price is required",
+  //           path: ["buy_now_price"],
+  //         });
+  //       }
+  //     }
+
+  //     if (data.selling_type === "both") {
+  //       const buyNow = parseFloat(data.buy_now_price);
+  //       const start = parseFloat(data.start_price);
+  //       const reserve = parseFloat(data.reserve_price);
+
+  //       if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
+  //         ctx.addIssue({
+  //           code: z.ZodIssueCode.custom,
+  //           message: "Start Price cannot be greater than Buy Now Price",
+  //           path: ["start_price"],
+  //         });
+  //       }
+  //       if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
+  //         ctx.addIssue({
+  //           code: z.ZodIssueCode.custom,
+  //           message: "Reserve Price cannot be greater than Buy Now Price",
+  //           path: ["reserve_price"],
+  //         });
+  //       }
+  //     }
+  //   });
+  // }, []);
   const fullSchema = useMemo(() => {
-    return baseListingSchema
-      .refine(
-        (data) => {
-          if (!data.buy_now_price) {
-            return !!data.start_price && !!data.reserve_price;
-          }
-          return true;
-        },
-        {
-          message:
-            "Start price and Reserve price are required if Buy now price is not provided",
-          path: ["start_price"],
+    return baseListingSchema.superRefine((data, ctx) => {
+      const isAuction =
+        data.selling_type === "auction" || data.selling_type === "both";
+      const isBuyNow =
+        data.selling_type === "buy_now" || data.selling_type === "both";
+
+      // Helper to check presence (null/undefined are considered missing)
+      const isMissing = (v) => v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+
+      if (isAuction) {
+        if (isMissing(data.start_price)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Start price is required",
+            path: ["start_price"],
+          });
         }
-      )
-      .refine(
-        (data) => {
-          // Start Price cannot be greater than Buy Now Price
-          if (
-            data.buy_now_price &&
-            data.buy_now_price.trim() !== "" &&
-            data.start_price &&
-            data.start_price.trim() !== ""
-          ) {
-            const buyNow = parseFloat(data.buy_now_price);
-            const start = parseFloat(data.start_price);
-            if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
-              return false;
-            }
-          }
-          return true;
-        },
-        {
-          message: "Start Price cannot be greater than Buy Now Price",
-          path: ["start_price"],
+
+        if (isMissing(data.reserve_price)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Reserve price is required",
+            path: ["reserve_price"],
+          });
         }
-      )
-      .refine(
-        (data) => {
-          // Reserve Price cannot be greater than Buy Now Price
-          if (
-            data.buy_now_price &&
-            data.buy_now_price.trim() !== "" &&
-            data.reserve_price &&
-            data.reserve_price.trim() !== ""
-          ) {
-            const buyNow = parseFloat(data.buy_now_price);
-            const reserve = parseFloat(data.reserve_price);
-            if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
-              return false;
-            }
-          }
-          return true;
-        },
-        {
-          message: "Reserve Price cannot be greater than Buy Now Price",
-          path: ["reserve_price"],
+      }
+
+      if (isBuyNow) {
+        if (isMissing(data.buy_now_price)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Buy now price is required",
+            path: ["buy_now_price"],
+          });
         }
-      );
+      }
+
+      // Numeric comparisons: coerce to numbers and ensure not NaN
+      const buyNow = Number(data.buy_now_price);
+      const start = Number(data.start_price);
+      const reserve = Number(data.reserve_price);
+
+      const hasBuyNow = !isNaN(buyNow);
+      const hasStart = !isNaN(start);
+      const hasReserve = !isNaN(reserve);
+
+      if (data.selling_type === "both") {
+        if (hasStart && hasBuyNow && start > buyNow) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Start price cannot be greater than Buy Now price",
+            path: ["start_price"],
+          });
+        }
+
+        if (hasReserve && hasBuyNow && reserve > buyNow) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Reserve price cannot be greater than Buy Now price",
+            path: ["reserve_price"],
+          });
+        }
+      }
+    });
   }, []);
+
 
   const normalizedInitialValues = useMemo(() => {
     if (!initialValues) return { attributes: [] };
@@ -231,7 +338,7 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
     }
     initCategoryForEdit();
 
-      if (mode === "edit") {
+    if (mode === "edit") {
       // Wait a tick to ensure reset is applied before marking touched
       setTimeout(() => {
         const allFields = Object.keys(methods.getValues());
@@ -300,6 +407,7 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
     if (activeStep === 3)
       return [
         "buy_now_price",
+        "selling_type",
         "allow_offers",
         "start_price",
         "reserve_price",
@@ -316,17 +424,17 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
   //   if (valid) setActiveStep((prev) => prev + 1);
   // };
   const handleNext = async () => {
-  const fields = getStepFields(activeStep, parentCategoryName);
-  console.log("Checking fields:", fields);
-  const valid = await methods.trigger(fields);
-  console.log("Validation result:", valid, methods.formState.errors);
+    const fields = getStepFields(activeStep, parentCategoryName);
+    console.log("Checking fields:", fields);
+    const valid = await methods.trigger(fields);
+    console.log("Validation result:", valid, methods.formState.errors);
 
-  if (valid) {
-    setActiveStep((prev) => prev + 1);
-  } else {
-    console.warn("Validation failed for step:", activeStep);
-  }
-};
+    if (valid) {
+      setActiveStep((prev) => prev + 1);
+    } else {
+      console.warn("Validation failed for step:", activeStep);
+    }
+  };
 
 
 
@@ -354,7 +462,7 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
       formData.append("quantity", data.quantity || 1);
       formData.append("pickup_option", 1);
       formData.append("listing_type", "marketplace");
-      
+
       // Append dynamic attributes if present
       if (data.attributes && Array.isArray(data.attributes)) {
         let attributeIndex = 0;
@@ -393,7 +501,7 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
       // TODO: Show success toast, redirect, or reset form as needed
     } catch (error) {
       console.error("Error submitting listing:", error);
-      
+
       // Handle API validation errors
       const validationErrors = error?.data?.data || error?.response?.data?.data;
       if (validationErrors && typeof validationErrors === "object") {
@@ -420,7 +528,6 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
     }
   };
 
-
   const renderStep = () => {
     switch (activeStep) {
       case 0:
@@ -442,6 +549,65 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
     }
   };
 
+  const getErrorMessages = (errors) => {
+    const messages = [];
+
+    const traverse = (obj) => {
+      if (!obj || typeof obj !== "object") return;
+
+      if (obj.message && typeof obj.message === "string") {
+        messages.push(obj.message);
+        return;
+      }
+
+      Object.values(obj).forEach((val) => {
+        traverse(val);
+      });
+    };
+
+    traverse(errors);
+    return [...new Set(messages)];
+  };
+
+  const onInvalid = (errors) => {
+    console.log("ON_INVALID_ERRORS:", errors);
+    const errorMessages = getErrorMessages(errors);
+    console.log("EXTRACTED_MESSAGES:", errorMessages);
+    if (errorMessages.length > 0) {
+      errorMessages.forEach((msg) => toast.error(msg));
+    }
+  };
+
+  const goToStep = async (targetIndex) => {
+    // Moving backward → no validation
+    if (targetIndex <= activeStep) {
+      setActiveStep(targetIndex);
+      return;
+    }
+
+    // Moving forward → validate current step
+    const fields = getStepFields(activeStep, parentCategoryName);
+    const valid = await methods.trigger(fields);
+
+    if (valid) {
+      setActiveStep(targetIndex);
+    } else {
+      const errors = getErrorMessages(methods.formState.errors);
+
+      // if (errors.length) {
+      //   errors.forEach((msg) =>
+      //     toast.error(msg)
+      //   );
+      // } else {
+      //   toast.error("Please fix the errors before continuing.");
+      // }
+
+      console.warn("Validation failed for step:", activeStep);
+    }
+  };
+
+
+
   return (
     <FormProvider {...methods}>
       <form>
@@ -453,22 +619,23 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
                 <button
                   key={step.key}
                   type="button"
-                  disabled={index > activeStep}
-                  onClick={() => index <= activeStep && setActiveStep(index)}
-                  className={`relative pb-2 transition-all duration-200 whitespace-nowrap 
-          ${index === activeStep ? "text-black font-semibold" : "text-gray-400"}
-        `}
+                  onClick={() => goToStep(index)}
+                  // disabled={index > activeStep + 1} // optional: prevent skipping too far
+                  className={`relative pb-2 transition-all duration-200 whitespace-nowrap
+      ${index === activeStep ? "text-black font-semibold" : "text-gray-400"}
+    `}
                 >
                   {t(step.title)}
 
                   {/* Underline indicator */}
                   <span
-                    className={`absolute left-0 bottom-0 h-[2px] w-full rounded bg-black transition-all duration-300 
-            ${index === activeStep ? "opacity-100" : "opacity-0"}
-          `}
+                    className={`absolute left-0 bottom-0 h-[2px] w-full rounded bg-black transition-all duration-300
+        ${index === activeStep ? "opacity-100" : "opacity-0"}
+      `}
                   />
                 </button>
               ))}
+
             </div>
           </div>
 
@@ -496,7 +663,7 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
                   t(mode === "edit" ? "Update Listing" : "Create Listing")
                 )
               }
-              onClick={handleSubmit(internalSubmit)}
+              onClick={handleSubmit(internalSubmit, onInvalid)}
               disabled={isSubmitting}
             />
           )}

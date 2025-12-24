@@ -51,8 +51,10 @@ const CategoryModal = ({
                     onClick={() => handleCategoryClick(cat)}
                     className="flex justify-between items-center py-3 px-2 hover:bg-gray-100 cursor-pointer"
                   >
-                    <span>{cat.name}</span>
-                    <span className="text-gray-400">{">"}</span>
+                    <span>{cat.name} 
+                      {/* {cat.child_count > 0 ? '(' + cat.child_count + ')' : ''} */}
+                      </span>
+                    {cat.child_count > 0 && <span className="text-gray-400">{">"}</span>}
                   </li>
                 ))}
               </ul>

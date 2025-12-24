@@ -161,7 +161,7 @@ const StepTitleCategory = ({ setIsModalOpen, selectedCategory, watch }) => {
           {category_id && selectedCategory ? (
             <div className="flex justify-between items-center">
               <p className="text-base text-green-600 font-semibold">
-                {selectedCategory?.name}
+                {selectedCategory?.parent?.name ? selectedCategory?.parent?.name + " > " + selectedCategory?.name : selectedCategory?.name }
               </p>
               <button
                 type="button"

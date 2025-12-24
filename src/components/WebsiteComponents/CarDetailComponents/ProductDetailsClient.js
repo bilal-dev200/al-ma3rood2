@@ -1141,7 +1141,7 @@ export default function ProductDetailsClient({
                 <div className="font-bold uppercase">
                   {t(key.toLocaleUpperCase())}
                 </div>
-                <div className="text-gray-700 uppercase">{value}</div>
+                <div className="text-gray-700 uppercase">{String(value).replace(/_/g, " ")}</div>
               </div>
             ))}
         </div>

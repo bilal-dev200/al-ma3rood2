@@ -105,8 +105,11 @@ export const SearchFilter = () => {
   };
 
   const handleSelectProduct = (listing) => {
+    const catSlug = listing.category?.slug?.includes("/")
+      ? listing.category.slug.split("/").pop()
+      : listing.category?.slug || "unknown";
     setShowDropdown(false);
-    router.push(`/marketplace/${listing.category?.slug}/${listing?.slug}`);
+    router.push(`/marketplace/${catSlug}/${listing?.slug}`);
   };
 
   return (
@@ -178,8 +181,8 @@ export const SearchFilter = () => {
         <div className="w-full md:w-auto ">
           <button
             className={`px-6 md:mt-6 py-2 rounded-md w-full md:w-auto
-                            ${loading || !searchTerm ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white"}`}
-            disabled={loading || !searchTerm}
+                            ${loading || !selectedCategory ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white"}`}
+            disabled={loading || !selectedCategory}
             onClick={handleSearch}
           >
             {loading ? (

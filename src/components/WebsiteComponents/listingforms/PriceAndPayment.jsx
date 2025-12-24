@@ -26,7 +26,7 @@ const PriceAndPayment = () => {
   const start_price = watch("start_price");
   const reserve_price = watch("reserve_price");
   const expire_at = watch("expire_at");
-  
+
   // Helper function to check if a date is today
   const isToday = (date) => {
     if (!date) return false;
@@ -236,186 +236,138 @@ const PriceAndPayment = () => {
         {t("Price & Payment")}
       </h2>
 
-      {/* Buy Now */}
-      <div className="relative w-full mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {t("Buy Now")}{" "}
-          <span className="text-gray-400">{t("(optional)")}</span>
+      {/* Selling Type Dropdown */}
+      <div className="w-full mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t("How would you like to sell?")} <span className="text-red-500">*</span>
         </label>
-        <div className="absolute inset-y-0 mt-6  left-0 pl-3 flex items-center pointer-events-none">
-          <span className="text-gray-500 price">$</span>
-        </div>
-        <input
-          type="number"
-          min="0"
-          {...register("buy_now_price", {
-            onChange: (e) => {
-              const value = e.target.value;
-              const numValue = parseFloat(value);
-              if (value !== "" && (!isNaN(numValue) && numValue < 0)) {
-                e.target.value = "";
-              }
-            }
-          })}
-          className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring appearance-none
-        [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
-        ${
-          errors.buy_now_price
+        <select
+          {...register("selling_type")}
+          className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring ${errors.selling_type
             ? "border-red-500 focus:border-red-500"
             : "border-gray-300 focus:border-green-400"
-        }`}
-        />
-        {errors.buy_now_price && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.buy_now_price.message}
-          </p>
+            }`}
+        >
+          <option value="">{t("Select an option")}</option>
+          <option value="auction">{t("Run an auction")}</option>
+          <option value="buy_now">{t("Buy Now")}</option>
+          <option value="both">{t("Both")}</option>
+        </select>
+        {errors.selling_type && (
+          <p className="text-red-500 text-sm mt-1">{errors.selling_type.message}</p>
         )}
       </div>
 
-      {/* Allow Offers */}
-      <div className="mt-4">
-        <label className="inline-flex items-center space-x-2">
-          <input
-            type="checkbox"
-            {...register("allow_offers")}
-            className="accent-green-500"
-          />
-          <span className="font-bold">
-            {t("Allow buyers to make an offer")}
-          </span>
-        </label>
-        <p className="text-xs ml-6 text-gray-400">
-          {t("Offers can be made until the reserve price is met.")}
-        </p>
-      </div>
+      {/* Buy Now Price - shown if selling_type is 'buy_now' or 'both' */}
+      {(watch("selling_type") === "buy_now" || watch("selling_type") === "both") && (
+        <div className="relative w-full mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t("Buy Now Price")} <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="text-gray-500 price">$</span>
+            </div>
+            <input
+              type="number"
+              min="0"
+              {...register("buy_now_price")}
+              className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring appearance-none
+                [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
+                ${errors.buy_now_price
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:border-green-400"
+                }`}
+            />
+          </div>
+          {errors.buy_now_price && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.buy_now_price.message}
+            </p>
+          )}
+        </div>
+      )}
 
-      {/* Start/Reserve Price */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("Start price")} <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 price">$</span>
-            </div>
+      {/* Allow Offers - shown if selling_type includes buy_now */}
+      {(watch("selling_type") === "buy_now" || watch("selling_type") === "auction" || watch("selling_type") === "both") && (
+        <div className="mb-6">
+          <label className="inline-flex items-center space-x-2">
             <input
-              type="number"
-              min="0"
-              {...register("start_price", {
-                onChange: (e) => {
-                  const value = e.target.value;
-                  const numValue = parseFloat(value);
-                  if (value !== "" && (!isNaN(numValue) && numValue < 0)) {
-                    e.target.value = "";
-                  }
-                },
-                validate: (value) => {
-                  // Required validation
-                  if (!buy_now_price && !value) {
-                    return "Start price is required if Buy Now price is not provided";
-                  }
-                  // Start Price cannot be greater than Buy Now Price
-                  if (
-                    buy_now_price &&
-                    buy_now_price.trim() !== "" &&
-                    value &&
-                    value.trim() !== ""
-                  ) {
-                    const buyNow = parseFloat(buy_now_price);
-                    const start = parseFloat(value);
-                    if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
-                      return "Start Price cannot be greater than Buy Now Price";
-                    }
-                  }
-                  return true;
-                },
-              })}
-              className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring 
-    [&::-webkit-inner-spin-button]:appearance-none 
-    [&::-webkit-outer-spin-button]:appearance-none 
-    [appearance:textfield]
-    ${
-      errors.start_price
-        ? "border-red-500 focus:border-red-500"
-        : "border-gray-300 focus:border-green-400"
-    } placeholder-price`}
+              type="checkbox"
+              {...register("allow_offers")}
+              className="accent-green-500"
             />
-          </div>
-          {errors.start_price && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.start_price.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("Reserve price")} <span className="text-red-500">*</span>
+            <span className="font-bold">
+              {t("Allow buyers to make an offer")}
+            </span>
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 price">$</span>
-            </div>
-            <input
-              type="number"
-              min="0"
-              disabled={!start_price || start_price.trim() === ""}
-              {...register("reserve_price", {
-                onChange: (e) => {
-                  const value = e.target.value;
-                  const numValue = parseFloat(value);
-                  if (value !== "" && (!isNaN(numValue) && numValue < 0)) {
-                    e.target.value = "";
-                  }
-                },
-                validate: (value) => {
-                  // Required validation
-                  if (!buy_now_price && !value) {
-                    return "Reserve price is required if Buy Now price is not provided";
-                  }
-                  // Reserve Price cannot be greater than Buy Now Price
-                  if (
-                    buy_now_price &&
-                    buy_now_price.trim() !== "" &&
-                    value &&
-                    value.trim() !== ""
-                  ) {
-                    const buyNow = parseFloat(buy_now_price);
-                    const reserve = parseFloat(value);
-                    if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
-                      return "Reserve Price cannot be greater than Buy Now Price";
-                    }
-                  }
-                  return true;
-                },
-              })}
-              className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring
-    [&::-webkit-inner-spin-button]:appearance-none 
-    [&::-webkit-outer-spin-button]:appearance-none 
-    [appearance:textfield] 
-    ${
-      errors.reserve_price
-        ? "border-red-500 focus:border-red-500"
-        : "border-gray-300 focus:border-green-400"
-    } ${
-                !start_price || start_price.trim() === ""
-                  ? "bg-gray-100 cursor-not-allowed opacity-60"
-                  : ""
-              } placeholder-price`}
-            />
-          </div>
-          {errors.reserve_price && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.reserve_price.message}
-            </p>
-          )}
-          {(!start_price || start_price.trim() === "") && (
-            <p className="text-gray-500 text-xs mt-1">
-              Please enter Start Price first
-            </p>
-          )}
+          <p className="text-xs ml-6 text-gray-400">
+            {t("Offers can be made until the reserve price is met.")}
+          </p>
         </div>
-      </div>
+      )}
+
+      {/* Start/Reserve Price - shown if selling_type is 'auction' or 'both' */}
+      {(watch("selling_type") === "auction" || watch("selling_type") === "both") && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t("Start price")} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 price">$</span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                {...register("start_price")}
+                className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring 
+                  [&::-webkit-inner-spin-button]:appearance-none 
+                  [&::-webkit-outer-spin-button]:appearance-none 
+                  [appearance:textfield]
+                  ${errors.start_price
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:border-green-400"
+                  } placeholder-price`}
+              />
+            </div>
+            {errors.start_price && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.start_price.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t("Reserve price")} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 price">$</span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                {...register("reserve_price")}
+                className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring
+                  [&::-webkit-inner-spin-button]:appearance-none 
+                  [&::-webkit-outer-spin-button]:appearance-none 
+                  [appearance:textfield] 
+                  ${errors.reserve_price
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:border-green-400"
+                  } placeholder-price`}
+              />
+            </div>
+            {errors.reserve_price && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.reserve_price.message}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Expiry Picker */}
       <div className="mt-6">
@@ -426,7 +378,6 @@ const PriceAndPayment = () => {
         <Controller
           control={control}
           name="expire_at"
-          rules={{ required: true }}
           render={({ field }) => (
             <DatePicker
               {...field}
@@ -449,11 +400,10 @@ const PriceAndPayment = () => {
               }}
               className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring
             [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
-            ${
-              errors.expire_at
-                ? "border-red-500 focus:border-red-500"
-                : "border-gray-300 focus:border-green-400"
-            }`}
+            ${errors.expire_at
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:border-green-400"
+                }`}
               placeholderText={t("Select date and time")}
             />
           )}

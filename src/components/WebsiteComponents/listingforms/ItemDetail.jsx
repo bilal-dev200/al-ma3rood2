@@ -71,7 +71,6 @@ const ItemDetail = ({ parentCategoryName }) => {
       <Controller
         name="description"
         control={control}
-        rules={{ required: "Description is required" }}
         render={({ field: { onChange, value }, fieldState: { error } }) => (
           <div className="rounded-md">
             <QuillEditor

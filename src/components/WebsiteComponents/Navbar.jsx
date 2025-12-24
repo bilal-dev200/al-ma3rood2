@@ -14,15 +14,17 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const watchlistCount = useWatchlistStore(
     (state) => state.watchlist?.length || 0
   );
   const { user, token } = useAuthStore();
 
-  const isLoggedIn = !!user && !!token;
+  const isLoggedIn = token !== null;
   // const fetchWatchlist = useWatchlistStore((state) => state.fetchWatchlist);
 
   // React.useEffect(() => {
@@ -45,7 +47,7 @@ const Navbar = () => {
     { name: "About Us", href: "/about" },
     { name: "How It Works", href: "/work" },
     { name: "Contact Us", href: "/contact-us" },
-    { name: "Start Listing", href: isLoggedIn ? "/listing" : "/login" },
+    { name: "Start Listing", href: isLoggedIn ? "/listing" : `/login?callbackUrl=${encodeURIComponent(pathname)}` },
     isLoggedIn ? { name: "Watch List", href: "/watchlist" } : null,
   ];
   const { t, i18n } = useTranslation();
@@ -56,7 +58,7 @@ const Navbar = () => {
       <div className="flex items-center justify-between px-4 md:px-6 py-3 bg-white flex-wrap">
         <div className="flex items-center gap-4 md:gap-8 text-sm">
         
-          <Link href="/account">
+          <Link href={isLoggedIn ? "/account" : `/login?callbackUrl=${encodeURIComponent(pathname)}`}>
             <div className="flex items-center gap-2 cursor-pointer hover:text-green-500 transition-colors">
               {isLoggedIn ? (
                 user?.profileImage ? (
@@ -130,7 +132,7 @@ const Navbar = () => {
           </div>
           :
           <div className="hidden md:flex items-center gap-8 text-sm min-w-36">
-            <Link href="/login">
+            <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}>
               <div className="flex items-center gap-2 cursor-pointer hover:text-green-500 transition-colors">
                 <FaPlus className="text-lg" />
                 <span>{t("Start a Listing")}</span>

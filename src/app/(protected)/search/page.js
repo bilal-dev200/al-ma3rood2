@@ -21,6 +21,8 @@ const SearchPageContent = () => {
     const maxPrice = searchParams.get("max_price");
     const categoryId = searchParams.get("category_id") || searchParams.get("selected_category");
     const sortBy = searchParams.get("sort_by") || "latest";
+    const type = searchParams.get("listing_type") || "";
+
 
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -104,7 +106,8 @@ const SearchPageContent = () => {
                 const offset = (currentPage - 1) * limit;
 
                 const queryParams = {
-                    keyword: keyword,
+                    ...(keyword && { keyword: keyword }),
+                    ...(type && { listing_type: type }),
                     limit: limit,
                     offset: offset,
                     sort_by: sortBy,
@@ -297,7 +300,7 @@ const SearchPageContent = () => {
                             : 'grid-cols-1'
                             }`}>
                             {displayResults.map((item, index) => (
-                                <SearchResultCard key={item.id || index} item={item} viewMode={viewMode} />
+                                <SearchResultCard key={`${item.id}-${index}`} item={item} viewMode={viewMode} />
                             ))}
                         </div>
 

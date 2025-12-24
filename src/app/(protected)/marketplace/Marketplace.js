@@ -91,7 +91,7 @@ export default async function Marketplace({ searchParams }) {
           heading="Deals"
           // cards={listings?.data?.slice(0, 8) || []}
           cards={dealCards}
-          seeMoreLink="/hotDeals"
+          seeMoreLink="/search?keyword=&listing_type=marketplace"
         />
       </div>
 
