@@ -381,10 +381,24 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
   // Apply sorting before rendering
   const sortedListings = [...motorListings].sort((a, b) => {
     const getPrice = (item) => {
-      if (item.allow_offers) {
-        return parseFloat(item.start_price) || 0;
+      // Helper to clean and parse price (removes commas, spaces, etc.)
+      const parsePrice = (price) => {
+        if (!price) return 0;
+        const cleaned = String(price).replace(/,/g, "").trim();
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? 0 : parsed;
+      };
+
+      // If no bids, use buy_now_price
+      if (item.bids_count === 0) {
+        return parsePrice(item.buy_now_price);
       }
-      return parseFloat(item.buy_now_price) || 0;
+      // If there are bids, use the highest bid amount (first bid in array)
+      if (item.bids_count > 0 && item.bids && item.bids.length > 0) {
+        return parsePrice(item.bids[0]?.amount);
+      }
+      // Fallback to buy_now_price
+      return parsePrice(item.buy_now_price);
     };
 
     const getCreatedAt = (item) => new Date(item.created_at).getTime();

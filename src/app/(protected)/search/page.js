@@ -146,7 +146,8 @@ const SearchPageContent = () => {
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                const res = await categoriesApi.getAllCategories();
+                const listing_type = type;
+                const res = await categoriesApi.getAllCategoriesSearches(null, listing_type);
                 setCategories(res.data || []); // Assuming API returns { data: [...] } or array
             } catch (err) {
                 console.error("Failed to load categories", err);
@@ -194,45 +195,54 @@ const SearchPageContent = () => {
                 {/* 1. Page Title */}
                 {/* <h1 className="text-3xl font-bold mb-6 text-gray-800">{t("Search Results")} {keyword && `for "${keyword}"`}</h1> */}
 
-                {/* 2. Search Input (Styled like TradeMe) */}
-                {/* <div className="mb-4">
-                    <form onSubmit={handleSearchSubmit} className="flex w-full shadow-sm rounded-md overflow-hidden border border-gray-300 bg-white">
-                        <div className="relative flex-grow">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                                </svg>
+                {/* Sticky Header Wrapper */}
+                <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm pt-2 pb-2 border-b border-gray-100 mb-8 px-2 -mx-2">
+                    {/* 2. Search Input */}
+                    <div className="mb-4">
+                        <form onSubmit={handleSearchSubmit} className="flex w-full shadow-sm rounded-full overflow-hidden border border-gray-300 bg-white focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500 transition-all">
+                            <div className="relative flex-grow">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder={t("Search all categories...")}
+                                    className="w-full pl-12 pr-10 py-1.5 text-gray-900 placeholder-gray-400 focus:outline-none sm:text-lg"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSearchTerm('');
+                                            const params = new URLSearchParams(searchParams.toString());
+                                            params.delete("keyword");
+                                            params.set("page", "1");
+                                            router.push(`/search?${params.toString()}`);
+                                        }}
+                                        className="absolute inset-y-0 right-2 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        <IoClose className="h-6 w-6" />
+                                    </button>
+                                )}
                             </div>
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder={t("Search all categories...")}
-                                className="w-full pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 sm:text-lg"
-                            />
-                            {searchTerm && (
-                                <button
-                                    type="button"
-                                    onClick={() => setSearchTerm('')}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                                >
-                                    <IoClose className="h-5 w-5" />
-                                </button>
-                            )}
-                        </div>
-                        <button
-                            type="submit"
-                            className="bg-green-600 px-6 text-white font-medium hover:bg-green-700 transition-colors"
-                        >
-                            {t("Search")}
-                        </button>
-                    </form>
-                </div> */}
+                            <button
+                                type="submit"
+                                className="bg-green-600 px-8 text-white font-semibold hover:bg-green-700 transition-colors"
+                            >
+                                {t("Search")}
+                            </button>
+                        </form>
+                    </div>
 
-                {/* 3. Filters & Toggles Row */}
-                <div className="flex flex-col md:flex-row gap-4 mb-8 items-center bg-white/80 pt-4 pb-4 sticky top-0 z-30">
-                    <div className="flex-grow w-full md:w-auto pb-2 md:pb-0">
-                        <SearchPageFilters categoryId={categoryId} categories={categories} />
+                    {/* 3. Filters & Toggles Row */}
+                    <div className="flex flex-col md:flex-row gap-4 items-center">
+                        <div className="flex-grow w-full md:w-auto">
+                            <SearchPageFilters categoryId={categoryId} categories={categories} />
+                        </div>
                     </div>
                 </div>
 
