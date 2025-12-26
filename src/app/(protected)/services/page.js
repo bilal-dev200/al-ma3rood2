@@ -14,12 +14,13 @@ import ServicesResultsSkeleton from "./components/results-skeleton";
 export const metadata = SERVICES_MODULE_METADATA;
 
 export default async function Page({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
   const [categoryTree, locationData, featuredProviders] = await Promise.all([
     categoriesApi.getCategoryTree("services"),
     locationsApi.getAllLocations(),
     getFeaturedProviders(),
   ]);
-  
+
   // Transform categories and regions using the same functions as listing page
   const categories = transformServiceCategories(
     categoryTree?.data ?? categoryTree?.categories ?? categoryTree ?? []
@@ -27,21 +28,21 @@ export default async function Page({ searchParams }) {
   const regions = transformRegionsResponse(locationData);
 
   const filters = {
-    query: searchParams?.query || "",
-    category: searchParams?.category || "",
-    subcategory: searchParams?.subcategory || "",
-    region: searchParams?.region || "",
-    area: searchParams?.area || "",
-    sortBy: searchParams?.sortBy || "price-low-high",
+    query: resolvedSearchParams?.query || "",
+    category: resolvedSearchParams?.category || "",
+    subcategory: resolvedSearchParams?.subcategory || "",
+    region: resolvedSearchParams?.region || "",
+    area: resolvedSearchParams?.area || "",
+    sortBy: resolvedSearchParams?.sortBy || "price-low-high",
   };
 
-  if (searchParams?.priceMin) {
-    filters.priceMin = Number.parseInt(searchParams.priceMin, 10) || 0;
+  if (resolvedSearchParams?.priceMin) {
+    filters.priceMin = Number.parseInt(resolvedSearchParams.priceMin, 10) || 0;
   }
 
-  if (searchParams?.priceMax) {
+  if (resolvedSearchParams?.priceMax) {
     filters.priceMax =
-      Number.parseInt(searchParams.priceMax, 10) ||
+      Number.parseInt(resolvedSearchParams.priceMax, 10) ||
       Number.POSITIVE_INFINITY;
   }
 

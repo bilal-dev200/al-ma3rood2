@@ -160,7 +160,7 @@ export function ServiceBookingCard({
                 </dd>
               </div>
             </div> */}
-            {quotePrice !== undefined && quotePrice !== null && (
+            {/* {quotePrice !== undefined && quotePrice !== null && (
               <div className="flex items-center gap-2">
                 <SaudiRiyal className="h-4 w-4 text-slate-400" />
                 <div>
@@ -168,12 +168,11 @@ export function ServiceBookingCard({
                     Quoted price - Asking Price
                   </dt>
                   <dd className="font-medium text-slate-900">
-                    {/* {formatCurrency(quotePrice, quoteCurrency)} */}
                     {quotePrice} - {askingPrice}
                   </dd>
                 </div>
               </div>
-            )}
+            )} */}
             <div className="flex items-center gap-2">
               <User2 className="h-4 w-4 text-slate-400" />
               <div>

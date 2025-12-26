@@ -7,6 +7,8 @@ import { Suspense } from "react";
 
 function BookingSuccessContent() {
     const searchParams = useSearchParams();
+    const name = searchParams.get("name");
+    const serviceTitle = searchParams.get("service");
     const email = searchParams.get("email");
     const phone = searchParams.get("phone");
 
@@ -20,15 +22,27 @@ function BookingSuccessContent() {
                 Request Submitted!
             </h1>
             <p className="mb-8 text-lg text-gray-600">
-                Your service request has been successfully submitted.
+                Your service request for <span className="font-semibold">"{serviceTitle}"</span> has been successfully submitted.
             </p>
 
-            {(email || phone) && (
+            {(name || email || phone) && (
                 <div className="mb-8 w-full max-w-md rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
                     <h2 className="mb-4 text-lg font-semibold text-gray-800">
                         Provider Contact Details
                     </h2>
                     <div className="space-y-3 text-left">
+                        {serviceTitle && (
+                            <div className="flex items-center justify-between rounded-lg bg-blue-50 p-3 mb-2">
+                                <span className="text-sm font-medium text-blue-600">Service booked</span>
+                                <span className="font-semibold text-blue-900">{serviceTitle}</span>
+                            </div>
+                        )}
+                        {name && (
+                            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                                <span className="text-sm font-medium text-gray-500">Provider</span>
+                                <span className="font-semibold text-gray-900">{name}</span>
+                            </div>
+                        )}
                         {email && (
                             <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                                 <span className="text-sm font-medium text-gray-500">Email</span>

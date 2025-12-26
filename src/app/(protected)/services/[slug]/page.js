@@ -54,6 +54,7 @@ function mapServiceResponse(raw) {
     },
     gallery,
     user: raw.user,
+    schedule: raw.schedule || [],
   };
 }
 

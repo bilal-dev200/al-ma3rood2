@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import { transformServiceCategories, transformRegionsResponse } from "@/lib/util
 import SearchableDropdown from "@/components/WebsiteComponents/ReuseableComponenets/SearchableDropdown";
 import { useServicesStore } from "@/lib/stores/servicesStore";
 import { Image_URL } from "@/config/constants";
+import AvailabilitySchedule from "@/components/WebsiteComponents/listingforms/AvailabilitySchedule";
 
 const listingSchema = z.object({
   title: z.string().min(4, "Add a clear service title"),
@@ -27,12 +28,15 @@ const listingSchema = z.object({
   category: z.string().min(1, "Choose a service category"),
   region: z.string().min(1, "Select a region"),
   area: z.string().min(1, "Select a governorate"),
-  price: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price (numbers only)"),
-  priceUnit: z.string().min(3, "Add a price unit, e.g. per project"),
+  price: z.string().optional(),
+  priceUnit: z.string().optional(),
   experience: z.string().optional(),
   nextAvailability: z.string().optional(),
+  availability: z.record(z.string(), z.array(z.object({
+    start: z.string(),
+    end: z.string(),
+    enabled: z.boolean().optional()
+  }))).optional(),
   images: z
     .any()
     .optional()
@@ -48,7 +52,7 @@ export default function EditServiceForm({ serviceId }) {
   const [serviceData, setServiceData] = useState(null);
   const [existingImages, setExistingImages] = useState([]);
   const [deletingImageId, setDeletingImageId] = useState(null);
-  
+
   // Get categories and regions from Zustand store
   const categories = useServicesStore((state) => state.categories);
   const regions = useServicesStore((state) => state.regions);
@@ -64,12 +68,12 @@ export default function EditServiceForm({ serviceId }) {
             categoriesApi.getCategoryTree("services"),
             locationsApi.getAllLocations(),
           ]);
-          
+
           const formattedCategories = transformServiceCategories(
             categoryTree?.data ?? categoryTree?.categories ?? categoryTree ?? []
           ).filter((category) => category.id);
           const formattedRegions = transformRegionsResponse(locationData);
-          
+
           setServiceMeta({
             categories: formattedCategories,
             regions: formattedRegions,
@@ -94,20 +98,20 @@ export default function EditServiceForm({ serviceId }) {
         const services = Array.isArray(response?.data?.data)
           ? response.data.data
           : Array.isArray(response?.data)
-          ? response.data
-          : [];
+            ? response.data
+            : [];
         const service = services.find(
           (s) => String(s.id || s.service_id) === String(serviceId)
         );
-        
+
         if (!service) {
           toast.error("Service not found.");
           router.push("/account/services/my-services");
           return;
         }
-        
+
         setServiceData(service);
-        
+
         // Extract existing images
         const images = Array.isArray(service.images) ? service.images : [];
         setExistingImages(images);
@@ -120,10 +124,21 @@ export default function EditServiceForm({ serviceId }) {
     })();
   }, [serviceId, router]);
 
+  const defaultAvailability = {
+    Sun: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+    Mon: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+    Tue: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+    Wed: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+    Thu: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+    Fri: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+    Sat: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+  };
+
   const {
     register,
     handleSubmit,
     watch,
+    control,
     reset,
     setValue,
     formState: { errors, isSubmitting },
@@ -140,6 +155,7 @@ export default function EditServiceForm({ serviceId }) {
       priceUnit: "per project",
       experience: "",
       nextAvailability: "",
+      availability: defaultAvailability,
       images: undefined,
     },
   });
@@ -147,6 +163,45 @@ export default function EditServiceForm({ serviceId }) {
   // Populate form when service data is loaded
   useEffect(() => {
     if (serviceData) {
+      // Transform schedule array to availability object for the form
+      const DAY_MAP_REVERSE = {
+        sunday: "Sun",
+        monday: "Mon",
+        tuesday: "Tue",
+        wednesday: "Wed",
+        thursday: "Thu",
+        friday: "Fri",
+        saturday: "Sat",
+      };
+
+      const formatTo12h = (time24) => {
+        if (!time24) return "";
+        let [hours, minutes] = time24.split(":");
+        let modifier = "AM";
+        let h = parseInt(hours, 10);
+        if (h >= 12) {
+          modifier = "PM";
+          if (h > 12) h -= 12;
+        }
+        if (h === 0) h = 12;
+        return `${String(h).padStart(2, "0")}:${minutes} ${modifier}`;
+      };
+
+      const availability = {};
+      if (Array.isArray(serviceData.schedule)) {
+        serviceData.schedule.forEach(slot => {
+          const dayKey = DAY_MAP_REVERSE[slot.day.toLowerCase()];
+          if (dayKey) {
+            if (!availability[dayKey]) availability[dayKey] = [];
+            availability[dayKey].push({
+              start: formatTo12h(slot.from || slot.start),
+              end: formatTo12h(slot.to || slot.end),
+              enabled: true
+            });
+          }
+        });
+      }
+
       reset({
         title: serviceData.title || serviceData.name || "",
         subtitle: serviceData.subtitle || serviceData.summary || "",
@@ -154,10 +209,11 @@ export default function EditServiceForm({ serviceId }) {
         category: String(serviceData.category_id || serviceData.category?.id || ""),
         region: String(serviceData.region_id || serviceData.region?.id || ""),
         area: String(serviceData.governorate_id || serviceData.governorate?.id || ""),
-        price: String(serviceData.price || serviceData.price_amount || ""),
+        price: serviceData.price !== null ? String(serviceData.price) : "",
         priceUnit: serviceData.price_unit || serviceData.priceUnit || "per project",
         experience: serviceData.experience || "",
         nextAvailability: serviceData.next_availability || serviceData.nextAvailability || "",
+        availability: Object.keys(availability).length > 0 ? availability : defaultAvailability,
         images: undefined,
       });
     }
@@ -220,14 +276,14 @@ export default function EditServiceForm({ serviceId }) {
         region.id === selectedRegion || region.value === selectedRegion || String(region.id) === String(selectedRegion)
     );
     if (!match) return [];
-    
+
     let areas = [];
     if (Array.isArray(match.areas) && match.areas.length) {
       areas = match.areas;
     } else if (Array.isArray(match.governorates) && match.governorates.length) {
       areas = match.governorates;
     }
-    
+
     return areas.map((area) => {
       if (typeof area === "string") {
         return { id: area, label: area };
@@ -253,7 +309,7 @@ export default function EditServiceForm({ serviceId }) {
 
   async function handleDeleteImage(imageId) {
     if (!imageId || !serviceId) return;
-    
+
     try {
       setDeletingImageId(imageId);
       await servicesApi.deleteImage(serviceId, imageId);
@@ -266,9 +322,9 @@ export default function EditServiceForm({ serviceId }) {
         Object.values(error.data.errors)[0][0];
       toast.error(
         firstError ||
-          error?.data?.message ||
-          error?.message ||
-          "Failed to delete image."
+        error?.data?.message ||
+        error?.message ||
+        "Failed to delete image."
       );
     } finally {
       setDeletingImageId(null);
@@ -294,8 +350,42 @@ export default function EditServiceForm({ serviceId }) {
       if (!Number.isNaN(governorateId)) {
         formData.append("governorate_id", governorateId);
       }
-      formData.append("price", values.price);
-      formData.append("price_unit", values.priceUnit.trim());
+      if (values.availability) {
+        const DAY_MAP = {
+          Sun: "sunday",
+          Mon: "monday",
+          Tue: "tuesday",
+          Wed: "wednesday",
+          Thu: "thursday",
+          Fri: "friday",
+          Sat: "saturday",
+        };
+
+        const formatTo24h = (timeStr) => {
+          if (!timeStr || !timeStr.includes(" ")) return timeStr;
+          const [time, modifier] = timeStr.split(" ");
+          let [hours, minutes] = time.split(":");
+          if (hours === "12") hours = "00";
+          if (modifier === "PM") hours = parseInt(hours, 10) + 12;
+          return `${String(hours).padStart(2, "0")}:${minutes}`;
+        };
+
+        let index = 0;
+        Object.entries(values.availability).forEach(([day, slots]) => {
+          slots.forEach((slot) => {
+            if (slot.enabled !== false) {
+              formData.append(`schedule[${index}][day]`, DAY_MAP[day] || day.toLowerCase());
+              formData.append(`schedule[${index}][from]`, formatTo24h(slot.start));
+              formData.append(`schedule[${index}][to]`, formatTo24h(slot.end));
+              index++;
+            }
+          });
+        });
+      }
+
+      // formData.append("price", values.price);
+      // formData.append("price_unit", (values.priceUnit || "").trim());
+
       if (values.experience) {
         formData.append("experience", values.experience.trim());
       }
@@ -319,9 +409,9 @@ export default function EditServiceForm({ serviceId }) {
         Object.values(error.data.errors)[0][0];
       toast.error(
         firstError ||
-          error?.data?.message ||
-          error?.message ||
-          "Failed to update service listing."
+        error?.data?.message ||
+        error?.message ||
+        "Failed to update service listing."
       );
     }
   }
@@ -490,10 +580,23 @@ export default function EditServiceForm({ serviceId }) {
 
         <section className="space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Pricing & availability
+            Availability
           </h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div className="sm:col-span-2">
+              <Controller
+                control={control}
+                name="availability"
+                render={({ field }) => (
+                  <AvailabilitySchedule
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+
+            {/* <div>
               <label className="block text-sm font-medium text-slate-700">
                 Starting price
               </label>
@@ -533,9 +636,9 @@ export default function EditServiceForm({ serviceId }) {
                   {errors.priceUnit.message}
                 </p>
               )}
-            </div>
+            </div> */}
 
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-slate-700">
                 Next availability (optional)
               </label>
@@ -551,7 +654,7 @@ export default function EditServiceForm({ serviceId }) {
               <label className="block text-sm font-medium text-slate-700">
                 Service Images
               </label>
-              
+
               {/* Existing Images */}
               {existingImages.length > 0 && (
                 <div className="mt-3 mb-4">
@@ -562,11 +665,11 @@ export default function EditServiceForm({ serviceId }) {
                     {existingImages.map((image) => {
                       const imageId = image.id || image.image_id;
                       const imagePath = image.image_path || image.path;
-                      const imageUrl = imagePath && Image_URL 
-                        ? `${Image_URL}${imagePath}` 
+                      const imageUrl = imagePath && Image_URL
+                        ? `${Image_URL}${imagePath}`
                         : image.url || "/placeholder.svg";
                       const isDeleting = deletingImageId === imageId;
-                      
+
                       return (
                         <div
                           key={imageId}
@@ -598,7 +701,7 @@ export default function EditServiceForm({ serviceId }) {
                   </div>
                 </div>
               )}
-              
+
               {/* Upload New Images */}
               <div>
                 <p className="mb-2 text-xs font-medium text-slate-600">

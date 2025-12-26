@@ -196,11 +196,17 @@ export default function BookServiceForm({ service }) {
       // Assuming service structure has user/creator info
       const providerEmail = service.user?.email || service.creator?.email || service.email || "";
       const providerPhone = service.user?.mobile || service.creator?.mobile || service.mobile || service.phone || "";
+      const providerName = service.user?.name || service.user?.username || service.creator?.name || "";
+      const providerTitle = service.title || "";
+
 
       // Redirect to success page
       const params = new URLSearchParams();
       if (providerEmail) params.set("email", providerEmail);
       if (providerPhone) params.set("phone", providerPhone);
+      if (providerName) params.set("name", providerName);
+      if (providerTitle) params.set("service", providerTitle);
+
 
       router.push(`/services/booking-success?${params.toString()}`);
 

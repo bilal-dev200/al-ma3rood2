@@ -60,7 +60,7 @@ export default function MyServiceCard({ service, onDelete }) {
               {categoryLabel}
             </p>
           )}
-          <h3 className="mt-1 text-lg font-semibold text-slate-900">{title}</h3>
+          <h3 className="mt-1 text-lg line-clamp-2 font-semibold text-slate-900">{title}</h3>
         </div>
 
         {subtitle && (
@@ -91,7 +91,7 @@ export default function MyServiceCard({ service, onDelete }) {
         </div>
 
         {/* Price */}
-        <div className="mt-auto">
+        {/* <div className="mt-auto">
           <p className="text-xs text-slate-500">From</p>
           <p className="text-lg font-semibold text-slate-900">
             {formatPrice(priceValue)}
@@ -100,7 +100,7 @@ export default function MyServiceCard({ service, onDelete }) {
               {priceUnit}
             </span>
           </p>
-        </div>
+        </div> */}
 
         {/* Actions */}
         <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">

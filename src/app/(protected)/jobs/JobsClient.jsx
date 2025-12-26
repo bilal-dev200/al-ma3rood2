@@ -307,9 +307,9 @@ const JobsClient = ({ category, initialProducts }) => {
                 options={[
                   { value: 10, label: "10" },
                   { value: 100, label: "100" },
-                  { value: 1000, label: "1,000" },
-                  { value: 5000, label: "5,000" },
-                  { value: 10000, label: "10,000" },
+                  { value: 1000, label: "1k" },
+                  { value: 5000, label: "5k" },
+                  { value: 10000, label: "10k+" },
                 ]}
                 placeholder="Select Minimum"
                 className="text-sm"
@@ -332,11 +332,11 @@ const JobsClient = ({ category, initialProducts }) => {
                   handleFilterChange("max_amount", selected?.value || "")
                 }
                 options={[
-                  { value: 1000, label: "1,000" },
-                  { value: 5000, label: "5,000" },
-                  { value: 10000, label: "10,000" },
-                  { value: 20000, label: "20,000" },
-                  { value: 50000, label: "50,000" },
+                  { value: 1000, label: "1k" },
+                  { value: 5000, label: "5k" },
+                  { value: 10000, label: "10k" },
+                  { value: 20000, label: "20k" },
+                  { value: 50000, label: "50k+" },
                 ]}
                 placeholder="Select Maximum"
                 className="text-sm"

@@ -98,6 +98,7 @@ export const metadata = {
   robots: "index, follow",
 };
 
-export default function Page({ searchParams }) {
-  return <Marketplace searchParams={searchParams} />;
+export default async function Page({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  return <Marketplace searchParams={resolvedSearchParams} />;
 }

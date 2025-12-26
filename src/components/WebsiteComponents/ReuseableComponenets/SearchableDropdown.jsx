@@ -46,7 +46,7 @@ const SearchableDropdown = ({
   const [filteredOptions, setFilteredOptions] = useState(options);
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
-
+console.log("options in dropdown", options);
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredOptions(options);
@@ -237,12 +237,12 @@ const SearchableDropdown = ({
                       aria-selected={isSelected}
                     >
                       <div className="flex items-center gap-2.5 w-full">
-                        {showHierarchy && normalized.depth > 0 && (
+                        {/* {showHierarchy && normalized.depth > 0 && (
                           <div className="flex items-center gap-1.5 flex-shrink-0">
                             <div className="w-4 h-px bg-slate-300"></div>
                             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                           </div>
-                        )}
+                        )} */}
                         {showHierarchy && normalized.depth === 0 && normalized.isParent && (
                           <div className="flex items-center gap-2 w-full">
                             <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">

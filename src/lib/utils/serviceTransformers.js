@@ -10,9 +10,9 @@ function collectCategoryOptions(nodes = [], trail = [], depth = 0) {
     const label = node?.name;
     const path = [...trail, label].filter(Boolean);
     const children = node?.children_recursive || [];
-    const current = id ? [{ 
-      id: String(id), 
-      label, 
+    const current = id ? [{
+      id: String(id),
+      label,
       fullPath: path.join(" › "),
       depth,
       isParent: false,
@@ -27,30 +27,35 @@ function collectCategoryOptions(nodes = [], trail = [], depth = 0) {
 
 export function transformServiceCategories(tree = []) {
   if (!Array.isArray(tree)) return [];
-  // Return a flat list of all categories (parent and children) with depth information
-  return tree.flatMap((node) => {
+
+  // Only process root nodes (those with no parent_id) at the top level
+  // This prevents children that are incorrectly present in the root array
+  // from being added twice (once as root, once as child).
+  const rootNodes = tree.filter(node => !node.parent_id);
+
+  return rootNodes.flatMap((node) => {
     const id = node?.id;
     const label = node?.name;
     const children = node?.children_recursive || [];
     const options = [];
-    
+
     // Add parent category
     if (id) {
-      options.push({ 
-        id: String(id), 
-        label, 
+      options.push({
+        id: String(id),
+        label,
         fullPath: label,
         depth: 0,
         isParent: children.length > 0,
         parentLabel: null
       });
     }
-    
+
     // Add children with depth information
     if (children.length > 0) {
       options.push(...collectCategoryOptions(children, [label], 1));
     }
-    
+
     return options;
   });
 }

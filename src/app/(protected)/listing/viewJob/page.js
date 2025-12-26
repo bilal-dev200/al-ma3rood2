@@ -107,7 +107,9 @@ const Page = () => {
   async function handleWithdraw(option) {
     try {
       await JobsApi.withdrawListing(listing.id); // Assuming a JobsApi.withdrawListing exists
+       toast.success("Job withdrawn successfully");
       setOpenWithdrawDialog(false);
+      router.replace("/account/jobs-list");
     } catch (error) {
       console.log("error", error);
       toast.error(t("Failed to withdraw listing."));

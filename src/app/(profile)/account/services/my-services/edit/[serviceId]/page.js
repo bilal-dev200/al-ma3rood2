@@ -5,7 +5,8 @@ export const metadata = {
   description: "Edit your service listing on Ma3rood.",
 };
 
-export default function Page({ params }) {
-  return <EditServiceForm serviceId={params.serviceId} />;
+export default async function Page({ params }) {
+  const resolvedParams = await params;
+  return <EditServiceForm serviceId={resolvedParams.serviceId} />;
 }
 

@@ -103,7 +103,9 @@ const Page = () => {
   async function handleWithdraw(option) {
     try {
       await listingsApi.withdrawListing(listing.slug);
+       toast.success("Listing withdrawn successfully ✅");
       setOpenWithdrawDialog(false);
+      router.replace("/account/selling");
     } catch (error) {
       console.log("error", error);
     }

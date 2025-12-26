@@ -346,19 +346,18 @@ const PropertiesClient = ({
 
   const priceOptions = [
     { value: "", label: "Select Price" },
-    { value: "50000", label: "50,000" },
-    { value: "100000", label: "100,000" },
-    { value: "200000", label: "200,000" },
-    { value: "500000", label: "500,000+" },
+    { value: "100000", label: "100k" },
+    { value: "200000", label: "200k" },
+    { value: "500000", label: "500k" },
+    { value: "1000000", label: "1M+" },
   ];
 
   const landAreaOptions = [
     { value: "", label: "Select Land Area" },
-    { value: "100", label: "100 sqm" },
-    { value: "200", label: "200 sqm" },
+    { value: "150", label: "150 sqm" },
     { value: "300", label: "300 sqm" },
-    { value: "400", label: "400 sqm" },
-    { value: "500", label: "500+ sqm" },
+    { value: "550", label: "550 sqm" },
+    { value: "700", label: "700+ sqm" },
   ];
 
   const parkingOptions = [
