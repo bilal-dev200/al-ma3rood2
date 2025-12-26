@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { servicesApi } from "@/lib/api/services";
 import SearchableDropdown from "@/components/WebsiteComponents/ReuseableComponenets/SearchableDropdown";
 import { useServicesStore } from "@/lib/stores/servicesStore";
+import AvailabilitySchedule from "@/components/WebsiteComponents/listingforms/AvailabilitySchedule";
 
 const listingSchema = z.object({
   title: z.string().min(4, "Add a clear service title"),
@@ -27,6 +28,11 @@ const listingSchema = z.object({
   // priceUnit: z.string().min(3, "Add a price unit, e.g. per project"),
   experience: z.string().optional(),
   nextAvailability: z.string().optional(),
+  availability: z.record(z.string(), z.array(z.object({
+    start: z.string(),
+    end: z.string(),
+    enabled: z.boolean().optional()
+  }))).optional(),
   images: z
     .any()
     .optional()
@@ -38,7 +44,7 @@ const listingSchema = z.object({
 
 export default function CreateServiceListingForm() {
   const router = useRouter();
-  
+
   // Get categories and regions from Zustand store
   const categories = useServicesStore((state) => state.categories);
   const regions = useServicesStore((state) => state.regions);
@@ -50,6 +56,7 @@ export default function CreateServiceListingForm() {
     watch,
     reset,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(listingSchema),
@@ -64,6 +71,15 @@ export default function CreateServiceListingForm() {
       priceUnit: "per project",
       experience: "",
       nextAvailability: "",
+      availability: {
+        Sun: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+        Mon: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+        Tue: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+        Wed: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+        Thu: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+        Fri: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+        Sat: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+      },
       images: undefined,
     },
   });
@@ -125,14 +141,14 @@ export default function CreateServiceListingForm() {
         region.id === selectedRegion || region.value === selectedRegion || String(region.id) === String(selectedRegion)
     );
     if (!match) return [];
-    
+
     let areas = [];
     if (Array.isArray(match.areas) && match.areas.length) {
       areas = match.areas;
     } else if (Array.isArray(match.governorates) && match.governorates.length) {
       areas = match.governorates;
     }
-    
+
     return areas.map((area) => {
       if (typeof area === "string") {
         return { id: area, label: area };
@@ -178,6 +194,39 @@ export default function CreateServiceListingForm() {
         formData.append("next_availability", values.nextAvailability.trim());
       }
 
+      if (values.availability) {
+        const DAY_MAP = {
+          Sun: "sunday",
+          Mon: "monday",
+          Tue: "tuesday",
+          Wed: "wednesday",
+          Thu: "thursday",
+          Fri: "friday",
+          Sat: "saturday",
+        };
+
+        const formatTo24h = (timeStr) => {
+          if (!timeStr || !timeStr.includes(" ")) return timeStr;
+          const [time, modifier] = timeStr.split(" ");
+          let [hours, minutes] = time.split(":");
+          if (hours === "12") hours = "00";
+          if (modifier === "PM") hours = parseInt(hours, 10) + 12;
+          return `${String(hours).padStart(2, "0")}:${minutes}`;
+        };
+
+        let index = 0;
+        Object.entries(values.availability).forEach(([day, slots]) => {
+          slots.forEach((slot) => {
+            if (slot.enabled !== false) {
+              formData.append(`schedule[${index}][day]`, DAY_MAP[day] || day.toLowerCase());
+              formData.append(`schedule[${index}][from]`, formatTo24h(slot.start));
+              formData.append(`schedule[${index}][to]`, formatTo24h(slot.end));
+              index++;
+            }
+          });
+        });
+      }
+
       const imageFiles =
         values.images instanceof FileList ? Array.from(values.images) : [];
       imageFiles.forEach((file, index) => {
@@ -197,6 +246,15 @@ export default function CreateServiceListingForm() {
         priceUnit: "per project",
         experience: "",
         nextAvailability: "",
+        availability: {
+          Sun: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+          Mon: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+          Tue: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+          Wed: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+          Thu: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+          Fri: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+          Sat: [{ start: "06:00 AM", end: "07:00 PM", enabled: true }],
+        },
         images: undefined,
       });
       const slug = response?.data?.slug || response?.slug;
@@ -205,14 +263,14 @@ export default function CreateServiceListingForm() {
       }
     } catch (error) {
       console.error("Error creating service listing:", error);
-      
+
       // Handle API validation errors - check multiple possible error structures
-      const validationErrors = 
-        error?.data?.data || 
-        error?.data?.errors || 
-        error?.response?.data?.data || 
+      const validationErrors =
+        error?.data?.data ||
+        error?.data?.errors ||
+        error?.response?.data?.data ||
         error?.response?.data?.errors;
-      
+
       if (validationErrors && typeof validationErrors === "object") {
         Object.entries(validationErrors).forEach(([field, messages]) => {
           if (Array.isArray(messages)) {
@@ -450,6 +508,22 @@ export default function CreateServiceListingForm() {
                 type="text"
                 placeholder="e.g. Available from mid-January"
                 className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-4">
+                Weekly availability schedule
+              </label>
+              <Controller
+                name="availability"
+                control={control}
+                render={({ field }) => (
+                  <AvailabilitySchedule
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
             </div>
 

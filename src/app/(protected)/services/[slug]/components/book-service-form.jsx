@@ -67,6 +67,20 @@ export default function BookServiceForm({ service }) {
     return `Hi ${serviceName},\n\nI'd like to lock in ${categoryLabel.toLowerCase()} in ${areaLabel}. Please confirm availability for the selected slot.`;
   }, [service]);
 
+  // Parse availability if it's a string
+  const availability = useMemo(() => {
+    if (!service?.availability) return null;
+    if (typeof service.availability === "string") {
+      try {
+        return JSON.parse(service.availability);
+      } catch (e) {
+        console.error("Failed to parse availability", e);
+        return null;
+      }
+    }
+    return service.availability;
+  }, [service?.availability]);
+
   const {
     register,
     handleSubmit,
@@ -78,8 +92,8 @@ export default function BookServiceForm({ service }) {
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       preferredDate: "",
-      startTime: "09:00",
-      endTime: "11:00",
+      startTime: "",
+      endTime: "",
       addressLine1: "",
       regionId: initialRegionId ? String(initialRegionId) : "",
       governorateId: initialGovernorateId ? String(initialGovernorateId) : "",
@@ -87,6 +101,73 @@ export default function BookServiceForm({ service }) {
       budget: "",
     },
   });
+
+  const preferredDate = watch("preferredDate");
+
+  // Determine available slots for the selected date
+  const availableSlots = useMemo(() => {
+    if (!preferredDate) return [];
+
+    // Parse YYYY-MM-DD manually to avoid timezone shifts (new Date("YYYY-MM-DD") is UTC)
+    const [year, month, day] = preferredDate.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+
+    // Use full lowercase day name to match new schedule format
+    const dayNameFull = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ][date.getDay()];
+    // Keep short name for backward compatibility with old availability object
+    const dayNameShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+      date.getDay()
+    ];
+
+    // Priority 1: Use service.schedule (the new array format)
+    let scheduleArray = service?.schedule;
+    if (typeof scheduleArray === "string") {
+      try {
+        scheduleArray = JSON.parse(scheduleArray);
+      } catch (e) {
+        console.error("Failed to parse schedule string", e);
+      }
+    }
+
+    if (Array.isArray(scheduleArray)) {
+      return scheduleArray
+        .filter((slot) => slot.day === dayNameFull)
+        .map((slot) => ({
+          start: slot.from,
+          end: slot.to,
+        }));
+    }
+
+    // Priority 2: Use service.availability (the old object format)
+    if (availability) {
+      const daySlots = availability[dayNameShort] || [];
+      return daySlots.filter((slot) => slot.enabled !== false);
+    }
+
+    return [];
+  }, [preferredDate, availability, service?.schedule]);
+
+  const selectedSlotValue = watch("startTime") + " - " + watch("endTime");
+
+  const handleSlotChange = (e) => {
+    const val = e.target.value;
+    if (!val) {
+      setValue("startTime", "");
+      setValue("endTime", "");
+      return;
+    }
+    const [start, end] = val.split(" - ");
+    setValue("startTime", start);
+    setValue("endTime", end);
+  };
 
   const selectedRegionId = watch("regionId");
   const selectedGovernorateId = watch("governorateId");
@@ -181,14 +262,30 @@ export default function BookServiceForm({ service }) {
 
   async function onSubmit(values) {
     try {
+      const [year, month, day] = values.preferredDate.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      const dayName = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][date.getDay()];
+
+      const formatTo24h = (timeStr) => {
+        if (!timeStr || !timeStr.includes(" ")) return timeStr;
+        const [time, modifier] = timeStr.split(" ");
+        let [hours, minutes] = time.split(":");
+        if (hours === "12") hours = "00";
+        if (modifier === "PM") hours = parseInt(hours, 10) + 12;
+        return `${String(hours).padStart(2, "0")}:${minutes}`;
+      };
+
       const booking = await bookService({
         ...values,
         serviceSlug: service.slug,
         serviceTitle: service.title,
-        preferredTimeWindow: {
-          start: values.startTime,
-          end: values.endTime,
-        },
+        schedule: [
+          {
+            day: dayName,
+            from: formatTo24h(values.startTime),
+            to: formatTo24h(values.endTime),
+          },
+        ],
       });
       // toast.success("Booking created. We'll notify the provider.");
 
@@ -271,6 +368,37 @@ export default function BookServiceForm({ service }) {
             </p>
           )}
         </div>
+
+        {preferredDate && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Select time slot
+            </label>
+            {availableSlots.length > 0 ? (
+              <select
+                onChange={handleSlotChange}
+                value={watch("startTime") ? selectedSlotValue : ""}
+                className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <option value="">Choose a time slot</option>
+                {availableSlots.map((slot, idx) => (
+                  <option key={idx} value={`${slot.start} - ${slot.end}`}>
+                    {slot.start} - {slot.end}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="mt-1 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-500 italic text-center">
+                The provider is unavailable on this day.
+              </div>
+            )}
+            {(errors.startTime || errors.endTime) && (
+              <p className="mt-1 text-xs text-red-500">
+                Please select an available time slot.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* <div className="grid gap-4 sm:grid-cols-2">
           <div>

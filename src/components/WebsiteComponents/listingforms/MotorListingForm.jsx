@@ -17,6 +17,7 @@ import { listingsApi } from "@/lib/api/listings";
 import { motorsApi, motorSearchFilters } from "@/lib/api/motors";
 import { toast } from "react-toastify";
 import UploadPhotos from "./UploadPhotos";
+import PriceAndPayment from "./PriceAndPayment";
 import { categoriesApi } from "@/lib/api/category";
 import CategoryModal from "./CategoryModal";
 import {
@@ -36,6 +37,16 @@ const QuillEditor = dynamic(() => import("@/components/ui/QuillEditor"), {
   ),
 });
 
+const priceField = z.preprocess((val) => {
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed === "") return 0;
+    const n = Number(trimmed);
+    return isNaN(n) ? val : n;
+  }
+  return val;
+}, z.number().nullable().optional());
+
 const motorListingSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
@@ -52,11 +63,17 @@ const motorListingSchema = z
     //   "for_parts_or_not_working",
     // ]),
     images: z.array(z.any()).min(1, "At least one image is required"),
-    buy_now_price: z.string().optional(),
+    selling_type: z.enum(["auction", "buy_now", "both"], {
+      errorMap: () => ({ message: "Please select how you would like to sell" }),
+    }),
+    buy_now_price: priceField,
     allow_offers: z.boolean().optional(),
-    start_price: z.string().optional(),
-    reserve_price: z.string().optional(),
-    expire_at: z.date().optional(),
+    start_price: priceField,
+    reserve_price: priceField,
+    expire_at: z.date({
+      required_error: "Please select an expiry date and time",
+      invalid_type_error: "Please select a valid expiry date and time"
+    }),
     payment_method_id: z.string().optional(),
     // quantity: z.number().optional(),
     // vehicle_type: z.string().min(1, "Vehicle Type is required"),
@@ -81,76 +98,68 @@ const motorListingSchema = z
     wof_expiry: z.string().optional(),
     rego_expiry: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      // Case 1: Buy now price is filled
-      if (data.buy_now_price && data.buy_now_price.trim() !== "") {
-        return true;
+  .superRefine((data, ctx) => {
+    const isAuction =
+      data.selling_type === "auction" || data.selling_type === "both";
+    const isBuyNow =
+      data.selling_type === "buy_now" || data.selling_type === "both";
+
+    const isMissing = (v) => v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+
+    if (isAuction) {
+      if (isMissing(data.start_price)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Start price is required",
+          path: ["start_price"],
+        });
       }
 
-      // Case 2: Both start and reserve price are filled
-      if (
-        data.start_price &&
-        data.start_price.trim() !== "" &&
-        data.reserve_price &&
-        data.reserve_price.trim() !== ""
-      ) {
-        return true;
+      if (isMissing(data.reserve_price)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Reserve price is required",
+          path: ["reserve_price"],
+        });
+      }
+    }
+
+    if (isBuyNow) {
+      if (isMissing(data.buy_now_price)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Buy now price is required",
+          path: ["buy_now_price"],
+        });
+      }
+    }
+
+    const buyNow = Number(data.buy_now_price);
+    const start = Number(data.start_price);
+    const reserve = Number(data.reserve_price);
+
+    const hasBuyNow = !isNaN(buyNow);
+    const hasStart = !isNaN(start);
+    const hasReserve = !isNaN(reserve);
+
+    if (data.selling_type === "both") {
+      if (hasStart && hasBuyNow && start > buyNow) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Start price cannot be greater than Buy Now price",
+          path: ["start_price"],
+        });
       }
 
-      // Otherwise fail
-      return false;
-    },
-    {
-      message:
-        "Either enter Buy Now Price, or both Start Price and Reserve Price",
-      path: ["buy_now_price"], // error will show under buy_now_price by default
-    }
-  )
-  .refine(
-    (data) => {
-      // Start Price cannot be greater than Buy Now Price
-      if (
-        data.buy_now_price &&
-        data.buy_now_price.trim() !== "" &&
-        data.start_price &&
-        data.start_price.trim() !== ""
-      ) {
-        const buyNow = parseFloat(data.buy_now_price);
-        const start = parseFloat(data.start_price);
-        if (!isNaN(buyNow) && !isNaN(start) && start > buyNow) {
-          return false;
-        }
+      if (hasReserve && hasBuyNow && reserve > buyNow) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Reserve price cannot be greater than Buy Now price",
+          path: ["reserve_price"],
+        });
       }
-      return true;
-    },
-    {
-      message: "Start Price cannot be greater than Buy Now Price",
-      path: ["start_price"],
     }
-  )
-  .refine(
-    (data) => {
-      // Reserve Price cannot be greater than Buy Now Price
-      if (
-        data.buy_now_price &&
-        data.buy_now_price.trim() !== "" &&
-        data.reserve_price &&
-        data.reserve_price.trim() !== ""
-      ) {
-        const buyNow = parseFloat(data.buy_now_price);
-        const reserve = parseFloat(data.reserve_price);
-        if (!isNaN(buyNow) && !isNaN(reserve) && reserve > buyNow) {
-          return false;
-        }
-      }
-      return true;
-    },
-    {
-      message: "Reserve Price cannot be greater than Buy Now Price",
-      path: ["reserve_price"],
-    }
-  );
+  });
 
 const steps = [
   { title: "Vehicle Type & Category", key: "vehicle-type" },
@@ -621,7 +630,7 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
     ["category_id"], // Step 0
     ["title", "description", "condition", "make", "model", "year"], // Step 1
     ["images"], // Step 2
-    ["buy_now_price", "start_price", "reserve_price"], // Step 3
+    ["selling_type", "buy_now_price", "start_price", "reserve_price", "expire_at"], // Step 3
   ];
 
   // Load vehicle data based on vehicle type
@@ -685,9 +694,19 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
     // 2. Convert 'allow_offers' string ("false") to boolean (false)
     if (copy.allow_offers) {
       copy.allow_offers =
-        copy.allow_offers === "true" || copy.allow_offers === true;
+        copy.allow_offers === "true" || copy.allow_offers === true || copy.allow_offers === "1";
     } else {
       copy.allow_offers = false;
+    }
+
+    // 3. Set selling_type based on prices if not present
+    if (!copy.selling_type) {
+      const hasBuyNow = copy.buy_now_price && copy.buy_now_price !== "" && copy.buy_now_price !== "0";
+      const hasAuction = copy.start_price && copy.start_price !== "" && copy.start_price !== "0";
+      if (hasBuyNow && hasAuction) copy.selling_type = "both";
+      else if (hasBuyNow) copy.selling_type = "buy_now";
+      else if (hasAuction) copy.selling_type = "auction";
+      else copy.selling_type = "";
     }
 
     // ✅ Vehicle data normalization – only adjust when incoming values exist in dataset
@@ -875,6 +894,7 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
       formData.append("category_id", data.category_id || 1);
       formData.append("description", data.description);
       formData.append("condition", data.condition || "new");
+      formData.append("selling_type", data.selling_type);
       formData.append("buy_now_price", data.buy_now_price || "");
       formData.append("allow_offers", data.allow_offers ? "1" : "0");
       formData.append("start_price", data.start_price || "");
@@ -1778,293 +1798,9 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
   );
 
   const renderPricePaymentStep = () => {
-    const categoryId = watch("category_id");
-    const startPrice = watch("start_price");
-    const buyNowPrice = watch("buy_now_price");
-    const isReservePriceDisabled = !startPrice || startPrice.trim() === "";
     return (
       <div className="space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Price & Payment
-          </h2>
-          <p className="text-lg text-gray-600">
-            Set your pricing and payment options
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900">Pricing</h3>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Buy Now Price
-              </label>
-              <Controller
-                name="buy_now_price"
-                control={control}
-                render={({ field }) => (
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 price">$</span>
-                    </div>
-                    <input
-                      {...field}
-                      type="number"
-                      min="0"
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const numValue = parseFloat(value);
-                        if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
-                          field.onChange(value);
-                        } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
-                          field.onChange("");
-                        }
-                      }}
-                      className="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
-      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Enter price"
-                    />
-                  </div>
-                )}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Allow Offers
-              </label>
-              <Controller
-                name="allow_offers"
-                control={control}
-                render={({ field }) => (
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      {...field}
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                      className="mr-2"
-                    />
-                    Accept offers from buyers
-                  </label>
-                )}
-              />
-            </div>
-            {/* )} */}
-
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Price
-                </label>
-                <Controller
-                  name="start_price"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 price">$</span>
-                      </div>
-                      <input
-                        {...field}
-                        type="number"
-                        min="0"
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const numValue = parseFloat(value);
-                          if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
-                            field.onChange(value);
-                          } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
-                            field.onChange("");
-                          }
-                        }}
-                        className={`w-full border rounded-md 
-      focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
-      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
-      ${errors.start_price ? "border-red-500" : "border-gray-300"}`}
-                        placeholder="Enter start price"
-                      />
-                    </div>
-                  )}
-                />
-                {errors.start_price && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.start_price.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reserve Price
-                </label>
-                <Controller
-                  name="reserve_price"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 price">$</span>
-                      </div>
-                      <input
-                        {...field}
-                        type="number"
-                        min="0"
-                        disabled={isReservePriceDisabled}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const numValue = parseFloat(value);
-                          if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
-                            field.onChange(value);
-                          } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
-                            field.onChange("");
-                          }
-                        }}
-                        className={`w-full border rounded-md 
-      focus:outline-none focus:ring-2 focus:ring-green-500 pl-8 pr-3 py-2
-      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
-      ${errors.reserve_price ? "border-red-500" : "border-gray-300"}
-      ${isReservePriceDisabled
-                            ? "bg-gray-100 cursor-not-allowed opacity-60"
-                            : ""
-                          }`}
-                        placeholder="Enter reserve price"
-                      />
-                    </div>
-                  )}
-                />
-                {errors.reserve_price && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.reserve_price.message}
-                  </p>
-                )}
-                {isReservePriceDisabled && (
-                  <p className="text-gray-500 text-xs mt-1">
-                    Please enter Start Price first
-                  </p>
-                )}
-              </div>
-            </>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900">
-              Additional Options
-            </h3>
-
-            {/* <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Quantity
-            </label>
-          <Controller
-  name="quantity"
-  control={control}
-  render={({ field }) => (
-    <input
-      {...field}
-      type="number"
-      min="1"
-      defaultValue="1"
-      className="w-full px-3 py-2 border border-gray-300 rounded-md 
-      focus:outline-none focus:ring-2 focus:ring-green-500
-      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-      placeholder="1"
-    />
-  )}
-/>
-
-          </div> */}
-
-            {/* <div> */}
-
-            <div className="mt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expiry Date & Time
-              </label>
-              <Controller
-                control={control}
-                name="expire_at"
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <DatePicker
-                    {...field}
-                    selected={field.value}
-                    onChange={(date) =>
-                      setValue("expire_at", date, { shouldValidate: true })
-                    }
-                    showTimeSelect
-                    timeFormat="hh:mm aa"
-                    dateFormat="yyyy-MM-dd h:mm aa"
-                    minDate={new Date()}
-                    maxDate={getMaxDate()}
-                    filterTime={(time) => {
-                      const now = new Date();
-                      const selectedDate = field.value;
-                      if (selectedDate && isToday(selectedDate)) {
-                        return time.getTime() >= now.getTime();
-                      }
-                      return true;
-                    }}
-                    className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring
-                          [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
-                          ${errors.expire_at
-                        ? "border-red-500 focus:border-red-500"
-                        : "border-gray-300 focus:border-green-400"
-                      }`}
-                    placeholderText={t("Select date and time")}
-                  />
-                )}
-              />
-              {errors.expire_at && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.expire_at.message}
-                </p>
-              )}
-            </div>
-            {/* </div> */}
-
-            {/* {watchedVehicleType !== "Car parts & accessories" && (
-              <>
-                <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  VIN Number
-                </label>
-                <Controller
-                  name="vin"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="Vehicle Identification Number"
-                    />
-                  )}
-                />
-              </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Registration
-                  </label>
-                  <Controller
-                    name="registration"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="License plate number"
-                      />
-                    )}
-                  />
-                </div>
-              </>
-            )} */}
-          </div>
-        </div>
+        <PriceAndPayment />
 
         <div className="flex justify-between pt-6">
           <Button

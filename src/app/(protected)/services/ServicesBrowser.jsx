@@ -10,6 +10,7 @@ import ServicesResultsSkeleton from "./components/results-skeleton";
 import { useServicesStore } from "@/lib/stores/servicesStore";
 import { servicesApi } from "@/lib/api/services";
 import { Image_URL } from "@/config/constants";
+import ServiceCategories from "./ServiceCategories";
 
 export default function ServicesBrowser({
   initialListings = [],
@@ -273,6 +274,13 @@ export default function ServicesBrowser({
         canSearch={hasHydrated}
       />
 
+      <ServiceCategories
+  heading="Service Categories"
+  isLoading={false}
+  error={null}
+  description="Browse available service categories"
+/>
+
       <ResultsHeader
         totalResults={listings.length}
         sortBy={sortBy}
@@ -304,5 +312,4 @@ export default function ServicesBrowser({
     </div>
   );
 }
-
 

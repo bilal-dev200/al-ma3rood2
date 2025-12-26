@@ -46,8 +46,15 @@
 }
 
 @font-face {
-  font-family: 'Amiri';
-  src: url("/font/Amiri/Amiri-Regular.ttf") format('truetype');
+  font-family: 'DIN';
+  src: url("/font/Din/D-DIN.otf") format('truetype');
+}
+
+@font-face {
+  font-family: 'DIN';
+  src: url('/font/Din/D-DIN.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
 }
 
 @font-face {
@@ -60,7 +67,7 @@
 }
 
 .font-Amiri {
-  font-family: 'Amiri';
+  font-family: 'DIN';
 }
 
 .font-Poppins {

@@ -349,6 +349,7 @@ const PriceAndPayment = () => {
               <input
                 type="number"
                 min="0"
+                disabled={!start_price}
                 {...register("reserve_price")}
                 className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring
                   [&::-webkit-inner-spin-button]:appearance-none 
