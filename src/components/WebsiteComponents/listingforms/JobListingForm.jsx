@@ -32,8 +32,8 @@ const jobListingSchema = z
       .nullable()
       .refine((val) => val !== null && val > 0, "Job Category is required"),
     subcategory_id: z.number().int().optional().nullable(),
-    region_id: z.string({ required_error: "Region is required" }).nullable(),
-    governorate_id: z.string({ required_error: "Governorate is required" }).nullable(),
+    region_id: z.string().min(1, "Region is required"),
+    governorate_id: z.string().min(1, "Governorate is required"),
 
     company_name: z.string().min(2, "Company Name is required"),
     work_type: z.enum(["full_time", "part_time", "contract", "freelance", "remote"], {
@@ -69,12 +69,24 @@ const jobListingSchema = z
     contact_phone: z.string().min(10, "Valid phone number is required"),
     contact_email: z.string().email("A valid email is required"),
     reference: z.string().optional(),
+    deadline: z.string().optional().nullable().refine((val) => {
+      if (!val) return true;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const deadlineDate = new Date(val);
+      return deadlineDate > today;
+    }, "Deadline must be a future date"),
     video_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 
     // File Uploads
-    logo: fileSchema,
-    banner: fileSchema,
-    images: z.array(fileSchema).optional(),
+    logo: z.any().optional(),
+    banner: z.any().refine((val) => {
+      if (!val) return false;
+      if (val instanceof File) return true;
+      if (typeof val === 'string' && val.trim().length > 0) return true;
+      return false;
+    }, "Banner is required"),
+    images: z.array(z.any()).min(2, "At least 2 additional images are required"),
   })
 // .strict(); 
 
@@ -86,7 +98,7 @@ const jobSteps = [
     fields: [
       "title", "category_id", "region_id", "governorate_id",
       "company_name", "work_type", "minimum_pay_type",
-      "minimum_pay_amount", "package_id",
+      "minimum_pay_amount", "package_id", "deadline",
     ]
   },
   {
@@ -145,6 +157,7 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
       banner: undefined,
       images: [],
       package_id: 1,
+      deadline: "",
     },
     mode: "onTouched",
   });
@@ -192,6 +205,9 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
     copy.show_pay = copy.show_pay === true || copy.show_pay === "true" ? 1 : 0;
 
     if (copy.category_id) copy.category_id = Number(copy.category_id);
+    if (typeof copy.minimum_pay_amount === "string") {
+      copy.minimum_pay_amount = copy.minimum_pay_amount.replace(/,/g, "");
+    }
     if (initialValues.region && initialValues.region.name) {
       copy.region_id = initialValues.region.name;
     } else {
@@ -212,6 +228,12 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
       copy.key_points = "";
     }
     if (copy.package_id) copy.package_id = Number(copy.package_id);
+    if (copy.deadline && typeof copy.deadline === "string") {
+      // Input type="date" expects YYYY-MM-DD
+      copy.deadline = copy.deadline.split("T")[0];
+    } else {
+      copy.deadline = "";
+    }
 
     if (initialValues.logo) {
       copy.logo = initialValues.logo;
@@ -402,6 +424,7 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
       if (data.region_id) formData.append("region_id", regions.find((r) => r.name === data.region_id)?.id || null);
       if (data.governorate_id) formData.append("governorate_id", governorates.find((g) => g.name === data.governorate_id)?.id || null,);
       if (data.package_id) formData.append("package_id", data.package_id.toString());
+      if (data.deadline) formData.append("deadline", data.deadline);
 
       // Optional/Misc Fields
       if (data.company_benefits) formData.append("company_benefits", data.company_benefits);
@@ -553,7 +576,7 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
 
           {/* Region ID (Placeholder) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Region*</label>
             <Controller
               name="region_id"
               control={control}
@@ -582,7 +605,7 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
 
           {/* Governorate ID (Placeholder) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Governorate</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Governorate*</label>
             <Controller
               name="governorate_id"
               control={control}
@@ -921,6 +944,31 @@ Line 2: 3+ years experience...`} />
             {errors.contact_email && <p className="text-red-500 text-sm mt-1">{errors.contact_email.message}</p>}
           </div>
 
+          {/* Package (Placeholder) - usually fixed to 1 for now */}
+          {/* <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Package ID</label>
+                <Controller name="package_id" control={control} render={({ field }) => (
+                    <input {...field} type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" />
+                )} />
+            </div> */}
+
+          {/* Deadline (Optional) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Application Deadline (Optional)</label>
+            <Controller
+              name="deadline"
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              )}
+            />
+            {errors.deadline && <p className="text-red-500 text-sm mt-1">{errors.deadline.message}</p>}
+          </div>
           {/* Reference (Optional) */}
           {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Reference (Optional)</label>
@@ -942,14 +990,13 @@ Line 2: 3+ years experience...`} />
           <FileInput name="logo" label="Company Logo (File)" />
 
           {/* Banner Upload */}
-          <FileInput name="banner" label="Job Banner (File)" />
+          <FileInput name="banner" label="Job Banner (File)*" />
 
           {/* Media Upload */}
           <div className="md:col-span-2">
             <UploadPhotos
-              label="Additional Media (Photos)"
-              // onChange={(files) => setValue("media", files)}
-              onChange={(files) => setValue("media", files)}
+              name="images"
+              label="Additional Media (Photos)*"
             />
           </div>
 

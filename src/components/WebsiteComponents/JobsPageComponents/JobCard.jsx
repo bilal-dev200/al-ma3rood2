@@ -4,20 +4,27 @@ import Link from "next/link";
 import { FaBriefcase } from "react-icons/fa";
 
 export default function JobCard({ title, company, location, date, description, logo, banner, slug }) {
-    // Function to get "Listed X hours/days ago"
+  // Function to get "Listed X hours/days ago"
   const getRelativeTime = (createdAt) => {
-    const now = new Date();
+    if (!createdAt) return "Date not available";
+
     const posted = new Date(createdAt);
+    const now = new Date();
+
     const diffMs = now - posted;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-    if (diffHours < 1) return "Listed just now";
-    if (diffHours < 24) return `Listed ${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 1) return "Listed just now";
+    if (diffMinutes < 60) return `Listed ${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+    if (diffHours < 24) return `Listed ${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     if (diffDays === 1) return "Listed 1 day ago";
+
     return `Listed ${diffDays} days ago`;
   };
+
+
   return (
     <Link href={`/jobs/${slug}`} className="cursor-pointer bg-[#F8F8F8] border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col">
 
@@ -27,7 +34,7 @@ export default function JobCard({ title, company, location, date, description, l
       </div>
 
       <div className="flex items-center text-gray-600 text-sm mb-4">
-        
+
         <div className="flex items-center text-xs w-fit">
           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
             <path
@@ -40,21 +47,21 @@ export default function JobCard({ title, company, location, date, description, l
         </div>
         <span className="mx-2">|</span>
         <span className="text-[#175f48] text-sm">{getRelativeTime(date)}</span>
-        
+
       </div>
 
       <p className="text-gray-600 text-sm mb-6 leading-relaxed flex-grow">
-         {description
-    ? description.length > 250
-      ? `${description.slice(0, 250)}...`
-      : description
-    : "No description available..."}
+        {description
+          ? description.length > 250
+            ? `${description.slice(0, 250)}...`
+            : description
+          : "No description available..."}
       </p>
 
       <div className="flex justify-between">
         <div></div>
-              {/* Company Logo */}
-      <div className="flex flex-col justify-center items-center">
+        {/* Company Logo */}
+        <div className="flex flex-col justify-center items-center">
           {logo ? (
             <Image
               src={`${Image_URL}${logo}`}

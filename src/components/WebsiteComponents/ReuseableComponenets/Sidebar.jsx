@@ -22,12 +22,18 @@ import {
   FaChevronUp,
   FaHandsHelping,
 } from "react-icons/fa";
+import { SlOptionsVertical } from "react-icons/sl";
+import { FiLogOut } from "react-icons/fi";
 import { LiaFileUploadSolid } from "react-icons/lia";
 import { IoIosDocument } from "react-icons/io";
 import { useTranslation } from "react-i18next";
 import { MdWorkHistory } from "react-icons/md";
+import { useAuthStore } from "@/lib/stores/authStore";
+import { Image_URL } from "@/config/constants";
+import Image from "next/image";
 
 const Sidebar = () => {
+  const { user, logout, updateUser } = useAuthStore();
   const [showSidebar, setShowSidebar] = useState(false);
   const [showSellingOptions, setShowSellingOptions] = useState(false);
   const [showBuyingOptions, setShowBuyingOptions] = useState(false);
@@ -54,12 +60,12 @@ const Sidebar = () => {
       {/* Fixed Sidebar Toggle Icon (Mobile Only) */}
       {!showSidebar && (
         <button
-          className={`md:hidden text-green-500 bg-white fixed top-4 ${
+          className={`md:hidden text-green-500 bg-white fixed top-24 ${
             isArabic ? "right-4" : "left-4"
           } z-[999]`}
           onClick={() => setShowSidebar(true)}
         >
-          <GoSidebarExpand size={24} />
+          <SlOptionsVertical size={24} />
         </button>
       )}
 
@@ -85,6 +91,32 @@ const Sidebar = () => {
           </button>
         </div>
 
+        <div className="flex flex-col justify-center items-center">
+ {/* Profile Image */}
+  <div className="relative w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center overflow-hidden">
+    {user?.profile_photo ? (
+      <Image
+        src={`${Image_URL}${user.profile_photo}`}
+        alt="Profile"
+        fill
+        sizes="48px"
+        className="object-cover"
+      />
+    ) : (
+      <span className="text-lg font-semibold">
+        {user?.username?.charAt(0)?.toUpperCase()}
+      </span>
+    )}
+  </div>
+
+  {/* Username */}
+  <div>
+    <h2 className="text-sm font-semibold text-gray-900">
+      {user?.username}
+    </h2>
+    <p className="py-4"></p>
+  </div>
+</div>
         {/* <div className="font-semibold mb-6 hidden md:block">Ma3rood</div> */}
 
         {/* Navigation Links */}
@@ -309,6 +341,20 @@ const Sidebar = () => {
             <FaClipboardList />
             <span>{t("Help")}</span>
           </Link> */}
+
+          {/* Logout */}
+<div className="mt-auto pt-6 border-t border-gray-200">
+  <button
+    onClick={logout}
+    className={`w-full flex items-center gap-2 text-red-500 hover:text-red-600 transition ${
+      isArabic ? "flex-row-reverse justify-end" : ""
+    }`}
+  >
+    <FiLogOut />
+    <span>{t("Logout")}</span>
+  </button>
+</div>
+
         </nav>
       </div>
 

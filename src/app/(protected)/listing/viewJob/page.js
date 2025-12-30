@@ -77,11 +77,15 @@ const Page = () => {
     },
     {
       label: "Entry Level",
-      value: listing.is_entry_level ? t("Yes") : t("No"),
+      value: listing?.is_entry_level ? t("Yes") : t("No"),
     },
     {
       label: "Posted On",
-      value: new Date(listing.created_at).toLocaleDateString(),
+      value: new Date(listing?.created_at).toLocaleDateString(),
+    },
+    {
+      label: "Deadline",
+      value: new Date(listing?.deadline).toLocaleDateString(),
     },
   ];
 

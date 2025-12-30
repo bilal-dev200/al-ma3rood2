@@ -57,7 +57,7 @@ const Navbar = () => {
     <header className="w-full border-b shadow-sm ">
       <div className="flex items-center justify-between px-4 md:px-6 py-3 bg-white flex-wrap">
         <div className="flex items-center gap-4 md:gap-8 text-sm">
-        
+        {pathname !== "/account" && (
           <Link href={isLoggedIn ? "/account" : `/login?callbackUrl=${encodeURIComponent(pathname)}`}>
             <div className="flex items-center gap-2 cursor-pointer hover:text-green-500 transition-colors">
               {isLoggedIn ? (
@@ -71,7 +71,7 @@ const Navbar = () => {
                   />
                 ) : (
                   <div
-                    className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white font-bold"
+                    className="flex w-8 h-8 rounded-full bg-green-600 items-center justify-center text-white font-bold"
                   >
                     {user?.username?.charAt(0).toUpperCase() || "U"}
                   </div>
@@ -79,11 +79,12 @@ const Navbar = () => {
               ) : (
                 <FaUser className="text-lg" />
               )}
-              <span>
-                {isLoggedIn ? user?.username || t("Account") : t("Login")}
-              </span>
+              {/* <span> */}
+                {isLoggedIn ? <span className="hidden md:flex"> {user?.username} </span> || <span>{t("Account")}</span> : <span>{t("Login")}</span>}
+              {/* </span> */}
             </div>
           </Link>
+        )}
 
 
           <div className="hidden sm:flex items-center gap-2 hover:text-green-500">
@@ -96,7 +97,7 @@ const Navbar = () => {
               </span>
             </a>
           </div>
-          <LanguageSwitcher />
+          {/* <LanguageSwitcher /> */}
         </div>
 
         <div className="order-first sm:order-none w-full sm:w-auto text-center mt-2 sm:mt-0 flex justify-center">
@@ -150,6 +151,7 @@ const Navbar = () => {
             )}
           </button>
         </div>
+
       </div>
 
       <nav
