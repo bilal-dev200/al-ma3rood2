@@ -591,6 +591,18 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
     formState: { errors },
     control,
   } = methods;
+
+  const sellingType = watch("selling_type");
+
+  useEffect(() => {
+    if (sellingType === "auction") {
+      setValue("buy_now_price", "");
+    } else if (sellingType === "buy_now") {
+      setValue("start_price", "");
+      setValue("reserve_price", "");
+    }
+  }, [sellingType, setValue]);
+
   const watchedVehicleType = watch("vehicle_type");
   const watchedCategoryId = watch("category_id");
   const [activeStep, setActiveStep] = useState(0);
@@ -700,13 +712,17 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
     }
 
     // 3. Set selling_type based on prices if not present
-    if (!copy.selling_type) {
-      const hasBuyNow = copy.buy_now_price && copy.buy_now_price !== "" && copy.buy_now_price !== "0";
-      const hasAuction = copy.start_price && copy.start_price !== "" && copy.start_price !== "0";
-      if (hasBuyNow && hasAuction) copy.selling_type = "both";
-      else if (hasBuyNow) copy.selling_type = "buy_now";
-      else if (hasAuction) copy.selling_type = "auction";
-      else copy.selling_type = "";
+    if (!copy.selling_type || copy.selling_type === "") {
+      const hasBuyNow = Number(copy.buy_now_price) > 0;
+      const hasStartPrice = Number(copy.start_price) > 0;
+
+      if (hasBuyNow && hasStartPrice) {
+        copy.selling_type = "both";
+      } else if (hasBuyNow) {
+        copy.selling_type = "buy_now";
+      } else if (hasStartPrice) {
+        copy.selling_type = "auction";
+      }
     }
 
     // ✅ Vehicle data normalization – only adjust when incoming values exist in dataset

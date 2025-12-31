@@ -282,6 +282,27 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
     } else {
       copy.attributes = [];
     }
+
+    // Strip commas from price fields
+    ['buy_now_price', 'start_price', 'reserve_price'].forEach(field => {
+      if (typeof copy[field] === "string") {
+        copy[field] = copy[field].replace(/,/g, "");
+      }
+    });
+
+    // Synchronize selling_type with price fields if needed
+    if (!copy.selling_type || copy.selling_type === "") {
+      const hasBuyNow = Number(copy.buy_now_price) > 0;
+      const hasStartPrice = Number(copy.start_price) > 0;
+
+      if (hasBuyNow && hasStartPrice) {
+        copy.selling_type = "both";
+      } else if (hasBuyNow) {
+        copy.selling_type = "buy_now";
+      } else if (hasStartPrice) {
+        copy.selling_type = "auction";
+      }
+    }
     return copy;
   }, [initialValues]);
 
@@ -291,6 +312,16 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
     mode: "onTouched",
   });
   const { handleSubmit, setValue, watch, reset } = methods;
+  const sellingType = watch("selling_type");
+
+  useEffect(() => {
+    if (sellingType === "auction") {
+      setValue("buy_now_price", "");
+    } else if (sellingType === "buy_now") {
+      setValue("start_price", "");
+      setValue("reserve_price", "");
+    }
+  }, [sellingType, setValue]);
 
   // console.log('initialValues', initialValues);
 
@@ -310,6 +341,26 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
         }));
       } else {
         copy.attributes = [];
+      }
+      // Strip commas from price fields
+      ['buy_now_price', 'start_price', 'reserve_price'].forEach(field => {
+        if (typeof copy[field] === "string") {
+          copy[field] = copy[field].replace(/,/g, "");
+        }
+      });
+
+      // Synchronize selling_type with price fields if needed
+      if (!copy.selling_type || copy.selling_type === "") {
+        const hasBuyNow = Number(copy.buy_now_price) > 0;
+        const hasStartPrice = Number(copy.start_price) > 0;
+
+        if (hasBuyNow && hasStartPrice) {
+          copy.selling_type = "both";
+        } else if (hasBuyNow) {
+          copy.selling_type = "buy_now";
+        } else if (hasStartPrice) {
+          copy.selling_type = "auction";
+        }
       }
       reset(copy);
     }
@@ -450,10 +501,21 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
       formData.append("category_id", data.category_id);
       formData.append("description", data.description);
       formData.append("condition", data.condition);
-      formData.append("buy_now_price", data.buy_now_price);
+      if (data.buy_now_price != null || data.buy_now_price != undefined) {
+        formData.append("buy_now_price", data.buy_now_price);
+      }
+
+      if (data.start_price != null || data.start_price != undefined) {
+        formData.append("start_price", data.start_price);
+      }
+
+      if (data.reserve_price != null || data.reserve_price != undefined) {
+        formData.append("reserve_price", data.reserve_price);
+      }
+      // formData.append("buy_now_price", data.buy_now_price);
       formData.append("allow_offers", data.allow_offers ? "1" : "0");
-      formData.append("start_price", data.start_price);
-      formData.append("reserve_price", data.reserve_price);
+      // formData.append("start_price", data.start_price);
+      // formData.append("reserve_price", data.reserve_price);
       formData.append(
         "expire_at",
         data.expire_at ? new Date(data.expire_at).toISOString() : ""

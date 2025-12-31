@@ -51,9 +51,32 @@ const EditListingPage = ({ params: paramsPromise }) => {
         toast.success("Listing updated successfully!");
         router.push(`/listing/viewlisting?slug=${updatedListing.slug}`);
       }
-    } catch (err) {
-      toast.error("Failed to update listing.");
+ } catch (err) {
+  console.log("Update listing error:", err?.response);
+
+  // ✅ Handle validation error (422)
+  if (err?.status === 422) {
+    const data = err?.data?.data; // 👈 IMPORTANT
+
+    if (data && typeof data === "object") {
+      // get first field error
+      const firstError = Object.values(data)?.[0]?.[0];
+
+      if (firstError) {
+        toast.error(firstError);
+        return; // ⛔ stop here (NO generic error)
+      }
     }
+
+    // fallback (still validation, no generic error)
+    toast.error(err.response.data?.message || "Validation failed");
+    return;
+  }
+
+  // ❌ only for NON-422 errors
+  toast.error("Something went wrong. Please try again.");
+}
+
   };
 
   return (

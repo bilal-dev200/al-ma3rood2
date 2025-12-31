@@ -6,23 +6,24 @@ import { FaBriefcase } from "react-icons/fa";
 export default function JobCard({ title, company, location, date, description, logo, banner, slug }) {
   // Function to get "Listed X hours/days ago"
   const getRelativeTime = (createdAt) => {
-    if (!createdAt) return "Date not available";
+  if (!createdAt) return "Date not available";
 
-    const posted = new Date(createdAt);
-    const now = new Date();
+  // Force UTC parsing
+  const posted = new Date(createdAt.endsWith("Z") ? createdAt : createdAt + "Z");
+  const now = new Date();
 
-    const diffMs = now - posted;
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMinutes / 60);
-    const diffDays = Math.floor(diffHours / 24);
+  const diffMs = now.getTime() - posted.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMinutes < 1) return "Listed just now";
-    if (diffMinutes < 60) return `Listed ${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
-    if (diffHours < 24) return `Listed ${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-    if (diffDays === 1) return "Listed 1 day ago";
+  if (diffMinutes < 1) return "Listed just now";
+  if (diffMinutes < 60) return `Listed ${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `Listed ${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays === 1) return "Listed 1 day ago";
 
-    return `Listed ${diffDays} days ago`;
-  };
+  return `Listed ${diffDays} days ago`;
+};
 
 
   return (
