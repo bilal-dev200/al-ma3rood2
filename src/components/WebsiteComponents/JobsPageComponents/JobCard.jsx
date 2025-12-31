@@ -4,14 +4,41 @@ import Link from "next/link";
 import { FaBriefcase } from "react-icons/fa";
 
 export default function JobCard({ title, company, location, date, description, logo, banner, slug }) {
+ const parseDateSafely = (dateStr) => {
+  // ISO format (2025-01-20 or 2025-01-20T10:30:00Z)
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    return new Date(dateStr);
+  }
+
+  // Slash format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [part1, part2, year] = dateStr.split("/").map(Number);
+
+    // If first part > 12 → must be DD/MM/YYYY
+    if (part1 > 12) {
+      return new Date(Date.UTC(year, part2 - 1, part1));
+    }
+
+    // If second part > 12 → must be MM/DD/YYYY
+    if (part2 > 12) {
+      return new Date(Date.UTC(year, part1 - 1, part2));
+    }
+
+    // Ambiguous (01/02/2025) → assume backend is DD/MM
+    return new Date(Date.UTC(year, part2 - 1, part1));
+  }
+
+  return new Date(dateStr);
+};
+
   // Function to get "Listed X hours/days ago"
-  const getRelativeTime = (createdAt) => {
+const getRelativeTime = (createdAt) => {
   if (!createdAt) return "Date not available";
 
-  // Force UTC parsing
-  const posted = new Date(createdAt.endsWith("Z") ? createdAt : createdAt + "Z");
-  const now = new Date();
+  const posted = parseDateSafely(createdAt);
+  if (isNaN(posted)) return "Invalid date";
 
+  const now = new Date();
   const diffMs = now.getTime() - posted.getTime();
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMinutes / 60);
@@ -24,6 +51,7 @@ export default function JobCard({ title, company, location, date, description, l
 
   return `Listed ${diffDays} days ago`;
 };
+
 
 
   return (
