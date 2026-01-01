@@ -9,7 +9,7 @@ import FontSync from "@/components/WebsiteComponents/FontSync";
 export const metadata = {
   title: "Ma3rood",
   description: "Ma3rood - The Kingdom's marketplace for everything from household items and cars to homes, jobs, and services.",
-other: {
+  other: {
     "google-site-verification": "QOcVF2O0EwymmQj0mtALBvLdFn8PN1QjHWk2pIKwaME",
   },
 };
@@ -31,6 +31,34 @@ export default async function RootLayout({ children }) {
         // className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gray-50`}
         className={`${lang === "ar" ? "font-Amiri" : "font-Poppins"} antialiased min-h-screen bg-gray-50`}
       >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof Node === 'function' && Node.prototype) {
+                const originalRemoveChild = Node.prototype.removeChild;
+                Node.prototype.removeChild = function(child) {
+                  if (child.parentNode !== this) {
+                    if (console) {
+                      console.error('Cannot remove a child from a different parent', child, this);
+                    }
+                    return child;
+                  }
+                  return originalRemoveChild.apply(this, arguments);
+                }
+                 const originalInsertBefore = Node.prototype.insertBefore;
+                Node.prototype.insertBefore = function(newNode, referenceNode) {
+                  if (referenceNode && referenceNode.parentNode !== this) {
+                    if (console) {
+                      console.error('Cannot insert before a reference node from a different parent', referenceNode, this);
+                    }
+                    return newNode;
+                  }
+                  return originalInsertBefore.apply(this, arguments);
+                }
+              }
+            `,
+          }}
+        />
         <FontSync />
         <Toaster />
         <AuthCleanup />
