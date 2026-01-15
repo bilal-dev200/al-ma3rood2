@@ -342,9 +342,9 @@ const UserDetails = ({ profile }) => {
       toast.error("Cover upload failed!");
       console.error("Cover upload failed:", err.message);
     }
-  };   
-   const { t } = useTranslation();
-  
+  };
+  const { t } = useTranslation();
+
 
   return (
     <div className="w-full mx-auto bg-[#FAFAFA] rounded-lg overflow-hidden relative">
@@ -454,16 +454,16 @@ const UserDetails = ({ profile }) => {
             {
               icon: "/Profile/location.png",
               label: "Location",
-              value: (user?.address_1 == null || user?.address_1 == "") ? `${user?.governorates?.name}, ${user?.regions?.name}` : `${user?.address_1}, ${user?.governorates?.name}, ${user?.regions?.name}`,
+              value: (user?.address_1 == null || user?.address_1 == "") ? `${user?.area?.name || user?.area}, ${user?.cities?.name || user?.city}, ${user?.regions?.name || user?.regions}` : `${user?.address_1}, ${user?.area?.name || user?.area}, ${user?.cities?.name || user?.city}, ${user?.regions?.name || user?.regions}`,
             },
             {
               icon: "/Profile/since.png",
               label: "Member Since",
               value: user?.created_at
                 ? new Date(user.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                  })
+                  year: "numeric",
+                  month: "short",
+                })
                 : "",
             },
           ].map((item, i) => (
@@ -511,16 +511,16 @@ const UserDetails = ({ profile }) => {
             {
               icon: "/Profile/location.png",
               label: "Location",
-              value: (user?.address_1 == null || user?.address_1 == "") ? `${user?.governorates?.name}, ${user?.regions?.name}` : user?.address_1,
+              value: (user?.address_1 == null || user?.address_1 == "") ? `${user?.area?.name || user?.area}, ${user?.city?.name || user?.city}, ${user?.regions?.name || user?.regions}` : user?.address_1,
             },
             {
               icon: "/Profile/since.png",
               label: "Member Since",
               value: user?.created_at
                 ? new Date(user.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                  })
+                  year: "numeric",
+                  month: "short",
+                })
                 : "",
             },
           ].map((item, i) => (
@@ -538,7 +538,7 @@ const UserDetails = ({ profile }) => {
               </div>
               <div className="flex flex-col">
                 <span className="text-xs text-gray-500 leading-tight">
-              {t(item.label)}:
+                  {t(item.label)}:
                 </span>
                 <span className="text-sm text-gray-800 font-medium">
                   {item.value}
@@ -551,7 +551,7 @@ const UserDetails = ({ profile }) => {
         {/* Buttons */}
         <div className="mt-6 flex gap-3 flex-wrap">
           <Button
-    title={t("Log Out")}
+            title={t("Log Out")}
             onClick={() => {
               logout();
               router.push("/login");
@@ -560,7 +560,7 @@ const UserDetails = ({ profile }) => {
           />
           {!profile && (
             <Button
-      title={t("Edit Profile")}
+              title={t("Edit Profile")}
               onClick={() => showComponent("editProfile")}
             />
           )}

@@ -48,7 +48,7 @@ export default function CreatorListingsClient({
       const newListings = response?.data?.data || [];
       const currentPage = response?.data?.current_page || page + 1;
       const lastPage = response?.data?.last_page || 1;
-      
+
       if (newListings.length === 0 || currentPage >= lastPage) {
         setHasMore(false);
       } else {
@@ -94,7 +94,7 @@ export default function CreatorListingsClient({
         {creatorInfo && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-[#469BDB] text-white flex items-center justify-center text-2xl font-bold overflow-hidden">
+              <div className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center text-2xl font-bold overflow-hidden">
                 {creatorInfo?.profile_photo ? (
                   <Image
                     src={`${Image_URL}${creatorInfo.profile_photo}`}
@@ -195,8 +195,10 @@ export default function CreatorListingsClient({
                               <span className="text-xs text-gray-500 uppercase tracking-wide">
                                 {t("Buy Now")}
                               </span>
-                              <span className="text-lg font-bold text-green-600">
-                                ${listing.buy_now_price}
+                              <span className="text-lg  font-bold text-green-600">
+
+                                <span className="price">$</span>
+                                <span> {listing.buy_now_price}</span>
                               </span>
                             </div>
                           )
@@ -206,7 +208,8 @@ export default function CreatorListingsClient({
                               {t("Current Bid")}
                             </span>
                             <span className="text-lg font-bold text-green-600">
-                              ${listing.bids[0]?.amount}
+                              <span className="price">$</span>
+                              <span>{listing.bids[0]?.amount}</span>
                             </span>
                           </div>
                         ) : null}
@@ -229,11 +232,10 @@ export default function CreatorListingsClient({
                 <button
                   onClick={loadMore}
                   disabled={loading}
-                  className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                    loading
+                  className={`px-6 py-2 rounded-md font-medium transition-colors ${loading
                       ? "bg-gray-300 cursor-not-allowed text-gray-500"
                       : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
+                    }`}
                 >
                   {loading ? t("Loading...") : t("Load More")}
                 </button>

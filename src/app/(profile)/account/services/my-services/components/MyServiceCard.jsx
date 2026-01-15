@@ -15,18 +15,18 @@ function formatPrice(value) {
 }
 
 export default function MyServiceCard({ service, onDelete }) {
-    console.log('serviceeee in MyServiceCard', service);
+  console.log('serviceeee in MyServiceCard', service);
   const serviceId = service.id || service.service_id;
   const title = service.title || service.name || "Untitled Service";
   const subtitle = service.subtitle || service.summary || service.description || "";
   const priceValue = Number.isFinite(Number.parseFloat(service.price))
     ? Number.parseFloat(service.price)
     : Number.isFinite(Number.parseFloat(service.price_amount))
-    ? Number.parseFloat(service.price_amount)
-    : 0;
+      ? Number.parseFloat(service.price_amount)
+      : 0;
   const priceUnit = service.priceUnit || service.price_unit || "per project";
   const regionLabel = service.region?.name || service.region_name || service.region || "";
-  const areaLabel = service.area || service.governorate?.name || service.governorate_name || "";
+  const areaLabel = service.area?.name || service.area || service.area_name || service.city?.name || service.city || service.governorate?.name || service.governorate_name || "";
   const responseTime = service.responseTime || service.response_time || "Response time varies";
   const nextAvailability = service.nextAvailability || service.next_availability || "";
   const categoryLabel = service.category_name || service.subcategory_name || service.category?.name || "";

@@ -2,11 +2,15 @@ import { create } from "zustand";
 
 const initialState = {
   query: "",
+  status: "1",
   selectedCategory: "",
   selectedRegion: "",
+  selectedCity: "",
   selectedArea: "",
-  priceRange: [0, 5000],
-  sortBy: "price-low-high",
+  selectedArea: "",
+  // priceRange: [0, 5000],
+  sortBy: "latest",
+  sortBy: "latest",
   viewMode: "grid",
   // Service metadata (categories and regions)
   categories: [],
@@ -19,32 +23,39 @@ export const useServicesStore = create((set, get) => ({
   // Metadata setters
   setCategories: (categories) => set({ categories }),
   setRegions: (regions) => set({ regions }),
-  setServiceMeta: (meta) => set({ 
-    categories: meta.categories || [], 
+  setServiceMeta: (meta) => set({
+    categories: meta.categories || [],
     regions: meta.regions || [],
     isLoadingMeta: meta.isLoading || false,
   }),
   setIsLoadingMeta: (isLoading) => set({ isLoadingMeta: isLoading }),
   setQuery: (value) => set({ query: value }),
   setCategory: (categoryId) => set({ selectedCategory: categoryId }),
-  setRegion: (regionId) =>
+  setRegion: (regionId) => set({
+    selectedRegion: regionId,
+    selectedCity: regionId === get().selectedRegion ? get().selectedCity : "",
+    selectedArea: regionId === get().selectedRegion ? get().selectedArea : "",
+  }),
+  setCity: (value) =>
     set({
-      selectedRegion: regionId,
-      selectedArea: regionId === get().selectedRegion ? get().selectedArea : "",
+      selectedCity: value,
+      selectedArea: value === get().selectedCity ? get().selectedArea : "",
     }),
   setArea: (value) => set({ selectedArea: value }),
-  setPriceRange: (range) => {
-    const current = get().priceRange || [];
-    if (
-      current.length === 2 &&
-      range.length === 2 &&
-      current[0] === range[0] &&
-      current[1] === range[1]
-    ) {
-      return;
-    }
-    set({ priceRange: range });
-  },
+  setArea: (value) => set({ selectedArea: value }),
+  // setPriceRange: (range) => {
+  //   const current = get().priceRange || [];
+  //   if (
+  //     current.length === 2 &&
+  //     range.length === 2 &&
+  //     current[0] === range[0] &&
+  //     current[1] === range[1]
+  //   ) {
+  //     return;
+  //   }
+  //   set({ priceRange: range });
+  // },
+  setSortBy: (value) => set({ sortBy: value }),
   setSortBy: (value) => set({ sortBy: value }),
   setViewMode: (mode) => set({ viewMode: mode }),
   hydrateFromParams: (params = {}) => {
@@ -57,14 +68,14 @@ export const useServicesStore = create((set, get) => ({
       }
     });
 
-    const priceMin = Number.parseInt(params.priceMin, 10);
-    const priceMax = Number.parseInt(params.priceMax, 10);
-    if (!Number.isNaN(priceMin) || !Number.isNaN(priceMax)) {
-      nextState.priceRange = [
-        Number.isNaN(priceMin) ? initialState.priceRange[0] : priceMin,
-        Number.isNaN(priceMax) ? initialState.priceRange[1] : priceMax,
-      ];
-    }
+    // const priceMin = Number.parseInt(params.priceMin, 10);
+    // const priceMax = Number.parseInt(params.priceMax, 10);
+    // if (!Number.isNaN(priceMin) || !Number.isNaN(priceMax)) {
+    //   nextState.priceRange = [
+    //     Number.isNaN(priceMin) ? initialState.priceRange[0] : priceMin,
+    //     Number.isNaN(priceMax) ? initialState.priceRange[1] : priceMax,
+    //   ];
+    // }
 
     set(nextState);
   },

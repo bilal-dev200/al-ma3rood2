@@ -1,28 +1,3 @@
-// "use client"
-// import ContactForm from '@/components/WebsiteComponents/ContactusComponents/ContactForm';
-// import HelpOptions from '@/components/WebsiteComponents/ContactusComponents/HelpOptions';
-// import Sidebar from '@/components/WebsiteComponents/ReuseableComponenets/Sidebar';
-// import React, { useState } from 'react'
-
-// const page = () => {
-//   return (
-//     <>
-//     <div className="flex p-10  text-black">
-//     <Sidebar/>
-//       {/* Main Content */}
-//       <main className="flex-1 p-5 ">
-//     <ContactForm/>
-//         <HelpOptions/>
-
-//       </main>
-      
-//     </div>
-//     </>
-
-//   )
-// }
-
-// export default page
 "use client"
 import ContactForm from '@/components/WebsiteComponents/ContactusComponents/ContactForm';
 import Sidebar from '@/components/WebsiteComponents/ReuseableComponenets/Sidebar';

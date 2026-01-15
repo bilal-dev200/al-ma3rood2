@@ -257,7 +257,7 @@ const MarketplaceCard = ({
         <h2
           className={`text-lg sm:text-xl md:text-2xl font-semibold pb-1 mb-6 text-left whitespace-nowrap sm:whitespace-normal`}
         >
-          <span className="inline-block md:border-b-2 border-gray-400">
+          <span className="inline-block border-b-2 border-gray-400">
             {t(
               decodeURIComponent(heading)
                 .split(" ")
@@ -457,7 +457,9 @@ const MarketplaceCard = ({
                               {`${card?.creator?.address_1
                                 ? `${card?.creator?.address_1}, `
                                 : ""
-                                } ${card?.creator?.governorates?.name}, ${card?.creator?.regions?.name
+                                } ${card?.creator?.areas?.name ? `${card?.creator?.areas?.name}, ` : ""
+                                }${card?.creator?.cities?.name || card?.creator?.governorates?.name || ""
+                                }, ${card?.creator?.regions?.name
                                 }`}
                             </div>
                           </>

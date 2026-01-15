@@ -92,7 +92,7 @@ function ResetPasswordContent() {
       console.error("Reset Password Error:", err);
       setError(
         err.response?.data?.message ||
-          "Something went wrong. Please try again."
+        "Something went wrong. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -102,12 +102,12 @@ function ResetPasswordContent() {
   if (success) {
     return (
       <div className="flex flex-col md:flex-row w-full h-screen">
-        <div>
+        {/* <div>
           <LanguageSwitcher
             className="absolute top-4 left-2"
             buttonClassName="bg-green-600 text-green"
           />
-        </div>
+        </div> */}
 
         <div className="w-full md:w-[60%] flex flex-col justify-center items-center px-4 py-8 bg-white min-h-screen md:min-h-full">
           <div className="flex justify-center mb-6">
@@ -166,12 +166,12 @@ function ResetPasswordContent() {
   return (
     <div className="flex flex-col md:flex-row w-full h-screen">
       {/* Language Switcher */}
-      <div>
+      {/* <div>
         <LanguageSwitcher
           className="absolute top-4 left-2"
           buttonClassName="bg-green-600 text-green"
         />
-      </div>
+      </div> */}
 
       {/* LEFT: Form Section */}
       <div className="w-full md:w-[60%] flex flex-col justify-center items-center px-4 py-8 bg-white min-h-screen md:min-h-full">
@@ -235,9 +235,8 @@ function ResetPasswordContent() {
                 />
                 <button
                   type="button"
-                  className={`absolute inset-y-0 ${
-                    isArabic ? "left-0 pl-3" : "right-0 pr-3"
-                  } flex items-center text-gray-500 hover:text-gray-700`}
+                  className={`absolute inset-y-0 ${isArabic ? "left-0 pl-3" : "right-0 pr-3"
+                    } flex items-center text-gray-500 hover:text-gray-700`}
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -276,9 +275,8 @@ function ResetPasswordContent() {
                 />
                 <button
                   type="button"
-                  className={`absolute inset-y-0 ${
-                    isArabic ? "left-0 pl-3" : "right-0 pr-3"
-                  } flex items-center text-gray-500 hover:text-gray-700`}
+                  className={`absolute inset-y-0 ${isArabic ? "left-0 pl-3" : "right-0 pr-3"
+                    } flex items-center text-gray-500 hover:text-gray-700`}
                   onClick={() =>
                     setShowPasswordConfirmation(!showPasswordConfirmation)
                   }
@@ -298,11 +296,10 @@ function ResetPasswordContent() {
             <button
               type="submit"
               disabled={isLoading || !token || !email}
-              className={`w-full py-2 px-4 cursor-pointer border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                isLoading || !token || !email
+              className={`w-full py-2 px-4 cursor-pointer border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${isLoading || !token || !email
                   ? "bg-green-400 cursor-not-allowed"
                   : "bg-green-600 hover:bg-green-700"
-              }`}
+                }`}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">

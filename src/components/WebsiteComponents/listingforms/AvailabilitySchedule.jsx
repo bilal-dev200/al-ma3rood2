@@ -119,75 +119,224 @@ export default function AvailabilitySchedule({ value, onChange }) {
                             <div className="flex-1 space-y-3">
                                 {isEnabled ? (
                                     slots.map((slot, index) => (
-                                        <div key={index} className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
-                                            <div className="grid grid-cols-2 gap-4 flex-1">
-                                                <div>
-                                                    <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
-                                                        Start Time
-                                                    </label>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="text"
-                                                            list="time-options"
-                                                            value={slot.start}
-                                                            onChange={(e) => updateSlot(day, index, "start", e.target.value)}
-                                                            placeholder="06:00 AM"
-                                                            className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
-                                                        />
-                                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-                                                            <Clock size={14} />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
-                                                        End Time
-                                                    </label>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="text"
-                                                            list="time-options"
-                                                            value={slot.end}
-                                                            onChange={(e) => updateSlot(day, index, "end", e.target.value)}
-                                                            placeholder="07:00 PM"
-                                                            className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
-                                                        />
-                                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-                                                            <Clock size={14} />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        // <div key={index} className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
+                                        //     <div className="grid grid-cols-2 gap- flex-1">
+                                        //         <div>
+                                        //             <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
+                                        //                 Start Time
+                                        //             </label>
+                                        //             <div className="relative">
+                                        //                 <input
+                                        //                     type="text"
+                                        //                     list="time-options"
+                                        //                     value={slot.start}
+                                        //                     onChange={(e) => updateSlot(day, index, "start", e.target.value)}
+                                        //                     placeholder="06:00 AM"
+                                        //                     className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
+                                        //                 />
+                                        //                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                                        //                     <Clock size={14} />
+                                        //                 </div>
+                                        //             </div>
+                                        //         </div>
+                                        //         <div>
+                                        //             <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
+                                        //                 End Time
+                                        //             </label>
+                                        //             <div className="relative">
+                                        //                 <input
+                                        //                     type="text"
+                                        //                     list="time-options"
+                                        //                     value={slot.end}
+                                        //                     onChange={(e) => updateSlot(day, index, "end", e.target.value)}
+                                        //                     placeholder="07:00 PM"
+                                        //                     className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
+                                        //                 />
+                                        //                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                                        //                     <Clock size={14} />
+                                        //                 </div>
+                                        //             </div>
+                                        //         </div>
+                                        //     </div>
 
-                                            <div className="flex items-center gap-2 pt-5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => addSlot(day)}
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Add Slot"
-                                                >
-                                                    <Plus size={18} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeSlot(day, index)}
-                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Remove Slot"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                                {index === 0 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => copyToAll(day)}
-                                                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                                                        title="Copy to all days"
-                                                    >
-                                                        <Copy size={18} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
+                                        //     <div className="flex items-center gap-2 pt-5">
+                                        //         <button
+                                        //             type="button"
+                                        //             onClick={() => addSlot(day)}
+                                        //             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        //             title="Add Slot"
+                                        //         >
+                                        //             <Plus size={18} />
+                                        //         </button>
+                                        //         <button
+                                        //             type="button"
+                                        //             onClick={() => removeSlot(day, index)}
+                                        //             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        //             title="Remove Slot"
+                                        //         >
+                                        //             <Trash2 size={18} />
+                                        //         </button>
+                                        //         {index === 0 && (
+                                        //             <button
+                                        //                 type="button"
+                                        //                 onClick={() => copyToAll(day)}
+                                        //                 className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                                        //                 title="Copy to all days"
+                                        //             >
+                                        //                 <Copy size={18} />
+                                        //             </button>
+                                        //         )}
+                                        //     </div>
+                                        // </div>
+//                                         <div key={index} className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
+//   {/* Start & End Inputs */}
+//   <div className="grid grid-cols-1 gap-4 flex-1 sm:grid-cols-2">
+//     {/* Start Time */}
+//     <div>
+//       <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
+//         Start Time
+//       </label>
+//       <div className="relative">
+//         <input
+//           type="text"
+//           list="time-options"
+//           value={slot.start}
+//           onChange={(e) => updateSlot(day, index, "start", e.target.value)}
+//           placeholder="06:00 AM"
+//           className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
+//         />
+//         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+//           <Clock size={14} />
+//         </div>
+//       </div>
+//     </div>
+
+//     {/* End Time */}
+//     <div>
+//       <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
+//         End Time
+//       </label>
+//       <div className="relative">
+//         <input
+//           type="text"
+//           list="time-options"
+//           value={slot.end}
+//           onChange={(e) => updateSlot(day, index, "end", e.target.value)}
+//           placeholder="07:00 PM"
+//           className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
+//         />
+//         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+//           <Clock size={14} />
+//         </div>
+//       </div>
+//     </div>
+//   </div>
+
+//   {/* Action Buttons */}
+//   <div className="flex items-center gap-2 pt-5">
+//     <button
+//       type="button"
+//       onClick={() => addSlot(day)}
+//       className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+//       title="Add Slot"
+//     >
+//       <Plus size={18} />
+//     </button>
+//     <button
+//       type="button"
+//       onClick={() => removeSlot(day, index)}
+//       className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+//       title="Remove Slot"
+//     >
+//       <Trash2 size={18} />
+//     </button>
+//     {index === 0 && (
+//       <button
+//         type="button"
+//         onClick={() => copyToAll(day)}
+//         className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+//         title="Copy to all days"
+//       >
+//         <Copy size={18} />
+//       </button>
+//     )}
+//   </div>
+// </div>
+<div key={index} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-4">
+  {/* Start & End Inputs */}
+  <div className="grid grid-cols-1 gap-4 w-full sm:grid-cols-2 flex-1">
+    {/* Start Time */}
+    <div>
+      <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
+        Start Time
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          list="time-options"
+          value={slot.start}
+          onChange={(e) => updateSlot(day, index, "start", e.target.value)}
+          placeholder="06:00 AM"
+          className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
+        />
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+          <Clock size={14} />
+        </div>
+      </div>
+    </div>
+
+    {/* End Time */}
+    <div>
+      <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1 font-semibold">
+        End Time
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          list="time-options"
+          value={slot.end}
+          onChange={(e) => updateSlot(day, index, "end", e.target.value)}
+          placeholder="07:00 PM"
+          className="w-full rounded-xl border border-slate-200 pl-3 pr-10 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm transition-all"
+        />
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+          <Clock size={14} />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Action Buttons */}
+  <div className="flex gap-2 mt-2 sm:mt-5">
+    <button
+      type="button"
+      onClick={() => addSlot(day)}
+      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+      title="Add Slot"
+    >
+      <Plus size={18} />
+    </button>
+    <button
+      type="button"
+      onClick={() => removeSlot(day, index)}
+      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+      title="Remove Slot"
+    >
+      <Trash2 size={18} />
+    </button>
+    {index === 0 && (
+      <button
+        type="button"
+        onClick={() => copyToAll(day)}
+        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+        title="Copy to all days"
+      >
+        <Copy size={18} />
+      </button>
+    )}
+  </div>
+</div>
+
                                     ))
                                 ) : (
                                     <div className="py-2">

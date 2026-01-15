@@ -1,34 +1,67 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Filter, Search } from "lucide-react";
 import SearchableDropdown from "@/components/WebsiteComponents/ReuseableComponenets/SearchableDropdown";
 import { useServicesStore } from "@/lib/stores/servicesStore";
+import { useLocationStore } from "@/lib/stores/locationStore";
 
 export default function FilterBar({
   query,
   selectedCategory,
   selectedRegion,
+  selectedCity,
   selectedArea,
-  priceRange,
-  priceBounds,
+  // priceRange,
+  // priceBounds,
   onQueryChange,
   onCategoryChange,
   onRegionChange,
+  onCityChange,
   onAreaChange,
-  onPriceRangeChange,
+  // onPriceRangeChange,
   onReset,
   onSearch,
   isSearching = false,
   canSearch = true,
 }) {
-  const [priceMin, priceMax] = priceRange || [0, 0];
-  const [boundMin = 0, boundMax = 0] = priceBounds || [0, 0];
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Get categories and regions from Zustand store
+  // Get categories from Services Store
   const categories = useServicesStore((state) => state.categories);
-  const regions = useServicesStore((state) => state.regions);
+
+  // Get locations from Location Store
+  const {
+    locations,
+    getAllLocations,
+    cities: storeCities,
+    areas: storeAreas,
+    fetchCities,
+    fetchAreas,
+    isLoading: isLocationLoading,
+  } = useLocationStore();
+
+  // Initialize locations
+  useEffect(() => {
+    getAllLocations();
+  }, [getAllLocations]);
+
+  // Fetch Cities when Region changes (if selectedRegion is present)
+  // We need to detect if selectedRegion changes to trigger fetch, but onRegionChange handles the user action.
+  // However, if we load with a pre-selected region, we might need to fetch manually or via effect.
+  useEffect(() => {
+    if (selectedRegion) {
+      // regionOptions uses ID as value. ensure selectedRegion is ID.
+      // The original code used value or id.
+      fetchCities(selectedRegion);
+    }
+  }, [selectedRegion, fetchCities]);
+
+  // Fetch Areas when City changes
+  useEffect(() => {
+    if (selectedCity) {
+      fetchAreas(selectedCity);
+    }
+  }, [selectedCity, fetchAreas]);
+
 
   // Prepare category options for SearchableDropdown (with hierarchy support)
   const categoryOptions = useMemo(() => {
@@ -36,51 +69,38 @@ export default function FilterBar({
       id: category.id ?? category.value ?? category.slug,
       label: category.label ?? category.name ?? category.value ?? category.slug,
       depth: category.depth ?? 0,
-      isParent: category.isParent ?? false,
+      isParent: false,
       parentLabel: category.parentLabel ?? null,
       fullPath: category.fullPath ?? category.label ?? category.name,
     }));
   }, [categories]);
 
-  // Prepare region options for SearchableDropdown
+  // Prepare region options from Location Store
+  const country = locations.find((c) => c.id == 1);
+  const regions = country?.regions || [];
+
   const regionOptions = useMemo(() => {
-    return regions.map((region) => {
-      const value = region.id ?? region.value;
-      const label = region.label ?? region.name ?? region.title ?? value;
-      return {
-        id: String(value),
-        label: String(label),
-      };
-    });
+    return regions.map((region) => ({
+      id: String(region.id),
+      label: region.name,
+    }));
   }, [regions]);
 
-  // Prepare governorate options for SearchableDropdown
-  const governorateOptions = useMemo(() => {
-    const match = regions.find(
-      (region) =>
-        region.id === selectedRegion || region.value === selectedRegion || String(region.id) === String(selectedRegion)
-    );
-    if (!match) return [];
-    
-    let areas = [];
-    if (Array.isArray(match.areas) && match.areas.length) {
-      areas = match.areas;
-    } else if (Array.isArray(match.governorates) && match.governorates.length) {
-      areas = match.governorates;
-    }
-    
-    return areas.map((area) => {
-      if (typeof area === "string") {
-        return { id: area, label: area };
-      }
-      const value = area.id ?? area.value ?? area.slug ?? area.name;
-      const label = area.label ?? area.name ?? value;
-      return {
-        id: String(value),
-        label: String(label),
-      };
-    });
-  }, [regions, selectedRegion]);
+  // Prepare city options from Location Store
+  const cityOptions = useMemo(() => {
+    return storeCities.map((city) => ({
+      id: String(city.id),
+      label: city.name,
+    }));
+  }, [storeCities]);
+
+  // Prepare area options from Location Store
+  const areaOptions = useMemo(() => {
+    return storeAreas.map((area) => ({
+      id: String(area.id),
+      label: area.name,
+    }));
+  }, [storeAreas]);
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
@@ -98,47 +118,44 @@ export default function FilterBar({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onSearch}
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-green-600 bg-green-600 px-6 text-sm font-semibold text-white transition hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={isSearching || !canSearch}
-          >
-            <Search className="h-4 w-4" aria-hidden="true" />
-            {isSearching ? "Searching…" : "Search services"}
-          </button>
-          {/* <button
-            type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:hidden"
-            aria-expanded={isExpanded}
-          >
-            Filters
-            <span aria-hidden="true">{isExpanded ? "−" : "+"}</span>
-          </button> */}
-        </div>
+
       </div>
 
       <div
-        className={`mt-4 grid gap-4 transition-all sm:grid-cols-12 ${
-          isExpanded ? "grid" : "hidden sm:grid"
-        }`}
+        className="mt-4 grid gap-4 transition-all grid-cols-1 sm:grid-cols-12 lg:grid-cols-5"
       >
-        <div className="sm:col-span-5">
+        <div className="sm:col-span-8 lg:col-span-4">
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Search keywords
           </label>
           <input
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                onSearch();
+              }
+            }}
             type="search"
-            placeholder="e.g. wedding photographer, plumbing, mobile mechanic"
+            placeholder="e.g. wedding photographer, plumbing"
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
         </div>
 
-        <div className="sm:col-span-4">
+        <div className="sm:col-span-4 lg:col-span-1 flex items-end">
+          <button
+            type="button"
+            onClick={onSearch}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-green-600 bg-green-600 py-3 text-sm font-semibold text-white transition hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isSearching || !canSearch}
+            suppressHydrationWarning
+          >
+            <Search className="h-4 w-4" aria-hidden="true" />
+            {isSearching ? "Searching..." : "Search"}
+          </button>
+        </div>
+
+        <div className="sm:col-span-6 lg:col-span-2">
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Category
           </label>
@@ -153,7 +170,7 @@ export default function FilterBar({
           />
         </div>
 
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6 lg:col-span-1">
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Region
           </label>
@@ -167,66 +184,42 @@ export default function FilterBar({
           />
         </div>
 
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-6 lg:col-span-1">
           <label className="mb-2 block text-sm font-medium text-slate-700">
-            Governorate
+            City
           </label>
           <SearchableDropdown
-            options={governorateOptions}
-            value={selectedArea || ""}
-            onChange={(value) => onAreaChange(value || "")}
-            placeholder="Any governorate"
-            searchPlaceholder="Search governorates..."
-            emptyMessage="No governorates found"
-            disabled={!governorateOptions.length || !selectedRegion}
+            options={cityOptions}
+            value={selectedCity || ""}
+            onChange={(value) => onCityChange(value || "")}
+            placeholder="Select city"
+            searchPlaceholder="Search cities..."
+            emptyMessage="No cities found"
+            loading={isLocationLoading}
+            disabled={(!cityOptions.length && !isLocationLoading) || !selectedRegion}
           />
         </div>
 
-        {/* <div className="sm:col-span-3">
+        <div className="sm:col-span-6 lg:col-span-1">
           <label className="mb-2 block text-sm font-medium text-slate-700">
-            Price range (SAR)
+            Area
           </label>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              inputMode="numeric"
-              min={boundMin}
-              max={priceMax || boundMax}
-              value={priceMin}
-              onChange={(event) =>
-                onPriceRangeChange([
-                  Number(event.target.value) || boundMin,
-                  priceMax || boundMax,
-                ])
-              }
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              aria-label="Minimum price"
-            />
-            <span className="text-sm text-slate-500">to</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={priceMin || boundMin}
-              max={boundMax || 10000}
-              value={priceMax}
-              onChange={(event) =>
-                onPriceRangeChange([
-                  priceMin || boundMin,
-                  Number(event.target.value) || boundMax,
-                ])
-              }
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              aria-label="Maximum price"
-            />
-          </div>
+          <SearchableDropdown
+            options={areaOptions}
+            value={selectedArea || ""}
+            onChange={(value) => onAreaChange(value || "")}
+            placeholder="Select area"
+            searchPlaceholder="Search areas..."
+            emptyMessage="No areas found"
+            loading={isLocationLoading}
+            disabled={(!areaOptions.length && !isLocationLoading) || !selectedCity}
+          />
+        </div>
 
-          <p className="mt-1 text-xs text-slate-500">
-            Typical range {boundMin.toLocaleString("en-SA")} –{" "}
-            {boundMax.toLocaleString("en-SA")} SAR
-          </p>
-        </div> */}
+        {/* Price range commented out */}
+        {/* <div className="sm:col-span-3"> ... </div> */}
 
-        <div className="sm:col-span-12">
+        <div className="sm:col-span-12 lg:col-span-5">
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <button
               type="button"

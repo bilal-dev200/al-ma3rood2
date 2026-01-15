@@ -57,10 +57,17 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
     const {
         locations,
         getAllLocations,
+        // formattedLocations, // If needed?
+        cities,
+        areas,
+        fetchCities,
+        fetchAreas,
         selectedRegion,
-        selectedGovernorate,
+        selectedCity,
+        selectedArea,
         setSelectedRegion,
-        setSelectedGovernorate,
+        setSelectedCity,
+        setSelectedArea,
     } = useLocationStore();
 
     useEffect(() => {
@@ -92,14 +99,7 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
 
 
     // -- Options --
-    const country = locations.find((c) => c.id == 1);
-    const regions = country?.regions || [];
 
-    const governorates = useMemo(() => {
-        if (!selectedRegion || !selectedRegion.name) return [];
-        const region = regions.find((r) => r.name === selectedRegion.name);
-        return region?.governorates || [];
-    }, [regions, selectedRegion]);
 
     const conditions = [
         { key: "brand_new_unused", label: "Brand New / Unused" },
@@ -150,7 +150,8 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
         setPriceTo("");
         setSelectedCategory("");
         setSelectedRegion(null);
-        setSelectedGovernorate(null);
+        setSelectedCity(null);
+        setSelectedArea(null);
 
         const params = new URLSearchParams(searchParams.toString());
         // Keep keyword
@@ -249,22 +250,21 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                         <div>
                             <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Region</label>
                             <Select
-                                options={regions.map(r => ({ value: r.name, label: r.name }))}
+                                options={locations.map(r => ({ value: r.name, label: r.name, id: r.id }))}
                                 value={selectedRegion ? { value: selectedRegion.name, label: selectedRegion.name } : null}
                                 onChange={(val) => {
                                     if (val) {
-                                        const r = regions.find(reg => reg.name === val.value);
+                                        const r = locations.find(reg => reg.id === val.id);
                                         setSelectedRegion(r);
-                                        setSelectedGovernorate(null);
-                                        // Auto apply? Or wait? 
-                                        // Let's auto apply for location like standard filters, or create "View Results" if preferred.
-                                        // For UX consistency with Price, maybe auto apply is better for single selects?
-                                        // TradeMe applies immediately for dropdowns usually.
-                                        updateUrl({ region_id: r?.id, governorate_id: null });
+                                        setSelectedCity(null);
+                                        setSelectedArea(null);
+                                        fetchCities(r.id);
+                                        updateUrl({ region_id: r?.id, city_id: null, area_id: null });
                                     } else {
                                         setSelectedRegion(null);
-                                        setSelectedGovernorate(null);
-                                        updateUrl({ region_id: null, governorate_id: null });
+                                        setSelectedCity(null);
+                                        setSelectedArea(null);
+                                        updateUrl({ region_id: null, city_id: null, area_id: null });
                                     }
                                 }}
                                 placeholder="All Regions"
@@ -275,21 +275,69 @@ const SearchPageFilters = ({ categoryId, categories = [], onResults }) => {
                         </div>
                         {selectedRegion && (
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Governorate</label>
+                                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">City</label>
                                 <Select
-                                    options={governorates.map(g => ({ value: g.name, label: g.name }))}
-                                    value={selectedGovernorate ? { value: selectedGovernorate.name, label: selectedGovernorate.name } : null}
-                                    onChange={(val) => {
-                                        if (val) {
-                                            const g = governorates.find(gov => gov.name === val.value);
-                                            setSelectedGovernorate(g);
-                                            updateUrl({ governorate_id: g?.id });
-                                        } else {
-                                            setSelectedGovernorate(null);
-                                            updateUrl({ governorate_id: null });
+                                    options={cities.map(c => ({ value: c.name, label: c.name, id: c.id }))}
+                                    value={selectedCity ? { value: selectedCity.name, label: selectedCity.name } : null}
+                                    onInputChange={(inputValue) => {
+                                        if (selectedRegion?.id) {
+                                            fetchCities(selectedRegion.id, inputValue);
                                         }
                                     }}
-                                    placeholder="All Governorates"
+                                    onChange={async (val) => {
+                                        if (val) {
+                                            const c = cities.find(city => city.id === val.id);
+                                            setSelectedCity(c);
+                                            setSelectedArea(null);
+                                            updateUrl({ city_id: c?.id, area_id: null });
+
+                                            // Auto-select area logic
+                                            if (c?.id) {
+                                                const fetchedAreas = await fetchAreas(c.id);
+                                                if (fetchedAreas?.length === 1) {
+                                                    const area = fetchedAreas[0];
+                                                    setSelectedArea(area);
+                                                    updateUrl({ area_id: area.id });
+                                                }
+                                            } else {
+                                                fetchAreas(c.id);
+                                            }
+
+                                        } else {
+                                            setSelectedCity(null);
+                                            setSelectedArea(null);
+                                            updateUrl({ city_id: null, area_id: null });
+                                        }
+                                    }}
+                                    placeholder="Select City"
+                                    styles={selectStyles}
+                                    isClearable
+                                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                                />
+                            </div>
+                        )}
+                        {selectedCity && (
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Area</label>
+                                <Select
+                                    options={areas.map(a => ({ value: a.name, label: a.name, id: a.id }))}
+                                    value={selectedArea ? { value: selectedArea.name, label: selectedArea.name } : null}
+                                    onInputChange={(inputValue) => {
+                                        if (selectedCity?.id) {
+                                            fetchAreas(selectedCity.id, inputValue);
+                                        }
+                                    }}
+                                    onChange={(val) => {
+                                        if (val) {
+                                            const a = areas.find(area => area.id === val.id);
+                                            setSelectedArea(a);
+                                            updateUrl({ area_id: a?.id });
+                                        } else {
+                                            setSelectedArea(null);
+                                            updateUrl({ area_id: null });
+                                        }
+                                    }}
+                                    placeholder="Select Area"
                                     styles={selectStyles}
                                     isClearable
                                     menuPortalTarget={typeof document !== "undefined" ? document.body : null}

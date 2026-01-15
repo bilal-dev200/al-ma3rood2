@@ -16,8 +16,9 @@ export default async function Marketplace({ searchParams }) {
   const categoryIdFilter = searchParams?.category_id || "";
   const search = searchParams?.search || "";
   const city = searchParams?.city || "";
+  const city_id = searchParams?.city_id || "";
+  const area_id = searchParams?.area_id || "";
   const region_id = searchParams?.region_id || "";
-  const governorate_id = searchParams?.governorate_id || "";
   const creator_id = searchParams?.creator_id || "";
 
 
@@ -29,7 +30,8 @@ export default async function Marketplace({ searchParams }) {
       category_id: categoryIdFilter,
       search: search,
       region_id: region_id,
-      governorate_id: governorate_id,
+      city_id: city_id,
+      area_id: area_id,
       city: city,
       creator_id: creator_id,
       page: 1,

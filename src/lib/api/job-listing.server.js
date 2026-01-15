@@ -2,12 +2,18 @@ import { cookies } from "next/headers";
 
 // job-listing.server.js
 export async function fetchProduct(slug) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  console.log("Fetching Job URL:", `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}job-listing/${slug}/show`);
+
   const res = await fetch(
-    `https://ma3rood.datainovate.com/backend/api/job-listing/${slug}/show`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_MA3ROOD}job-listing/${slug}/show`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       cache: "no-store",
     }
@@ -36,7 +42,7 @@ export async function fetchAllListingsByFilter() {
     if (!res.ok) throw new Error("Failed to fetch listings: " + res.status);
 
     console.log(res.data);
-    
+
     return await res.json();
   } catch (error) {
     console.error("fetchAllListings error:", error);

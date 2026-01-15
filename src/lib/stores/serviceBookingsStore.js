@@ -74,7 +74,8 @@ function normalizeService(service = {}) {
     title: service.title,
     subtitle: service.subtitle,
     regionLabel: service.region?.name || "",
-    governorateLabel: service.governorate?.name || "",
+    cityLabel: service.city?.name || "",
+    areaLabel: service.area?.name || "",
     price: Number.isFinite(Number(service.price))
       ? Math.round(Number(service.price))
       : service.price || "",
@@ -141,28 +142,28 @@ function extractList(response) {
 
 function parseBookingResponse(response) {
   if (!response) return null;
-  
+
   // Axios wraps responses in .data, backend may return { data: { booking: {...} } } or { data: {...} }
   const data = response?.data || response;
-  
+
   // Check if response has empty data array
   if (Array.isArray(data) && data.length === 0) return null;
   if (Array.isArray(data?.data) && data.data.length === 0) return null;
-  
+
   const booking = data?.booking || data;
-  
+
   // Only normalize if we have a valid booking with at least an ID
   if (!booking || (!booking.id && !booking.booking_id && !booking.bookingId)) {
     return null;
   }
-  
+
   const normalized = normalizeBooking(booking);
-  
+
   // Double-check that normalized booking has required fields
   if (!normalized || !normalized.bookingId) {
     return null;
   }
-  
+
   return normalized;
 }
 
@@ -237,7 +238,8 @@ export const useServiceBookingsStore = create((set, get) => ({
       projectDetails,
       addressLine1,
       regionId,
-      governorateId,
+      cityId,
+      areaId,
       budget,
       preferredDate,
       startTime,
@@ -249,12 +251,13 @@ export const useServiceBookingsStore = create((set, get) => ({
     }
 
     const address =
-      addressLine1 
+      addressLine1
         ? {
-            address: addressLine1,
-            ...(regionId ? { region_id: regionId } : {}),
-            ...(governorateId ? { governorate_id: governorateId } : {}),
-          }
+          address: addressLine1,
+          ...(regionId ? { region_id: regionId } : {}),
+          ...(cityId ? { city_id: cityId } : {}),
+          ...(areaId ? { area_id: areaId } : {}),
+        }
         : undefined;
 
     const timeWindow =
@@ -308,7 +311,7 @@ export const useServiceBookingsStore = create((set, get) => ({
         responsePayload
       );
       const booking = parseBookingResponse(response);
-      
+
       // If we got a valid booking, update it; otherwise refetch
       if (booking && booking.bookingId) {
         set((state) => ({
@@ -335,7 +338,7 @@ export const useServiceBookingsStore = create((set, get) => ({
         responsePayload
       );
       const booking = parseBookingResponse(response);
-      
+
       // If we got a valid booking, update it; otherwise refetch
       if (booking && booking.bookingId) {
         set((state) => ({
@@ -359,10 +362,10 @@ export const useServiceBookingsStore = create((set, get) => ({
     try {
       const response = await serviceBookingsApi.markComplete(bookingId, payload);
       const booking = parseBookingResponse(response);
-      
+
       // Determine which list to refetch based on actor
       const isProvider = payload?.actor === "provider";
-      
+
       // If we got a valid booking, update it; otherwise refetch
       if (booking && booking.bookingId) {
         set((state) => ({
@@ -393,7 +396,7 @@ export const useServiceBookingsStore = create((set, get) => ({
         note: payload?.note,
       });
       const booking = parseBookingResponse(response);
-      
+
       // If we got a valid booking, update it; otherwise refetch both lists
       if (booking && booking.bookingId) {
         set((state) => ({

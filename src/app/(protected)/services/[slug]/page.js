@@ -7,7 +7,8 @@ import { Image_URL } from "@/config/constants";
 function mapServiceResponse(raw) {
   if (!raw) return null;
   const region = raw.region || {};
-  const governorate = raw.governorate || {};
+  const city = raw.city || {};
+  const area = raw.area || raw.governorate || {};
   const category = raw.category || {};
   const imagePath = raw.images?.[0]?.image_path;
   const photoUrl =
@@ -32,7 +33,8 @@ function mapServiceResponse(raw) {
     category_id: raw.category_id,
     region: region.id ? String(region.id) : "",
     regionLabel: region.name || "",
-    area: governorate.name || "",
+    city: city.name || "",
+    area: area.name || "",
     price: Number.parseFloat(raw.price) || 0,
     priceUnit: raw.price_unit || "per project",
     rating:
@@ -61,6 +63,7 @@ function mapServiceResponse(raw) {
 async function fetchRelatedServices(service) {
   try {
     const response = await servicesApi.getServices({
+      status: "1",
       subcategory: service.category_id,
       region: service.region,
       pageSize: 4,

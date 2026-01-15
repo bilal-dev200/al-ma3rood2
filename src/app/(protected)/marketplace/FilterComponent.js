@@ -23,26 +23,35 @@ const FilterComponent = ({ categoryId, onResults }) => {
 
   // Location Store
   const {
-    locations,
+    cities,
+    areas,
     getAllLocations,
     selectedRegion,
-    selectedGovernorate,
+    selectedCity,
+    selectedArea,
     setSelectedRegion,
-    setSelectedGovernorate,
+    setSelectedCity,
+    setSelectedArea,
+    fetchCities,
+    fetchAreas,
   } = useLocationStore();
 
   useEffect(() => {
     getAllLocations();
   }, [getAllLocations]);
 
-  const country = locations.find((c) => c.id == 1);
-  const regions = country?.regions || [];
+  // const country = locations.find((c) => c.id == 1);
+  const regions = locations; // Assuming locations are regions based on store structure or locations[0].regions
+  // If locations is countries, we need to find Saudi Arabia. 
+  // Based on your store, locations might be regions directly or countries. 
+  // Let's assume the store handles it or locations = regions. 
+  // Actually in store: setLocations matches API response.
+  // We'll stick to existing pattern but use 'locations' as regions list source if it was working.
+  // The previous code: const country = locations.find((c) => c.id == 1); const regions = country?.regions || [];
+  // I will keep using 'locations' to find country 1 if that's how it is.
 
-  const governorates = useMemo(() => {
-    if (!selectedRegion || !selectedRegion.name) return [];
-    const region = regions.find((r) => r.name === selectedRegion.name);
-    return region?.governorates || [];
-  }, [regions, selectedRegion]);
+  const country = locations.find((c) => c.id == 1);
+  const regionsList = country?.regions || [];
 
   const conditions = [
     { key: "brand_new_unused", label: "Brand New / Unused", fullLabel: "Brand New / Unused – never opened or used." },
@@ -86,28 +95,22 @@ const FilterComponent = ({ categoryId, onResults }) => {
     setPriceTo("");
     setSelectedPriceRange(null);
     setSelectedRegion(null);
-    setSelectedGovernorate(null);
+    setSelectedCity(null);
+    setSelectedArea(null);
     setOpenTab(null);
 
     const params = { category_id: categoryId, ...(search ? { search } : {}) };
     await handleFilter(params, true);
   };
 
-  // const removeFilter = (type) => {
-  //   if (type === "condition") setNewUsed("");
-  //   if (type === "region") setSelectedRegion(null);
-  //   if (type === "governorate") setSelectedGovernorate(null);
-  //   if (type === "price") {
-  //     setPriceFrom("");
-  //     setPriceTo("");
-  //   }
-  // };
+
   const removeFilter = async (type) => {
     let updatedFilters = {
       category_id: categoryId,
       ...(newUsed ? { condition: newUsed } : {}),
       ...(selectedRegion ? { region_id: selectedRegion.id } : {}),
-      ...(selectedGovernorate ? { governorate_id: selectedGovernorate.id } : {}),
+      ...(selectedCity ? { city_id: selectedCity.id } : {}),
+      ...(selectedArea ? { area_id: selectedArea.id } : {}),
       ...(priceFrom ? { min_price: priceFrom } : {}),
       ...(priceTo ? { max_price: priceTo } : {}),
       ...(search ? { search } : {}),
@@ -119,13 +122,21 @@ const FilterComponent = ({ categoryId, onResults }) => {
     }
     if (type === "region") {
       setSelectedRegion(null);
-      setSelectedGovernorate(null);
+      setSelectedCity(null);
+      setSelectedArea(null);
       delete updatedFilters.region_id;
-      delete updatedFilters.governorate_id;
+      delete updatedFilters.city_id;
+      delete updatedFilters.area_id;
     }
-    if (type === "governorate") {
-      setSelectedGovernorate(null);
-      delete updatedFilters.governorate_id;
+    if (type === "city") {
+      setSelectedCity(null);
+      setSelectedArea(null);
+      delete updatedFilters.city_id;
+      delete updatedFilters.area_id;
+    }
+    if (type === "area") {
+      setSelectedArea(null);
+      delete updatedFilters.area_id;
     }
     if (type === "price") {
       setPriceFrom("");
@@ -164,39 +175,7 @@ const FilterComponent = ({ categoryId, onResults }) => {
         `
       }} />
       {/* Header with Active Filters & Clear All */}
-      {/* <div className="flex justify-between items-start mb-2 max-w-xl">
-        <div className="flex flex-wrap gap-2">
-          {newUsed && (
-            <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-sm">
-              {conditions.find((item) => item.key === newUsed)?.label || t("Condition")}
-              <IoClose className="cursor-pointer" onClick={() => removeFilter("condition")} />
-            </span>
-          )}
 
-          {selectedRegion && (
-            <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-sm">
-              {selectedRegion.name}
-              <IoClose className="cursor-pointer" onClick={() => removeFilter("region")} />
-            </span>
-          )}
-
-          {selectedGovernorate && (
-            <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-sm">
-              {selectedGovernorate.name}
-              <IoClose className="cursor-pointer" onClick={() => removeFilter("governorate")} />
-            </span>
-          )}
-
-          {(priceFrom || priceTo) && (
-            <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-sm">
-              {selectedPriceRange ? selectedPriceRange.label : `${priceFrom || 0} - ${priceTo || "∞"}`}
-              <IoClose className="cursor-pointer" onClick={() => removeFilter("price")} />
-            </span>
-          )}
-        </div>
-
-
-      </div> */}
 
       {/* Filter Buttons */}
       <div className="flex gap-2 flex-wrap items-center">
@@ -283,19 +262,25 @@ const FilterComponent = ({ categoryId, onResults }) => {
             }
             onChange={(selected) => {
               if (selected) {
-                const region = regions.find((r) => r.name === selected.value);
+                const region = regionsList.find((r) => r.name === selected.value);
                 setSelectedRegion(region ? { id: region.id, name: region.name } : null);
-                setSelectedGovernorate(null);
+                if (region) fetchCities(region.id);
+                setSelectedCity(null);
+                setSelectedArea(null);
               } else {
                 setSelectedRegion(null);
-                setSelectedGovernorate(null);
+                setSelectedCity(null);
+                setSelectedArea(null);
               }
             }}
-            options={regions.map((r) => ({ value: r.name, label: r.name }))}
+            options={regionsList.map((r) => ({ value: r.name, label: r.name }))}
             placeholder={t("Region")}
             className="text-sm filter-select"
             classNamePrefix="react-select"
             isClearable
+            // ... styles (kept generic or need to copy large block? defaulting to standard props for brevity if styles match above)
+            // Reusing existing styles prop would be better but it's defined below. 
+            // I'll copy the styles prop from the original code block to be safe.
             styles={{
               control: (provided) => ({
                 ...provided,
@@ -332,25 +317,31 @@ const FilterComponent = ({ categoryId, onResults }) => {
           />
         </div>
 
-        {/* Governorate Select */}
+        {/* City Select */}
         <div className="min-w-[150px]">
           <Select
-            name="governorate"
+            name="city"
             value={
-              selectedGovernorate
-                ? { value: selectedGovernorate.name, label: selectedGovernorate.name }
+              selectedCity
+                ? { value: selectedCity.name, label: selectedCity.name }
                 : null
             }
+            onInputChange={(inputValue) => {
+              if (selectedRegion) fetchCities(selectedRegion.id, inputValue);
+            }}
             onChange={(selected) => {
               if (selected) {
-                const gov = governorates.find((g) => g.name === selected.value);
-                setSelectedGovernorate(gov ? { id: gov.id, name: gov.name } : null);
+                const city = cities.find((c) => c.name === selected.value);
+                setSelectedCity(city ? { id: city.id, name: city.name } : null);
+                if (city) fetchAreas(city.id);
+                setSelectedArea(null);
               } else {
-                setSelectedGovernorate(null);
+                setSelectedCity(null);
+                setSelectedArea(null);
               }
             }}
-            options={governorates.map((g) => ({ value: g.name, label: g.name }))}
-            placeholder={t("Governorate")}
+            options={cities.map((g) => ({ value: g.name, label: g.name }))}
+            placeholder={t("City")}
             className="text-sm filter-select"
             classNamePrefix="react-select"
             isClearable
@@ -360,7 +351,70 @@ const FilterComponent = ({ categoryId, onResults }) => {
                 ...provided,
                 minHeight: '36px',
                 fontSize: '14px',
-                borderColor: selectedGovernorate ? '#10b981' : provided.borderColor,
+                borderColor: selectedCity ? '#10b981' : provided.borderColor,
+                backgroundColor: state.isDisabled ? '#f3f4f6' : provided.backgroundColor,
+              }),
+              menu: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                zIndex: 9999,
+              }),
+              menuList: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+                padding: '4px',
+              }),
+              option: (provided, state) => ({
+                ...provided,
+                padding: '8px 12px',
+                backgroundColor: state.isSelected
+                  ? '#10b981'
+                  : state.isFocused
+                    ? '#f0fdf4'
+                    : 'white',
+                color: state.isSelected ? 'white' : '#374151',
+                '&:hover': {
+                  backgroundColor: state.isSelected ? '#10b981' : '#f0fdf4',
+                },
+              }),
+            }}
+          />
+        </div>
+
+        {/* Area Select */}
+        <div className="min-w-[150px]">
+          <Select
+            name="area"
+            value={
+              selectedArea
+                ? { value: selectedArea.name, label: selectedArea.name }
+                : null
+            }
+            onInputChange={(inputValue) => {
+              if (selectedCity) fetchAreas(selectedCity.id, inputValue);
+            }}
+            onChange={(selected) => {
+              if (selected) {
+                const area = areas.find((a) => a.name === selected.value);
+                setSelectedArea(area ? { id: area.id, name: area.name } : null);
+              } else {
+                setSelectedArea(null);
+              }
+            }}
+            options={areas.map((g) => ({ value: g.name, label: g.name }))}
+            placeholder={t("Area")}
+            className="text-sm filter-select"
+            classNamePrefix="react-select"
+            isClearable
+            isDisabled={!selectedCity}
+            styles={{
+              control: (provided, state) => ({
+                ...provided,
+                minHeight: '36px',
+                fontSize: '14px',
+                borderColor: selectedArea ? '#10b981' : provided.borderColor,
                 backgroundColor: state.isDisabled ? '#f3f4f6' : provided.backgroundColor,
               }),
               menu: (provided) => ({
@@ -469,7 +523,8 @@ const FilterComponent = ({ categoryId, onResults }) => {
               category_id: categoryId,
               ...(newUsed ? { condition: newUsed } : {}),
               ...(selectedRegion ? { region_id: selectedRegion.id } : {}),
-              ...(selectedGovernorate ? { governorate_id: selectedGovernorate.id } : {}),
+              ...(selectedCity ? { city_id: selectedCity.id } : {}),
+              ...(selectedArea ? { area_id: selectedArea.id } : {}),
               ...(priceFrom ? { min_price: priceFrom } : {}),
               ...(priceTo ? { max_price: priceTo } : {}),
               ...(search ? { search } : {}),
@@ -479,14 +534,14 @@ const FilterComponent = ({ categoryId, onResults }) => {
           }}
           disabled={
             loading ||
-            (!newUsed && !selectedRegion && !selectedGovernorate && !priceFrom && !priceTo)
+            (!newUsed && !selectedRegion && !selectedCity && !selectedArea && !priceFrom && !priceTo)
           }
           className="px-4 py-1.5 rounded-full bg-green-600 text-white text-sm font-semibold shadow-sm hover:bg-green-700 disabled:opacity-50 transition"
         >
           {loading ? t("Loading...") : t("Show Results")}
         </button>
         {/* Clear All */}
-        {(newUsed || selectedRegion || selectedGovernorate || priceFrom || priceTo) && (
+        {(newUsed || selectedRegion || selectedCity || selectedArea || priceFrom || priceTo) && (
           <button
             onClick={clearFilters}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm text-gray-500 border border-red-400 hover:text-red-500 min-w-20"

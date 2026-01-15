@@ -61,22 +61,68 @@ export default function SoldListingCard({ listingObj, listing, actions }) {
 
           {/* Price */}
           <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto text-sm text-gray-600">
-            <span className="text-xs text-gray-500">{t("Sold Now")}</span>
-            <span className="font-semibold text-gray-800 text-base">
-              <span className="price">$</span>
-              <span className="ml-1">
-                {listing.price || listingObj.winning_bid?.amount}
-              </span>
-            </span>
+            {(() => {
+              const winningBid = listingObj.winning_bid?.amount;
+              const buyNowPrice = Number(String(listing.price || "0").replace(/,/g, ""));
+              // Check for accepted offer if no winning bid and buy now is 0
+              // Note: listingObj might not have selling_offers populated fully or statuses, assuming accepted offer logic if it's in Sold.
+              // But usually Sold means status 3.
+              // Let's rely on winning_bid or buy_now or just fallback to "Sold"
+
+              if (winningBid) {
+                return (
+                  <>
+                    <span className="text-xs text-gray-500">{t("Winning Bid")}</span>
+                    <span className="font-semibold text-gray-800 text-base">
+                      <span className="price">$</span>
+                      <span className="ml-1">{winningBid}</span>
+                    </span>
+                  </>
+                )
+              } else if (buyNowPrice > 0) {
+                return (
+                  <>
+                    <span className="text-xs text-gray-500">{t("Sold for")}</span>
+                    <span className="font-semibold text-gray-800 text-base">
+                      <span className="price">$</span>
+                      <span className="ml-1">{listing.price}</span>
+                    </span>
+                  </>
+                )
+              } else {
+                // Try to find price from other sources or show N/A
+                const offerPrice = listingObj.selling_offers?.find(o => o.status === 'accepted')?.amount;
+                if (offerPrice) {
+                  return (
+                    <>
+                      <span className="text-xs text-gray-500">{t("Sold for")}</span>
+                      <span className="font-semibold text-gray-800 text-base">
+                        <span className="price">$</span>
+                        <span className="ml-1">{offerPrice}</span>
+                      </span>
+                    </>
+                  )
+                }
+
+                return (
+                  <>
+                    <span className="text-xs text-gray-500">{t("Sold")}</span>
+                    <span className="font-semibold text-gray-800 text-base">
+                      <span className="ml-1">{t("N/A")}</span>
+                    </span>
+                  </>
+                )
+              }
+
+            })()}
           </div>
         </div>
       </Link>
 
       {/* Actions */}
       <div
-        className={`border-t rounded-b-md px-4 py-2 flex flex-col sm:flex-row items-center text-sm text-gray-600 gap-2 sm:gap-4 ${
-          actions.length === 1 ? "justify-center" : "justify-between"
-        }`}
+        className={`border-t rounded-b-md px-4 py-2 flex flex-col sm:flex-row items-center text-sm text-gray-600 gap-2 sm:gap-4 ${actions.length === 1 ? "justify-center" : "justify-between"
+          }`}
       >
         {actions.map((action, idx) =>
           action.href ? (

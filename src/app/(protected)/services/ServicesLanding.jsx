@@ -11,13 +11,14 @@ export default function ServicesLanding({
   categories: initialCategories,
   regions: initialRegions,
   featuredProviders,
+  // initialListings,
   initialListings,
-  priceBounds,
+  // priceBounds,
   initialFilters,
   popularTags,
 }) {
   const setServiceMeta = useServicesStore((state) => state.setServiceMeta);
-  
+
   // Store categories/regions in Zustand when component mounts
   // Categories and regions are already transformed from the server component
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function ServicesLanding({
         <Suspense fallback={<ServicesResultsSkeleton />}>
           <ServicesBrowser
             initialListings={initialListings}
-            priceBounds={priceBounds}
+            // priceBounds={priceBounds}
             initialFilters={initialFilters}
           />
         </Suspense>

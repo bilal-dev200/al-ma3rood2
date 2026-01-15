@@ -40,7 +40,7 @@ const QuillEditor = dynamic(() => import("@/components/ui/QuillEditor"), {
 const priceField = z.preprocess((val) => {
   if (typeof val === "string") {
     const trimmed = val.trim();
-    if (trimmed === "") return 0;
+    if (trimmed === "") return null;
     const n = Number(trimmed);
     return isNaN(n) ? val : n;
   }
@@ -115,13 +115,13 @@ const motorListingSchema = z
         });
       }
 
-      if (isMissing(data.reserve_price)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Reserve price is required",
-          path: ["reserve_price"],
-        });
-      }
+      // if (isMissing(data.reserve_price)) {
+      //   ctx.addIssue({
+      //     code: z.ZodIssueCode.custom,
+      //     message: "Reserve price is required",
+      //     path: ["reserve_price"],
+      //   });
+      // }
     }
 
     if (isBuyNow) {
@@ -723,6 +723,13 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
       } else if (hasStartPrice) {
         copy.selling_type = "auction";
       }
+    }
+
+    // Infer $1 Reserve state
+    const start = Number(copy.start_price);
+    const reserve = Number(copy.reserve_price);
+    if (start === 1 && (isNaN(reserve) || reserve === 0)) {
+      copy.is_price_one_reserve = true;
     }
 
     // ✅ Vehicle data normalization – only adjust when incoming values exist in dataset
@@ -1844,7 +1851,7 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           {steps.map((step, index) => (
             <div key={step.key} className="flex items-center">
               <div
@@ -1869,7 +1876,53 @@ const MotorListingForm = ({ initialValues, mode = "create" }) => {
               )}
             </div>
           ))}
+        </div> */}
+        <div className="mb-8">
+  <div
+    className={`
+      flex items-center
+      w-full
+      overflow-x-auto md:overflow-visible
+      space-x-2 md:space-x-4
+      scrollbar-hide
+    `}
+  >
+    {steps.map((step, index) => (
+      <div
+        key={step.key}
+        className="flex items-center flex-shrink-0"
+      >
+        {/* Step Circle */}
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            index <= activeStep ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"
+          }`}
+        >
+          {index + 1}
         </div>
+
+        {/* Step Title */}
+        <span
+          className={`ml-2 text-sm font-medium ${
+            index <= activeStep ? "text-green-600" : "text-gray-500"
+          }`}
+        >
+          {step.title}
+        </span>
+
+        {/* Connector Line */}
+        {index < steps.length - 1 && (
+          <div
+            className={`h-1 flex-1 md:w-16 md:mx-4 bg-gray-200 ${
+              index < activeStep ? "bg-green-500" : ""
+            }`}
+          />
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+
       </div>
 
       {/* Step Content */}

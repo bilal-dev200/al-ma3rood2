@@ -11,10 +11,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Breadcrumbs";
 
 
 const Page = () => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -25,22 +26,28 @@ const Page = () => {
   useEffect(() => {
     fetchWatchlist();
   }, []);
- useEffect(() => {
-    console.log("Watchlist from store:", watchlist);
-  }, [watchlist]);
 
   const filteredWatchlist = watchlist.filter((item) =>
     item?.listing?.title?.toLowerCase().includes(search.toLowerCase())
   );
- useEffect(() => {
-    console.log("Filtered Watchlist:", filteredWatchlist);
-  }, [filteredWatchlist]);
+  const items = [
+    { label: "Home", href: "/" },
+    { label: "Account", href: "/account" },
+    { label: "Watchlist" },
+  ];
+
   return (
-    <div className="flex items-start md:p-10 text-black">
+    <div className="flex items-start px-3 sm:px-5 md:px-7 text-black">
       <Sidebar />
 
-      <main className="flex-1 p-5">
-        <div className="max-w-5xl mx-auto p-4">
+      <main className="p-1 sm:p-4 md:p-5 w-full">
+        <Breadcrumbs
+          items={items.map((item) => ({ ...item, label: t(item.label) }))}
+          styles={{
+            nav: "flex justify-start text-sm font-medium bg-white border-b border-gray-200 py-2",
+          }}
+        />
+        <div className="max-w-5xl py-5 px-3">
           <h2 className="text-2xl font-bold text-green-700">
             {t("Watchlist Listings")}
           </h2>
@@ -64,7 +71,7 @@ const Page = () => {
               if (listing.type === "service") {
                 return `/services/${listing?.slug}`;
               }
-              
+
               if (listing.type === "job") {
                 return `/jobs/${listing?.slug}`;
               }

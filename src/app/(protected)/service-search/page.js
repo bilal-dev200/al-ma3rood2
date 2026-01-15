@@ -10,6 +10,8 @@ import { Loader2, ArrowUp } from "lucide-react";
 import { FaThList, FaTh } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import CategoryBreakdown from "@/components/WebsiteComponents/Searchpageco/CategoryBreakdown";
+import ServiceCategories from "@/app/(protected)/services/ServiceCategories";
+import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Breadcrumbs";
 import Select from "react-select";
 
 const SearchPageContent = () => {
@@ -38,6 +40,13 @@ const SearchPageContent = () => {
     const router = useRouter();
 
     const [categories, setCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [isSubCategoriesLoading, setIsSubCategoriesLoading] = useState(false);
+    const [currentCategoryName, setCurrentCategoryName] = useState("");
+    const [breadcrumbs, setBreadcrumbs] = useState([
+        { label: "Home", href: "/" },
+        { label: "Services", href: "/services" },
+    ]);
 
     // Sort Options
     const sortOptions = [
@@ -142,6 +151,58 @@ const SearchPageContent = () => {
         fetchResults();
     }, [keyword, pageParam, categoryId, condition, minPrice, maxPrice, sortBy]);
 
+    // Fetch Sub-Categories when categoryId changes
+    useEffect(() => {
+        const loadSubCategories = async () => {
+            if (!categoryId) {
+                setSubCategories([]);
+                setBreadcrumbs([
+                    { label: "Home", href: "/" },
+                    { label: "Services", href: "/services" },
+                ]);
+                return;
+            }
+
+            setIsSubCategoriesLoading(true);
+            try {
+                // Fetch sub-categories
+                const res = await categoriesApi.getAllCategories(categoryId, "services");
+                setSubCategories(res.data || []);
+
+                // Fetch current category info for breadcrumbs (optional, or reuse from somewhere if available)
+                // For now, we can try to find it in the already loaded categories or fetch it if needed.
+                // Assuming getAllCategories response doesn't give parent name directly unless checking data structure.
+                // We'll update breadcrumbs based on history or basic assumption for now.
+
+                // If we want accurate breadcrumb name, we might need a separate call or look up up in a store if available.
+                // Let's try to find it in the 'results.categories' if possible, but that might be empty or filtered.
+
+                // Updating breadcrumbs roughly for now
+                if (res.data && res.data.length > 0 && res.data[0].parent) {
+                    setCurrentCategoryName(res.data[0].parent.name);
+                    setBreadcrumbs([
+                        { label: "Home", href: "/" },
+                        { label: "Services", href: "/services" },
+                        { label: res.data[0].parent.name, href: `/service-search?listing_type=services&selected_category=${categoryId}` }
+                    ]);
+                } else {
+                    // Fallback if we can't get parent name easily
+                    setBreadcrumbs([
+                        { label: "Home", href: "/" },
+                        { label: "Services", href: "/services" },
+                        { label: "Category", href: `/service-search?listing_type=services&selected_category=${categoryId}` }
+                    ]);
+                }
+
+            } catch (err) {
+                console.error("Failed to load sub-categories", err);
+            } finally {
+                setIsSubCategoriesLoading(false);
+            }
+        };
+        loadSubCategories();
+    }, [categoryId]);
+
     // Fetch Categories Separately to ensure dropdown always has data
     // useEffect(() => {
     //     const loadCategories = async () => {
@@ -191,6 +252,24 @@ const SearchPageContent = () => {
         <div className="bg-white min-h-screen pb-20">
             {/* <Navbar /> */}
             <div className="container mx-auto px-4 py-8 max-w-7xl">
+
+                {/* Back Button */}
+                <div className="mb-4">
+                    <button
+                        onClick={() => router.push('/services')}
+                        className="flex items-center text-gray-600 hover:text-green-600 transition-colors font-medium text-sm"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        {t("Back to Services")}
+                    </button>
+                </div>
+
+                {/* Breadcrumbs */}
+                <div className="mb-6">
+                    <Breadcrumbs items={breadcrumbs} />
+                </div>
 
                 {/* 1. Page Title */}
                 {/* <h1 className="text-3xl font-bold mb-6 text-gray-800">{t("Search Results")} {keyword && `for "${keyword}"`}</h1> */}
@@ -244,12 +323,23 @@ const SearchPageContent = () => {
                             <SearchPageFilters categoryId={categoryId} categories={categories} />
                         </div>
                     </div>
+
+                    {/* SubCategories Row */}
+                    {subCategories.length > 0 && (
+                        <div className="mt-4 border-t border-gray-100 pt-4">
+                            <ServiceCategories
+                                heading=""
+                                categories={{ data: subCategories }}
+                                isLoading={isSubCategoriesLoading}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* 4. Category Breakdown */}
-                <Suspense fallback={null}>
+                {/* <Suspense fallback={null}>
                     <CategoryBreakdown categories={categories} />
-                </Suspense>
+                </Suspense> */}
 
                 {/* 5. Results Header & Toggles */}
                 <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">

@@ -56,8 +56,11 @@ export const listingsApi = {
     if (payload?.region_id) {
       formattedPayload.regions_id = payload.region_id;
     }
-    if (payload?.governorate_id) {
-      formattedPayload.governorates_id = payload.governorate_id;
+    if (payload?.city_id) {
+      formattedPayload.city_id = payload.city_id;
+    }
+    if (payload?.area_id) {
+      formattedPayload.area_id = payload.area_id;
     }
     if (payload?.creator_id) {
       formattedPayload.creator_id = payload.creator_id;

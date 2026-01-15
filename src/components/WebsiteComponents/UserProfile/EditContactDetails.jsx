@@ -48,7 +48,8 @@ const schema = yup.object().shape({
   addressLine2: yup.string().nullable(),
   suburb: yup.string().nullable(),
   region: yup.string().nullable(),
-  governorate: yup.string().required("Governorate is required"),
+  city: yup.string().required("City is required"),
+  area: yup.string().required("Area is required"),
   postCode: yup.string().nullable(),
   closestDistrict: yup.string().nullable(),
 });
@@ -56,7 +57,12 @@ const schema = yup.object().shape({
 const EditContactDetails = () => {
   const hideComponent = useProfileStore((state) => state.hideComponent);
   const { user, logout, updateUser } = useAuthStore();
-  const { locations, getAllLocations } = useLocationStore();
+  const {
+    regions, fetchRegions,
+    cities: storeCities, fetchCities,
+    areas: storeAreas, fetchAreas,
+    isLoading: isLocationLoading
+  } = useLocationStore();
   const [loading, setLoading] = React.useState(false);
 
   const {
@@ -85,8 +91,8 @@ const EditContactDetails = () => {
       suburb: user?.suburb || "",
       postCode: user?.post_code || "",
       closestDistrict: user?.closest_district || "",
-      city: user?.city || "",
-      governorate: user?.governorates?.name || "",
+      city: user?.cities?.name || user?.cities || "",
+      area: user?.area?.name || user?.area || "",
       region: user?.regions?.name || "",
     },
   });
@@ -96,19 +102,30 @@ const EditContactDetails = () => {
     const formData = new FormData();
 
     const regions_id = regions.find((r) => r.name == data.region);
-    const governorates_id = governorates.find(
-      (r) => r.name == data.governorate
-    );
+    // const cityObj = storeCities.find((c) => c.name == data.city);
+    // const areaObj = storeAreas.find((a) => a.name == data.area);
 
-    // Validate region and governorate
+    // Use the state objects which are reliably set on selection
+    const cityObj = selectedCityObj;
+    const areaObj = selectedAreaObj;
+
+    // Validate region
     if (!regions_id) {
       toast.error("Please select a valid region");
       setLoading(false);
       return;
     }
 
-    if (!governorates_id) {
-      toast.error("Please select a valid governorate");
+    if (!cityObj && storeCities.length > 0) {
+      toast.error("Please select a valid city");
+      setLoading(false);
+      return;
+    }
+
+    // Areas might be optional depending on city, but schema says required.
+    // Ensure we check against the selected name to handle manual changes if any (though Select enforces selection)
+    if (!areaObj && storeAreas.length > 0) {
+      toast.error("Please select a valid area");
       setLoading(false);
       return;
     }
@@ -125,7 +142,8 @@ const EditContactDetails = () => {
     formData.append("business_name", data.businessName || "");
     formData.append("country_id", 1);
     formData.append("regions_id", regions_id.id);
-    formData.append("governorates_id", governorates_id.id);
+    formData.append("city_id", cityObj.id);
+    if (areaObj) formData.append("area_id", areaObj.id);
     formData.append("address_finder", data.addressFinder);
     formData.append("address_1", data.addressLine1);
     formData.append("address_2", data.addressLine2);
@@ -168,8 +186,8 @@ const EditContactDetails = () => {
         suburb: res.data?.suburb || "",
         post_code: res.data?.post_code || "",
         closest_district: res.data?.closest_district || "",
-        city: res.data?.city || "",
-        governorates: res.data?.governorates || "",
+        cities: res.data?.cities || "",
+        area: res.data?.area || "",
         regions: res.data?.regions || "",
       });
       // Navigate back to previous page
@@ -192,33 +210,48 @@ const EditContactDetails = () => {
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
 
+  // Track full objects to avoid finding them in potentially stale store lists
+  const [selectedCityObj, setSelectedCityObj] = useState(user?.cities || null);
+  const [selectedAreaObj, setSelectedAreaObj] = useState(user?.area || null);
+
   // const [states, setStates] = useState([]);
   // const [cities, setCities] = useState([]);
-  const country = locations.find((c) => c.id == 1); // Saudi Arabia
-  const regions = country?.regions || [];
-
-  const governorates =
-    regions.find((r) => r?.name === watch("region"))?.governorates || [];
-
-  const cities =
-    governorates.find((g) => g?.name === watch("governorate"))?.cities || [];
+  // No longer deriving from regions locally. State management is done via store.
+  // const country = regions.find((c) => c.id == 1);
+  // const regions = country?.regions || [];
+  // const governorates = ...
 
   useEffect(() => {
-    getAllLocations();
-  }, [getAllLocations]);
+    fetchRegions();
+  }, [fetchRegions]);
 
   // Watch region changes
   const currentRegion = watch("region");
-  const prevRegionRef = React.useRef(currentRegion);
+  const currentCity = watch("city");
 
-  // Reset governorate when region changes
+  // Reset city/area when region changes
   useEffect(() => {
-    // Only reset if region actually changed (not on initial mount)
-    if (prevRegionRef.current !== currentRegion && prevRegionRef.current !== undefined) {
-      setValue("governorate", "");
+    if (currentRegion) {
+      const r = regions.find(reg => reg.name === currentRegion);
+      if (r) fetchCities(r.id);
     }
-    prevRegionRef.current = currentRegion;
-  }, [currentRegion, setValue]);
+  }, [currentRegion]);
+
+  // Fetch areas when city changes
+  useEffect(() => {
+    if (currentCity) {
+      // Prefer the selected object, otherwise try to find it
+      const c = selectedCityObj || storeCities.find(city => city.name === currentCity);
+      if (c) {
+        fetchAreas(c.id).then(fetchedAreas => {
+          if (fetchedAreas && fetchedAreas.length === 1) {
+            setValue("area", fetchedAreas[0].name);
+            setSelectedAreaObj(fetchedAreas[0]);
+          }
+        });
+      }
+    }
+  }, [currentCity, storeCities, selectedCityObj]);
   // useEffect(() => {
   //   const allStates = State.getStatesOfCountry(selectedCountry.value);
   //   setStates(
@@ -408,9 +441,8 @@ const EditContactDetails = () => {
                     countryCodeEditable={false}
                     value={field.value || ""}
                     onChange={(value) => field.onChange(value)} // ✅ update field value properly
-                    inputClass={`w-full p-2 border rounded-md ${
-                      errors.mobile ? "border-red-500" : "border-gray-300"
-                    }`}
+                    inputClass={`w-full p-2 border rounded-md ${errors.mobile ? "border-red-500" : "border-gray-300"
+                      }`}
                     inputStyle={{
                       width: "100%",
                       height: "40px",
@@ -496,16 +528,18 @@ const EditContactDetails = () => {
             <label className="text-sm mb-1 block">{t("Region")}</label>
             <Controller
               name="region"
-              control={control} // from useForm()
+              control={control}
               render={({ field }) => (
                 <Select
                   {...field}
-                  value={
-                    field.value
-                      ? { value: field.value, label: field.value }
-                      : null
-                  }
-                  onChange={(selected) => field.onChange(selected?.value || "")}
+                  value={field.value ? { value: field.value, label: field.value } : null}
+                  onChange={(selected) => {
+                    field.onChange(selected?.value || "");
+                    setValue("city", "");
+                    setValue("area", "");
+                    setSelectedCityObj(null);
+                    setSelectedAreaObj(null);
+                  }}
                   options={regions.map((g) => ({
                     value: g?.name,
                     label: g?.name,
@@ -526,34 +560,80 @@ const EditContactDetails = () => {
 
           <div className="mb-4 w-full">
             <label className="text-sm mb-1 block">
-              {t("Governorate")} <span className="text-red-500">*</span>
+              {t("City")} <span className="text-red-500">*</span>
             </label>
             <Controller
-              name="governorate"
-              control={control} // from useForm()
+              name="city"
+              control={control}
               render={({ field }) => (
                 <Select
                   {...field}
-                  value={
-                    field.value
-                      ? { value: field.value, label: field.value }
-                      : null
-                  }
-                  onChange={(selected) => field.onChange(selected?.value || "")}
-                  options={governorates.map((g) => ({
+                  value={field.value ? { value: field.value, label: field.value } : null}
+                  onInputChange={(inputValue) => {
+                    const r = regions.find(reg => reg.name === watch("region"));
+                    if (r) fetchCities(r.id, inputValue);
+                  }}
+                  onChange={(selected) => {
+                    field.onChange(selected?.value || "");
+                    setSelectedCityObj(selected?.data || null);
+                    setValue("area", "");
+                    setSelectedAreaObj(null);
+                  }}
+                  options={storeCities.map((g) => ({
                     value: g?.name,
                     label: g?.name,
+                    data: g
                   }))}
-                  placeholder={t("Select a Governorate")}
+                  placeholder={t("Select a City")}
                   className="text-sm"
+                  isLoading={isLocationLoading}
                   classNamePrefix="react-select"
                   isClearable
                 />
               )}
             />
-            {errors.governorate && (
+            {errors.city && (
               <p className="text-red-500 text-xs mt-1">
-                {errors.governorate.message}
+                {errors.city.message}
+              </p>
+            )}
+          </div>
+
+          <div className="mb-4 w-full">
+            <label className="text-sm mb-1 block">
+              {t("Area")} <span className="text-red-500">*</span>
+            </label>
+            <Controller
+              name="area"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  value={field.value ? { value: field.value, label: field.value } : null}
+                  onInputChange={(inputValue) => {
+                    const c = storeCities.find(city => city.name === watch("city"));
+                    if (c) fetchAreas(c.id, inputValue);
+                  }}
+                  onChange={(selected) => {
+                    field.onChange(selected?.value || "");
+                    setSelectedAreaObj(selected?.data || null);
+                  }}
+                  options={storeAreas.map((g) => ({
+                    value: g?.name,
+                    label: g?.name,
+                    data: g
+                  }))}
+                  placeholder={t("Select an Area")}
+                  className="text-sm"
+                  isLoading={isLocationLoading}
+                  classNamePrefix="react-select"
+                  isClearable
+                />
+              )}
+            />
+            {errors.area && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.area.message}
               </p>
             )}
           </div>

@@ -38,10 +38,12 @@ const MotorListingCard = ({ listing, viewMode }) => {
   //   return `${numPrice.toLocaleString()}`;
   // };
   const formatPrice = (price) => {
-    if (!price) return "Price on application";
+    if (!price && price !== 0) return "Price on application";
 
+    // Ensure input is string to safe-guard against Numbers being passed
+    const stringPrice = String(price);
     // Remove commas and any extra spaces before converting
-    const numPrice = parseFloat(price.replace(/,/g, ""));
+    const numPrice = parseFloat(stringPrice.replace(/,/g, ""));
 
     if (isNaN(numPrice)) return "Price on application";
 
@@ -54,6 +56,7 @@ const MotorListingCard = ({ listing, viewMode }) => {
     // Add commas properly formatted
     return numPrice.toLocaleString();
   };
+
 
   console.log("aaa listing", listing);
 
@@ -75,17 +78,17 @@ const MotorListingCard = ({ listing, viewMode }) => {
     }
   };
 
+
+
   return (
     <Link
       href={`/motors/${listing.slug}`}
-      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${
-        viewMode !== "grid" ? "flex flex-col md:flex-row" : "flex flex-col"
-      }`}
+      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${viewMode !== "grid" ? "flex flex-col md:flex-row" : "flex flex-col"
+        }`}
     >
       <div
-        className={`relative ${
-          viewMode == "grid" ? "h-48" : "w-96  h-58"
-        } bg-gray-200`}
+        className={`relative ${viewMode == "grid" ? "h-48" : "w-96  h-58"
+          } bg-gray-200`}
       >
         {listing.images && listing.images.length > 0 ? (
           <img
@@ -109,11 +112,10 @@ const MotorListingCard = ({ listing, viewMode }) => {
         {/* Condition badge */}
         <div className="absolute top-2 right-2">
           <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              listing.condition === "new"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-600 text-white"
-            }`}
+            className={`px-2 py-1 rounded text-xs font-medium ${listing.condition === "new"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-600 text-white"
+              }`}
           >
             {listing.condition === "new" ? "New" : "Used"}
           </span>
@@ -136,9 +138,8 @@ const MotorListingCard = ({ listing, viewMode }) => {
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
             <h3
-              className={`text-lg font-semibold text-gray-900 line-clamp-2 truncate ${
-                viewMode !== "grid" ? "w-32 md:w-64" : "w-32 md:w-72"
-              }`}
+              className={`text-lg font-semibold text-gray-900 line-clamp-2 truncate ${viewMode !== "grid" ? "w-32 md:w-64" : "w-32 md:w-72"
+                }`}
             >
               {year && `${year} `}
               {make && `${make} `}
@@ -153,19 +154,19 @@ const MotorListingCard = ({ listing, viewMode }) => {
           <div className="text-right ml-4">
             {listing.bids_count === 0
               ? listing.buy_now_price && (
-                  <p className="text-xl font-bold text-green-600">
-                    <span className="price">$</span>
-                    {formatPrice(listing.buy_now_price)}
-                  </p>
-                )
+                <p className="text-xl font-bold text-green-600">
+                  <span className="price">$</span>
+                  {formatPrice(listing.buy_now_price)}
+                </p>
+              )
               : listing.bids_count &&
-                (listing.bids?.length > 0) &
-                (
-                  <p className="text-xl font-bold text-green-600">
-                    <span className="price">$</span>
-                    {formatPrice(listing.bids?.[0]?.amount)}
-                  </p>
-                )}
+              (listing.bids?.length > 0) &&
+              (
+                <p className="text-xl font-bold text-green-600">
+                  <span className="price">$</span>
+                  {formatPrice(listing.bids?.[0]?.amount)}
+                </p>
+              )}
             {listing.allow_offers && (
               <p className="text-xs text-gray-500">or best offer</p>
             )}

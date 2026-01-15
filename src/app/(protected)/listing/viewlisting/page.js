@@ -75,19 +75,19 @@ const Page = () => {
       : "-",
     remainingTime: listing.expire_at
       ? (() => {
-          const now = new Date();
-          const expire = new Date(listing.expire_at);
-          const diff = expire - now;
-          if (diff <= 0) return "Expired";
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-          const minutes = Math.floor((diff / (1000 * 60)) % 60);
-          let str = "";
-          if (days > 0) str += `${days} days, `;
-          if (hours > 0 || days > 0) str += `${hours} hours, `;
-          str += `${minutes} minutes`;
-          return str.trim();
-        })()
+        const now = new Date();
+        const expire = new Date(listing.expire_at);
+        const diff = expire - now;
+        if (diff <= 0) return "Expired";
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        let str = "";
+        if (days > 0) str += `${days} days, `;
+        if (hours > 0 || days > 0) str += `${hours} hours, `;
+        str += `${minutes} minutes`;
+        return str.trim();
+      })()
       : "-",
   };
   // Example shipping (customize as needed)
@@ -103,7 +103,7 @@ const Page = () => {
   async function handleWithdraw(option) {
     try {
       await listingsApi.withdrawListing(listing.slug);
-       toast.success("Listing withdrawn successfully ✅");
+      toast.success("Listing withdrawn successfully ✅");
       setOpenWithdrawDialog(false);
       router.replace("/account/selling");
     } catch (error) {
@@ -181,33 +181,33 @@ const Page = () => {
           <div className="order-3 mt-6 px-4">
             <h3 className="text-sm font-semibold mb-4">{t("Details")}</h3>
             {details.map((item, idx) => {
-              { console.log("aaaa item", item.label);
+              {
+                console.log("aaaa item", item.label);
                 return (
-                <div className="flex mb-4 flex-wrap" key={idx}>
-                  <div className="w-48 font-semibold text-gray-600 text-sm">
-                    {t(item.label)}
-                    {/* {item.label} */}
-                    {/* {t(`${item.label}`)} */}
+                  <div className="flex mb-4 flex-wrap" key={idx}>
+                    <div className="w-48 font-semibold text-gray-600 text-sm">
+                      {t(item.label)}
+                      {/* {item.label} */}
+                      {/* {t(`${item.label}`)} */}
+                    </div>
+                    <div className="text-sm  text-gray-700 max-w-md">
+                      {item.label.toLowerCase() === "description" ? (
+                        <div dangerouslySetInnerHTML={{ __html: item.value }} />
+                      ) : (
+                        item.value
+                      )}
+                    </div>
                   </div>
-                  <div className="text-sm  text-gray-700 max-w-md">
-                    {item.label.toLowerCase() === "description" ? (
-                      <div dangerouslySetInnerHTML={{ __html: item.value }} />
-                    ) : (
-                      item.value
-                    )}
-                  </div>
-                </div>
-              )
-            }
+                )
+              }
             })}
           </div>
 
           {/* SELLER INFO: LAST IN MOBILE */}
           <div className="order-4 mt-10 w-full px-4">
             <h4
-              className={`font-semibold text-gray-600 text-sm mb-4 ${
-                i18n.language === "ar" ? "text-right" : "text-left"
-              }`}
+              className={`font-semibold text-gray-600 text-sm mb-4 ${i18n.language === "ar" ? "text-right" : "text-left"
+                }`}
             >
               {t("About the Seller")}
             </h4>
@@ -231,13 +231,13 @@ const Page = () => {
                 <p className="text-sm text-gray-500">
                   {t("Location")}:{" "}
                   {listing.creator?.regions?.name
-                    ? `${
-                        listing.creator?.address_1
-                          ? `${listing.creator?.address_1}, `
-                          : ""
-                      }${listing.creator?.governorates?.name}, ${
-                        listing.creator?.regions?.name
-                      }`
+                    ? `${listing.creator?.address_1
+                      ? `${listing.creator?.address_1}, `
+                      : ""
+                    }${listing.creator?.areas?.name ? `${listing.creator?.areas?.name}, ` : ""
+                    }${listing.creator?.cities?.name || listing.creator?.governorates?.name || ""
+                    }, ${listing.creator?.regions?.name
+                    }`
                     : ""}
                 </p>
 
@@ -245,13 +245,13 @@ const Page = () => {
                   {t("Member Since")}:{" "}
                   {listing.creator?.created_at
                     ? new Date(listing.creator.created_at).toLocaleDateString(
-                        "en-US",
-                        {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )
+                      "en-US",
+                      {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      }
+                    )
                     : "Unknown"}
                 </p>
               </div>
@@ -292,7 +292,7 @@ const Page = () => {
             </div>
           )}
           <div className="border border-gray-400 rounded overflow-hidden bg-white w-full max-w-sm">
-            <div className="p-4">
+            {listing.buy_now_price > 0 && <div className="p-4">
               <h3 className="text-sm text-center text-gray-600">
                 {t("Buy Now")}
               </h3>
@@ -300,8 +300,8 @@ const Page = () => {
                 <span className="price">$</span>
                 {listing.buy_now_price}
               </p>
-            </div>
-            {listing.listing_type !== "property" && (
+            </div>}
+            {listing.listing_type !== "property" && listing.start_price > 0 && (
               <div className="p-4">
                 <h3 className="text-sm text-center text-gray-600">
                   {t("Bidding Starts At")}

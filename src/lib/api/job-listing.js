@@ -33,52 +33,54 @@ export const JobsApi = {
     return response.data;
   },
   // Listing Filter
-getListingsByFilter: async (payload) => {
-  // Destructure all the potential filter and pagination values from payload
-  const {
-    category_id,
-    region_id,
-    governorate_id,
-    work_type,
-    minimum_pay_type,
-    min_amount,
-    max_amount,
-    search,
-    status,
-    limit = 10, // Set a default limit for pagination
-    offset = 0, // Set a default offset for pagination
-  } = payload;
+  getListingsByFilter: async (payload) => {
+    // Destructure all the potential filter and pagination values from payload
+    const {
+      category_id,
+      region_id,
+      city_id,
+      area_id,
+      work_type,
+      minimum_pay_type,
+      min_amount,
+      max_amount,
+      search,
+      status,
+      limit = 10, // Set a default limit for pagination
+      offset = 0, // Set a default offset for pagination
+    } = payload;
 
-  // Create a URLSearchParams object to easily build the query string
-  const params = new URLSearchParams();
+    // Create a URLSearchParams object to easily build the query string
+    const params = new URLSearchParams();
 
-  // Conditionally append parameters only if they have a value (e.g., not null, undefined, or empty string)
-  if (search) params.append('keyword', search);
-  if (category_id) params.append('category_id', category_id);
-  if (region_id) params.append('region_id', region_id);
-  if (governorate_id) params.append('governorate_id', governorate_id);
-  if (work_type) params.append('work_type', work_type);
-  if (minimum_pay_type) params.append('minimum_pay_type', minimum_pay_type);
-  if (min_amount) params.append('min_amount', min_amount);
-  if (max_amount) params.append('max_amount', max_amount);
-  if (status) params.append('status', status);
+    // Conditionally append parameters only if they have a value (e.g., not null, undefined, or empty string)
+    if (search) params.append('keyword', search);
+    if (category_id) params.append('category_id', category_id);
+    if (region_id) params.append('region_id', region_id);
+    if (city_id) params.append('city_id', city_id);
+    if (area_id) params.append('area_id', area_id);
+    if (work_type) params.append('work_type', work_type);
+    if (minimum_pay_type) params.append('minimum_pay_type', minimum_pay_type);
+    if (min_amount) params.append('min_amount', min_amount);
+    if (max_amount) params.append('max_amount', max_amount);
+    if (status) params.append('status', status);
 
-  // Always include limit and offset for pagination
-  params.append('limit', limit);
-  params.append('offset', offset);
+    // Always include limit and offset for pagination
+    params.append('limit', limit);
+    params.append('offset', offset);
 
-  // Construct the final URL with the query string
-  const queryString = params.toString();
-  const url = `/job-listing?${queryString}`;
+    // Construct the final URL with the query string
+    const queryString = params.toString();
+    const url = `/job-listing?${queryString}`;
 
-  console.log("Check Listing URL:", url);
+    console.log("Check Listing URL:", url);
 
-  const response = await axiosClient.get(url);
-  return response.data;
-},
+    const response = await axiosClient.get(url);
+    return response.data;
+  },
   // Listing Filter By All Categories
   getListingsFilterByAllCategories: async (params = {}) => {
-        const filteredParams = Object.fromEntries(
+    const filteredParams = Object.fromEntries(
       Object.entries(params).filter(([_, v]) => v !== undefined)
     );
     const searchParams = new URLSearchParams(filteredParams).toString();
@@ -86,35 +88,35 @@ getListingsByFilter: async (payload) => {
     const response = await axiosClient.get(
       `/listings/suggestions${searchParams ? `?${searchParams}&status=1` : "?status=1"}`
     );
-    return{
+    return {
       web_suggestions: response?.web_suggestions || [],
       past_searches: response?.past_searches || [],
     };
   },
 
   listingsSearchHistory(params) {
-  return axiosClient.get("listings/search", { params });
-},
-updateJobApplicationStatus: async ({ job_application_id, job_status }) => {
-  try {
-    const formData = new FormData();
-    formData.append("job_application_id", job_application_id);
-    formData.append("job_status", job_status);
+    return axiosClient.get("listings/search", { params });
+  },
+  updateJobApplicationStatus: async ({ job_application_id, job_status }) => {
+    try {
+      const formData = new FormData();
+      formData.append("job_application_id", job_application_id);
+      formData.append("job_status", job_status);
 
-    const response = await axiosClient.post(
-      `/user/job-applying/statusupdate`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+      const response = await axiosClient.post(
+        `/user/job-applying/statusupdate`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
-    return response.data;
-  } catch (error) {
-    console.error("Error updating job application status:", error);
-    throw error;
-  }
-},
+      return response.data;
+    } catch (error) {
+      console.error("Error updating job application status:", error);
+      throw error;
+    }
+  },
 
   getListingBySlug: async (productSlug) => {
     const response = await axiosClient.get(`/user/job-listing/${productSlug}/show`);
@@ -223,12 +225,12 @@ export const commentsApi = {
       comment_text: reply,
     });
   },
-  updatecommnet:async(updateid,update)=>{
-    return await axiosClient.post(`/user/comments/${updateid}/update`,{
-      comment_text:update,
+  updatecommnet: async (updateid, update) => {
+    return await axiosClient.post(`/user/comments/${updateid}/update`, {
+      comment_text: update,
     })
   },
-deleteComment: async (commentId) => {
-  return await axiosClient.delete(`/user/comments/${commentId}/delete`);
-}
- };
+  deleteComment: async (commentId) => {
+    return await axiosClient.delete(`/user/comments/${commentId}/delete`);
+  }
+};

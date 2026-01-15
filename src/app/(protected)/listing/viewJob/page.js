@@ -71,9 +71,8 @@ const Page = () => {
     { label: "Work Type", value: formatWorkType(listing.work_type) },
     {
       label: "Location",
-      value: `${listing.governorate?.name || "N/A"}, ${
-        listing.region?.name || "N/A"
-      }`,
+      value: `${listing.city?.name || listing.governorate?.name || "N/A"}, ${listing.region?.name || "N/A"
+        }`,
     },
     {
       label: "Entry Level",
@@ -111,7 +110,7 @@ const Page = () => {
   async function handleWithdraw(option) {
     try {
       await JobsApi.withdrawListing(listing.id); // Assuming a JobsApi.withdrawListing exists
-       toast.success("Job withdrawn successfully");
+      toast.success("Job withdrawn successfully");
       setOpenWithdrawDialog(false);
       router.replace("/account/jobs-list");
     } catch (error) {
@@ -243,26 +242,25 @@ const Page = () => {
                 <p className="text-sm text-gray-500 mt-1">
                   {t("Location")}:{" "}
                   {listing.user?.regions?.name
-                    ? `${
-                        listing.user?.address_2
-                          ? `${listing.user?.address_2}, `
-                          : ""
-                      }${listing.user?.governorates?.name}, ${
-                        listing.user?.regions?.name
-                      }`
+                    ? `${listing.user?.address_2
+                      ? `${listing.user?.address_2}, `
+                      : ""
+                    }${listing.user?.cities?.name || listing.user?.governorates?.name || ""
+                    }, ${listing.user?.regions?.name
+                    }`
                     : "N/A"}
                 </p>
                 <p className="text-sm text-gray-500">
                   {t("Member Since")}:{" "}
                   {listing.user?.created_at
                     ? new Date(listing.user.created_at).toLocaleDateString(
-                        i18n.language === "ar" ? "ar-EG" : "en-US",
-                        {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )
+                      i18n.language === "ar" ? "ar-EG" : "en-US",
+                      {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      }
+                    )
                     : "Unknown"}
                 </p>
                 <p className="text-sm text-gray-500 mt-2 italic">

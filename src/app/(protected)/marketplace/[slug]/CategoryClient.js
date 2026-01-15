@@ -22,7 +22,7 @@ export default function CategoryClient({
   const observerRef = useRef();
   const router = useRouter();
   const searchParams = useSearchParams();
-console.log("Check Category", category);  
+  console.log("Check Category", category);
   // Params
   const search = searchParams.get("search") || "";
   const minPrice = searchParams.get("min_price");
@@ -291,6 +291,7 @@ console.log("Check Category", category);
           {/* Sorting Dropdown */}
           <div className="min-w-[180px]">
             <Select
+              instanceId="sort-select"
               options={sortOptions}
               value={sortOptions.find(opt => opt.value === sortBy)}
               onChange={handleSortChange}

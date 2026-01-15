@@ -47,10 +47,10 @@
 
 //   const markAllAsRead = async () => {
 //     try {
-//       const ids = notifications.map((n) => n.id);
-//       await Promise.all(ids.map((id) => userApi.userReadNotification(id)));
+//       await userApi.userAllReadNotification();
 //       toast.success("All notifications marked as read!");
-//       setNotifications([]);
+//       // Optionally re-fetch to update status, or clear if that's the desired behavior
+//       setNotifications([]); 
 //     } catch (error) {
 //       toast.error("Failed to mark all as read.");
 //     }
@@ -70,7 +70,7 @@
 //         items={items}
 //         styles={{ nav: "flex justify-start text-sm font-medium bg-white border-b border-gray-200 py-2" }}
 //       />
-      
+
 //     <div className="min-h-screen px-4 py-6 text-gray-800">
 //       <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
 //         <h2 className="text-2xl font-bold text-green-700">NOTIFICATIONS</h2>

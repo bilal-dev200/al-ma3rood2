@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { listingsApi } from "@/lib/api/listings";
 import Select from "react-select";
 import { Image_URL } from "@/config/constants";
-import { City } from "country-state-city";
-import { useCityStore } from "@/lib/stores/cityStore";
+// import { City } from "country-state-city";
+// import { useCityStore } from "@/lib/stores/cityStore";
 import { useLocationStore } from "@/lib/stores/locationStore";
 
 export const SearchFilterOld = () => {
@@ -21,7 +21,7 @@ export const SearchFilterOld = () => {
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
-  const [cities, setCities] = useState([]);
+  // const [cities, setCities] = useState([]);
   // const [selectedCity, setSelectedCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -30,21 +30,35 @@ export const SearchFilterOld = () => {
     getAllLocations,
     selectedCountry,
     selectedRegion,
-    selectedGovernorate,
+    selectedCity,
+    selectedArea,
     setSelectedCountry,
     setSelectedRegion,
-    setSelectedGovernorate,
+    setSelectedCity,
+    setSelectedArea,
   } = useLocationStore();
   const country = locations.find((c) => c.id == 1);
   const regions = country?.regions || [];
 
-  const governorates = useMemo(() => {
+  const cities = useMemo(() => {
     // guard clause — prevents error if selectedRegion is null
     if (!selectedRegion || !selectedRegion.name) return [];
 
     const region = regions.find((r) => r.name === selectedRegion.name);
-    return region?.governorates || [];
+    return region?.cities || [];
   }, [regions, selectedRegion]);
+
+  const areas = useMemo(() => {
+    if (!selectedCity || !selectedCity.name) return [];
+
+    // We need to find the city object from the region to access its areas
+    // Since selectedCity might just be { name: ... }, we need to look it up
+    const region = regions.find((r) => r.name === selectedRegion?.name);
+    const regionCities = region?.cities || [];
+    const city = regionCities.find(c => c.name === selectedCity.name);
+
+    return city?.areas || [];
+  }, [regions, selectedRegion, selectedCity]);
 
   const {
     categories,
@@ -53,22 +67,14 @@ export const SearchFilterOld = () => {
     setSelectedCategory,
   } = useCategoryStore();
 
-  const {
+  /* const {
     selectedCity,
     setSelectedCity,
-  } = useCityStore();
+  } = useCityStore(); */
 
   useEffect(() => {
     getAllCategories();
-    const defaultCities = City.getCitiesOfCountry("SA");
-    // Remove duplicate cities by name
-    const uniqueCities = defaultCities.filter(
-      (city, index, self) =>
-        index === self.findIndex((c) => c.name === city.name)
-    );
-
-    setCities(uniqueCities);
-
+    // Removed legacy city fetching logic
   }, [getAllCategories]);
 
   useEffect(() => {
@@ -139,9 +145,9 @@ export const SearchFilterOld = () => {
     params.set("listing_type", "marketplace");
 
     // Include other filters if needed/requested, but user focused on "search button... redirect to search page"
-    if (selectedCity) params.set("city", selectedCity);
+    if (selectedCity) params.set("city", selectedCity.name);
+    if (selectedArea) params.set("area_id", selectedArea.id);
     if (selectedRegion) params.set("region_id", selectedRegion.id);
-    if (selectedGovernorate) params.set("governorate_id", selectedGovernorate.id);
     if (selectedCategory) params.set("category_id", selectedCategory);
 
     router.push(`/search?${params.toString()}`);
@@ -234,25 +240,75 @@ export const SearchFilterOld = () => {
           />
         </div>
         <div className="flex flex-col w-full md:w-1/4">
-          <label className="text-sm text-gray-500 mb-1">{t("Governorate")}</label>
-          {/* {cities.length > 0 && ( */}
+          <label className="text-sm text-gray-500 mb-1">{t("City")}</label>
           <Select
-            name="governorate"
-            instanceId="governorate"
+            name="city"
+            instanceId="city"
             value={
-              selectedGovernorate
-                ? { value: selectedGovernorate.name, label: selectedGovernorate.name }
+              selectedCity
+                ? { value: selectedCity.name, label: selectedCity.name }
                 : null
             }
             onChange={(selected) => {
-              const gov = governorates.find((g) => g.name === selected?.value);
-              setSelectedGovernorate(gov ? { id: gov.id, name: gov.name } : null);
+              if (selected) {
+                // Find city object
+                const region = regions.find((r) => r.name === selectedRegion?.name);
+                const regionCities = region?.cities || [];
+                const city = regionCities.find(c => c.name === selected.value);
+                setSelectedCity(city ? { id: city.id, name: city.name } : null);
+              } else {
+                setSelectedCity(null);
+              }
             }}
-            options={governorates.map((g) => ({ value: g.name, label: g.name }))}
-            placeholder={t("Select a Governorate")}
+            options={cities.map((c) => ({ value: c.name, label: c.name }))}
+            placeholder={t("Select a City")}
             className="text-xs"
             classNamePrefix="react-select"
             isClearable
+            isDisabled={!selectedRegion}
+            styles={{
+              menu: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+              }),
+              menuList: (provided) => ({
+                ...provided,
+                maxHeight: 200,
+                overflowY: 'auto',
+              }),
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col w-full md:w-1/4">
+          <label className="text-sm text-gray-500 mb-1">{t("Area")}</label>
+          <Select
+            name="area"
+            instanceId="area"
+            value={
+              selectedArea
+                ? { value: selectedArea.name, label: selectedArea.name }
+                : null
+            }
+            onChange={(selected) => {
+              if (selected) {
+                // Find area object
+                const region = regions.find((r) => r.name === selectedRegion?.name);
+                const regionCities = region?.cities || [];
+                const city = regionCities.find(c => c.name === selectedCity?.name);
+                const area = city?.areas?.find(a => a.name === selected.value);
+                setSelectedArea(area ? { id: area.id, name: area.name } : null);
+              } else {
+                setSelectedArea(null);
+              }
+            }}
+            options={areas.map((a) => ({ value: a.name, label: a.name }))}
+            placeholder={t("Select an Area")}
+            className="text-xs"
+            classNamePrefix="react-select"
+            isClearable
+            isDisabled={!selectedCity}
             styles={{
               menu: (provided) => ({
                 ...provided,

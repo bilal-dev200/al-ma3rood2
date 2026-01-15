@@ -170,9 +170,10 @@ export default function SellingClient() {
               image: listing.images?.[0]?.image_path
                 ? `${Image_URL}${listing.images[0].image_path}`
                 : "/default-image.jpg",
-              link: `/marketplace/${
-                listing.category?.slug?.split("/").pop() || "unknown"
-              }/${listing.slug}`,
+              link: `/marketplace/${listing.category?.slug?.split("/").pop() || "unknown"
+                }/${listing.slug}`,
+              start_price: listing.start_price,
+              bids: listing.bids,
             }}
             // actions={commonActions(listing.slug)}
             //             const commonActions = (id) => [

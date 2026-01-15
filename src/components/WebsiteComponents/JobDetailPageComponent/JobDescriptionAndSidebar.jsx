@@ -25,7 +25,9 @@ export default function JobDescriptionAndSidebar({ product }) {
     contact_email,
     contact_phone,
     region,
-    governorate,
+    city,
+    area,
+    governorate, // fallback
     media_files = [],
   } = product || {};
 
@@ -97,11 +99,11 @@ export default function JobDescriptionAndSidebar({ product }) {
 
             {/* Contact Info */}
             <div className="space-y-2 text-sm text-gray-700">
-              {governorate?.name && region?.name && (
+              {(area?.name || city?.name || governorate?.name || region?.name) && (
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-[#175f48]" />
                   <span>
-                    {governorate.name}, {region.name}
+                    {[area?.name || governorate?.name, city?.name, region?.name].filter(Boolean).join(", ")}
                   </span>
                 </div>
               )}
@@ -145,38 +147,38 @@ export default function JobDescriptionAndSidebar({ product }) {
       />
 
       {/* FULLSCREEN SLIDER MODAL */}
-{fullscreenImage !== null && (
-  <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999]">
-    
-    {/* Close Button */}
-    <button
-      className="absolute top-6 right-6 text-white bg-black bg-opacity-50 p-2 rounded-full z-[10000]"
-      onClick={() => setFullscreenImage(null)}
-    >
-      <X className="w-6 h-6" />
-    </button>
+      {fullscreenImage !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999]">
 
-    {/* Slider */}
-    <Swiper
-      modules={[Navigation]}
-      navigation
-      initialSlide={fullscreenImage} // index number
-      loop={true}
-      className="w-full max-w-4xl"
-    >
-      {media_files.map((file, index) => (
-        <SwiperSlide key={index}>
-          <div className="flex items-center justify-center w-full h-full">
-            <img
-              src={`${Image_URL}${file.file_path}`}
-              className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
-            />
-          </div>
-        </SwiperSlide>
-      ))}
-    </Swiper>
-  </div>
-)}
+          {/* Close Button */}
+          <button
+            className="absolute top-6 right-6 text-white bg-black bg-opacity-50 p-2 rounded-full z-[10000]"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {/* Slider */}
+          <Swiper
+            modules={[Navigation]}
+            navigation
+            initialSlide={fullscreenImage} // index number
+            loop={true}
+            className="w-full max-w-4xl"
+          >
+            {media_files.map((file, index) => (
+              <SwiperSlide key={index}>
+                <div className="flex items-center justify-center w-full h-full">
+                  <img
+                    src={`${Image_URL}${file.file_path}`}
+                    className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
+                  />
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      )}
 
     </div>
   );

@@ -9,128 +9,152 @@ import {
   JobsApi,
 } from "@/lib/api/job-listing.js";
 import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Breadcrumbs";
+import { useRef } from "react";
 
 // --- CONSTANTS ---
-const JOBS_PER_PAGE = 10; 
+const JOBS_PER_PAGE = 10;
+
+const priceSelectStyles = {
+  control: (base) => ({
+    ...base,
+    minHeight: '38px', // Match standard input height
+    borderColor: '#e5e7eb',
+    boxShadow: 'none',
+    '&:hover': { borderColor: '#d1d5db' },
+    paddingLeft: '28px', // Space for currency symbol
+    fontSize: '0.875rem', // text-sm
+    borderRadius: '0.375rem' // rounded-md
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+};
 
 const JobsClient = ({ category, initialProducts }) => {
-    const { locations, getAllLocations } = useLocationStore();
-    const { t } = useTranslation();
+  const { locations, getAllLocations, cities, areas, fetchCities, fetchAreas, isLoading: isLocationLoading } = useLocationStore();
+  const { t } = useTranslation();
 
-    // --- STATE ---
-    const [jobListings, setJobListings] = useState(initialProducts || []);
-    const [loading, setLoading] = useState(false);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
-    const [hasMore, setHasMore] = useState(true); 
-    const [filters, setFilters] = useState({
-      type: "search",
-      search: "",
-      category_id: null,
-      // Removed unnecessary price/area/condition fields for jobs context, added job-specific ones:
-      region: "",
-      governorate: "",
-      work_type: "",
-      minimum_pay_type: "",
-      min_amount: "",
-      max_amount: "",
-      // Pagination
-      limit: JOBS_PER_PAGE, 
-      offset: 0, 
-    });
+  // --- STATE ---
+  const [jobListings, setJobListings] = useState(initialProducts || []);
+  const [loading, setLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const resultsRef = useRef(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [filters, setFilters] = useState({
+    type: "search",
+    search: "",
+    category_id: null,
+    // Removed unnecessary price/area/condition fields for jobs context, added job-specific ones:
+    region: "",
+    city: "",
+    area: "",
+    work_type: "",
+    minimum_pay_type: "",
+    min_amount: "",
+    max_amount: "",
+    status: 1, // Ensure we fetch active jobs
+    // Pagination
+    limit: JOBS_PER_PAGE,
+    offset: 0,
+  });
 
-    // --- MEMOIZED DATA ---
-    const country = locations.find((c) => c.id == 1);
-    const regions = country?.regions || [];
-    
-    const governorates = useMemo(() => {
-      const region = regions.find((r) => r.name === filters.region);
-      return region?.governorates || [];
-    }, [regions, filters.region]);
+  // --- MEMOIZED DATA ---
+  const country = locations.find((c) => c.id == 1);
+  const regions = country?.regions || [];
 
-    // --- API FETCHER ---
-    const fetchJobs = async (currentFilters, append = false) => {
-      console.log('fetch', currentFilters)
-        if (!append) setJobListings([]); // Clear list on new filter search
-        setLoading(true);
-        setIsInitialLoad(false);
+  // --- API FETCHER ---
+  const fetchJobs = async (currentFilters, append = false) => {
+    console.log('fetch', currentFilters)
+    if (!append) setJobListings([]); // Clear list on new filter search
+    setLoading(true);
+    setIsInitialLoad(false);
 
-        try {
-            // Find IDs for API payload
-            const regionObj = regions.find(r => r.name === currentFilters.region);
-            const governorateObj = governorates.find(g => g.name === currentFilters.governorate);
-            
-            const payload = {
-                ...currentFilters,
-                region_id: regionObj?.id || "",
-                governorate_id: governorateObj?.id || "",
-            };
+    try {
+      // Find IDs for API payload
+      const regionObj = regions.find(r => r.name === currentFilters.region);
+      const cityObj = cities.find(c => c.name === currentFilters.city);
+      const areaObj = areas.find(a => a.name === currentFilters.area);
 
-            const response = await JobsApi.getListingsByFilter(payload);
-            const newJobs = response || []; // Adjust to match your API response structure
-
-            setJobListings(prev => (append ? [...prev, ...newJobs] : newJobs));
-            setHasMore(newJobs.length === currentFilters.limit); 
-
-        } catch (error) {
-            console.error("Failed to fetch job listings:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    // --- EFFECTS ---
-
-    // 1. Load Locations on Mount
-    useEffect(() => {
-        getAllLocations(); 
-    }, [getAllLocations]);
-
-    // 2. Trigger fetch when offset/limit changes (for pagination/initial load)
-    useEffect(() => {
-        // Only fetch if it's not the very first mount or if offset > 0 (for scroll)
-        if (filters.offset === 0 && isInitialLoad && jobListings.length > 0) {
-          // If initial data is provided and offset is 0, don't refetch
-          setIsInitialLoad(false);
-          return; 
-        }
-
-        fetchJobs(filters, filters.offset > 0); 
-    }, [filters.offset]); // Only re-run when offset changes
-
-    // 3. Reset offset when any main filter changes
-    const handleFilterChange = (key, value) => {
-      setFilters(prev => ({
-        ...prev,
-        [key]: value,
-        // Reset offset to 0 when any filter changes
-        offset: 0, 
-      }));
-    };
-
-    // 4. Intersection Observer for Scroll Pagination
-    useEffect(() => {
-      const loadMoreTrigger = document.querySelector("#load-more-trigger");
-      if (!loadMoreTrigger) return;
-
-      const observer = new IntersectionObserver(
-          (entries) => {
-              if (entries[0].isIntersecting && hasMore && !loading) {
-                  // Increment offset to trigger the fetch in useEffect(filters.offset)
-                  setFilters(prev => ({ ...prev, offset: prev.offset + prev.limit }));
-              }
-          },
-          { threshold: 1.0 }
-      );
-
-      observer.observe(loadMoreTrigger);
-
-      return () => {
-          if (observer) {
-              observer.unobserve(loadMoreTrigger);
-          }
+      const payload = {
+        ...currentFilters,
+        region_id: regionObj?.id || "",
+        city_id: cityObj?.id || "",
+        area_id: areaObj?.id || "",
       };
-    }, [hasMore, loading]);
+
+      const response = await JobsApi.getListingsByFilter(payload);
+
+      // Handle response structure (it returns { data: [...] } usually)
+      const newJobs = response?.data || response || [];
+
+      setJobListings(prev => (append ? [...prev, ...newJobs] : newJobs));
+      setHasMore(newJobs.length === currentFilters.limit);
+
+      // Scroll to results if not appending
+      if (!append) {
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+
+    } catch (error) {
+      console.error("Failed to fetch job listings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // --- EFFECTS ---
+
+  // 1. Load Locations on Mount
+  useEffect(() => {
+    getAllLocations();
+  }, [getAllLocations]);
+
+  // 2. Trigger fetch when offset/limit changes (for pagination/initial load)
+  useEffect(() => {
+    // Only fetch if it's not the very first mount or if offset > 0 (for scroll)
+    if (filters.offset === 0 && isInitialLoad && jobListings.length > 0) {
+      // If initial data is provided and offset is 0, don't refetch
+      setIsInitialLoad(false);
+      return;
+    }
+
+    fetchJobs(filters, filters.offset > 0);
+  }, [filters.offset]); // Only re-run when offset changes
+
+  // 3. Reset offset when any main filter changes
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value,
+      // Reset offset to 0 when any filter changes
+      offset: 0,
+    }));
+  };
+
+  // 4. Intersection Observer for Scroll Pagination
+  useEffect(() => {
+    const loadMoreTrigger = document.querySelector("#load-more-trigger");
+    if (!loadMoreTrigger) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          // Increment offset to trigger the fetch in useEffect(filters.offset)
+          setFilters(prev => ({ ...prev, offset: prev.offset + prev.limit }));
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    observer.observe(loadMoreTrigger);
+
+    return () => {
+      if (observer) {
+        observer.unobserve(loadMoreTrigger);
+      }
+    };
+  }, [hasMore, loading]);
 
 
   return (
@@ -141,14 +165,14 @@ const JobsClient = ({ category, initialProducts }) => {
         style={{ background: "rgb(23, 95, 72)" }}
       >
         <div className=' pb-6 w-full'>
-        <Breadcrumbs
-        items={[{ label: "Home", href: "/" }, { label: "Jobs" }]}
-        styles={{
-          nav: "flex justify-start px-2 md:px-10 text-sm font-medium",
-        }}
-      />
+          <Breadcrumbs
+            items={[{ label: "Home", href: "/" }, { label: "Jobs" }]}
+            styles={{
+              nav: "flex justify-start px-2 md:px-10 text-sm font-medium",
+            }}
+          />
           <div className="mt-3 border-b border-white opacity-40 mx-2 md:mx-8"></div>
-      </div>
+        </div>
         <div className="max-w-6xl mx-auto w-full">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-snug mb-6 sm:mb-8">
             FIND YOUR NEXT JOB IN <br className="hidden sm:block" /> SAUDI ARABIA
@@ -159,9 +183,7 @@ const JobsClient = ({ category, initialProducts }) => {
       {/* Filter Card */}
       <div className="max-w-5xl mx-auto -mt-20 relative z-10 px-4">
         <div className="bg-white rounded-lg p-4 sm:p-6 shadow-lg">
-         {/* Top Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
-            {/* Search Button */}
+          {/* <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
             <button
               onClick={() =>
                 handleFilterChange("type", filters.type === "search" ? "all" : "search")
@@ -172,7 +194,6 @@ const JobsClient = ({ category, initialProducts }) => {
               <Search className="w-4 h-4 mr-2" /> Search for jobs
             </button>
 
-            {/* Browse Categories Button */}
             <button
               onClick={() =>
                 handleFilterChange("type", filters.type === "category" ? "all" : "category")
@@ -182,7 +203,7 @@ const JobsClient = ({ category, initialProducts }) => {
             >
               <List className="w-4 h-4 mr-2" /> Browse Job Categories
             </button>
-          </div>
+          </div> */}
 
 
           {/* Filter Grid */}
@@ -197,53 +218,55 @@ const JobsClient = ({ category, initialProducts }) => {
                 placeholder="e.g. Nurse"
                 value={filters.search}
                 onChange={(e) => handleFilterChange("search", e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    fetchJobs({ ...filters, offset: 0 }, false);
+                  }
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-sm bg-[#FAFAFA] text-sm text-gray-700 focus:outline-none "
               />
             </div>
 
-            {filters?.type == "category" && (
-              <>
-                {/* Categories */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
-                  <Select
-                    name="category_id"
-                    value={
-                      filters.category_id
-                        ? { value: filters.category_id, label: category?.find(c => c.id === filters.category_id)?.name || filters.category_id }
-                        : null
-                    }
-                    onChange={(selected) =>
-                      handleFilterChange("category_id", selected?.value || "")
-                    }
-                    options={category?.map((cat) => ({
-                      value: cat.id,
-                      label: cat.name,
-                    })) || []}
-                    placeholder="Select a Category"
-                    className="text-sm"
-                    classNamePrefix="react-select"
-                    isClearable
-                  />
-                </div>
-              </>
-            )}
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Category</label>
+              <Select
+                name="category_id"
+                value={
+                  filters.category_id
+                    ? { value: filters.category_id, label: category?.find(c => c.id === filters.category_id)?.name || filters.category_id }
+                    : null
+                }
+                onChange={(selected) =>
+                  handleFilterChange("category_id", selected?.value || "")
+                }
+                options={category?.map((cat) => ({
+                  value: cat.id,
+                  label: cat.name,
+                })) || []}
+                placeholder="Select a Category"
+                className="text-sm"
+                classNamePrefix="react-select"
+                isClearable
+              />
+            </div>
 
             {/* Work Type */}
             <div>
               <label className="block mb-1 text-sm font-medium">Work Type</label>
               <Select
+                instanceId="work_type"
                 name="work_type"
                 value={
                   filters.work_type
-        ? [
-            { value: "full_time", label: "Full Time" },
-            { value: "part_time", label: "Part Time" },
-            { value: "remote", label: "Remote" },
-            { value: "freelance", label: "Freelance" },
-            { value: "contract", label: "Contract" },
-          ].find((opt) => opt.value === filters.work_type) || null
-        : null
+                    ? [
+                      { value: "full_time", label: "Full Time" },
+                      { value: "part_time", label: "Part Time" },
+                      { value: "remote", label: "Remote" },
+                      { value: "freelance", label: "Freelance" },
+                      { value: "contract", label: "Contract" },
+                    ].find((opt) => opt.value === filters.work_type) || null
+                    : null
                 }
                 onChange={(selected) =>
                   handleFilterChange("work_type", selected?.value || "")
@@ -262,19 +285,20 @@ const JobsClient = ({ category, initialProducts }) => {
               />
             </div>
 
-            {/* Minimum Pay Type */}
+            {/* Pay Type */}
             <div>
-              <label className="block mb-1 text-sm font-medium">Minimum Pay Type</label>
+              <label className="block mb-1 text-sm font-medium">Pay Type</label>
               <Select
+                instanceId="pay_type"
                 name="minimum_pay_type"
                 value={
-                   filters.minimum_pay_type
-        ? [
-            { value: "hourly", label: "Hourly" },
-            { value: "daily", label: "Daily" },
-            { value: "monthly", label: "Monthly" },
-          ].find((opt) => opt.value === filters.minimum_pay_type) || null
-        : null
+                  filters.minimum_pay_type
+                    ? [
+                      { value: "hourly", label: "Hourly" },
+                      { value: "daily", label: "Daily" },
+                      { value: "monthly", label: "Monthly" },
+                    ].find((opt) => opt.value === filters.minimum_pay_type) || null
+                    : null
                 }
                 onChange={(selected) =>
                   handleFilterChange("minimum_pay_type", selected?.value || "")
@@ -291,75 +315,26 @@ const JobsClient = ({ category, initialProducts }) => {
               />
             </div>
 
-            {/* Minimum Amount */}
-            <div>
-              <label className="block mb-1 text-sm font-medium">Minimum Amount</label>
-              <Select
-                name="min_amount"
-                value={
-                  filters.min_amount
-                    ? { value: filters.min_amount, label: `${filters.min_amount}` }
-                    : null
-                }
-                onChange={(selected) =>
-                  handleFilterChange("min_amount", selected?.value || "")
-                }
-                options={[
-                  { value: 10, label: "10" },
-                  { value: 100, label: "100" },
-                  { value: 1000, label: "1k" },
-                  { value: 5000, label: "5k" },
-                  { value: 10000, label: "10k+" },
-                ]}
-                placeholder="Select Minimum"
-                className="text-sm"
-                classNamePrefix="react-select"
-                isClearable
-              />
-            </div>
-
-            {/* Maximum Amount */}
-            <div>
-              <label className="block mb-1 text-sm font-medium">Maximum Amount</label>
-              <Select
-                name="max_amount"
-                value={
-                  filters.max_amount
-                    ? { value: filters.max_amount, label: `${filters.max_amount}` }
-                    : null
-                }
-                onChange={(selected) =>
-                  handleFilterChange("max_amount", selected?.value || "")
-                }
-                options={[
-                  { value: 1000, label: "1k" },
-                  { value: 5000, label: "5k" },
-                  { value: 10000, label: "10k" },
-                  { value: 20000, label: "20k" },
-                  { value: 50000, label: "50k+" },
-                ]}
-                placeholder="Select Maximum"
-                className="text-sm"
-                classNamePrefix="react-select"
-                isClearable
-              />
-            </div>
-
             {/* Region */}
             <div className="relative">
               <label className="block mb-1 text-sm font-medium">{t("Region")}</label>
               <Select
+                instanceId="region"
                 name="region"
                 value={
                   filters.region ? { value: filters.region, label: filters.region } : null
                 }
                 onChange={(selected) => {
-                  // Reset governorate and city when region changes
+                  // Reset city and area when region changes
+                  if (selected?.value) {
+                    const r = regions.find(reg => reg.name === selected.value);
+                    if (r) fetchCities(r.id);
+                  }
                   setFilters(prev => ({
                     ...prev,
                     region: selected?.value || "",
-                    governorate: "",
                     city: "",
+                    area: "",
                     offset: 0,
                   }));
                 }}
@@ -371,25 +346,139 @@ const JobsClient = ({ category, initialProducts }) => {
               />
             </div>
 
-            {/* Governorate */}
+            {/* City */}
             <div>
-              <label className="block mb-1 text-sm font-medium">{t("Governorate")}</label>
+              <label className="block mb-1 text-sm font-medium">{t("City")}</label>
               <Select
-                name="governorate"
+                instanceId="city"
+                name="city"
                 value={
-                  filters.governorate
-                    ? { value: filters.governorate, label: filters.governorate }
+                  filters.city
+                    ? { value: filters.city, label: filters.city }
                     : null
                 }
-                onChange={(selected) =>
-                  handleFilterChange("governorate", selected?.value || "")
-                }
-                options={governorates.map((g) => ({ value: g.name, label: g.name }))}
-                placeholder={t("Select a Governorate")}
+                onChange={(selected) => {
+                  if (selected?.value) {
+                    const c = cities.find(city => city.name === selected.value);
+                    if (c) fetchAreas(c.id);
+                  }
+                  setFilters(prev => ({
+                    ...prev,
+                    city: selected?.value || "",
+                    area: "",
+                    offset: 0,
+                  }))
+                }}
+                onInputChange={(inputValue) => {
+                  const r = regions.find(reg => reg.name === filters.region);
+                  if (r) fetchCities(r.id, inputValue);
+                }}
+                options={cities.map((g) => ({ value: g.name, label: g.name }))}
+                placeholder={t("Select a City")}
                 className="text-sm"
                 classNamePrefix="react-select"
                 isClearable
+                isLoading={isLocationLoading}
+                isDisabled={(!cities.length && !isLocationLoading) || !filters.region}
               />
+            </div>
+
+            {/* Area */}
+            <div>
+              <label className="block mb-1 text-sm font-medium">{t("Area")}</label>
+              <Select
+                instanceId="area"
+                name="area"
+                value={
+                  filters.area
+                    ? { value: filters.area, label: filters.area }
+                    : null
+                }
+                onChange={(selected) =>
+                  handleFilterChange("area", selected?.value || "")
+                }
+                onInputChange={(inputValue) => {
+                  const c = cities.find(city => city.name === filters.city);
+                  if (c) fetchAreas(c.id, inputValue);
+                }}
+                options={areas.map((g) => ({ value: g.name, label: g.name }))}
+                placeholder={t("Select an Area")}
+                className="text-sm"
+                classNamePrefix="react-select"
+                isClearable
+                isLoading={isLocationLoading}
+                isDisabled={(!areas.length && !isLocationLoading) || !filters.city}
+              />
+            </div>
+
+            {/* Minimum Amount */}
+            <div>
+              <label className="block mb-1 text-sm font-medium">Minimum Amount</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <span className="text-gray-500 price">$</span>
+                </div>
+                <Select
+                  instanceId="min_amount"
+                  name="min_amount"
+                  value={
+                    filters.min_amount
+                      ? { value: filters.min_amount, label: `${filters.min_amount}` }
+                      : null
+                  }
+                  onChange={(selected) =>
+                    handleFilterChange("min_amount", selected?.value || "")
+                  }
+                  options={[
+                    { value: 10, label: "10" },
+                    { value: 100, label: "100" },
+                    { value: 1000, label: "1k" },
+                    { value: 5000, label: "5k" },
+                    { value: 10000, label: "10k+" },
+                  ]}
+                  placeholder="Select Minimum"
+                  styles={priceSelectStyles}
+                  className="text-sm"
+                  classNamePrefix="react-select"
+                  isClearable
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                />
+              </div>
+            </div>
+
+            {/* Maximum Amount */}
+            <div>
+              <label className="block mb-1 text-sm font-medium">Maximum Amount</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <span className="text-gray-500 price">$</span>
+                </div>
+                <Select
+                  instanceId="max_amount"
+                  name="max_amount"
+                  value={
+                    filters.max_amount
+                      ? { value: filters.max_amount, label: `${filters.max_amount}` }
+                      : null
+                  }
+                  onChange={(selected) =>
+                    handleFilterChange("max_amount", selected?.value || "")
+                  }
+                  options={[
+                    { value: 1000, label: "1k" },
+                    { value: 5000, label: "5k" },
+                    { value: 10000, label: "10k" },
+                    { value: 20000, label: "20k" },
+                    { value: 50000, label: "50k+" },
+                  ]}
+                  placeholder="Select Maximum"
+                  styles={priceSelectStyles}
+                  className="text-sm"
+                  classNamePrefix="react-select"
+                  isClearable
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                />
+              </div>
             </div>
           </div>
 
@@ -401,8 +490,8 @@ const JobsClient = ({ category, initialProducts }) => {
             <div className="hidden sm:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 w-full">
               <div></div>
               <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto sm:justify-end">
-                <button 
-                  onClick={() => fetchJobs({...filters, offset: 0}, false)} // Force search on button click
+                <button
+                  onClick={() => fetchJobs({ ...filters, offset: 0 }, false)} // Force search on button click
                   className="w-full sm:w-auto bg-[#175f48] hover:bg-blue-600 text-white px-6 py-2 rounded-md"
                 >
                   Search Jobs
@@ -412,8 +501,8 @@ const JobsClient = ({ category, initialProducts }) => {
 
             {/* Search Jobs Button for mobile (below everything) */}
             <div className="sm:hidden mt-2">
-              <button 
-                onClick={() => fetchJobs({...filters, offset: 0}, false)} // Force search on mobile click
+              <button
+                onClick={() => fetchJobs({ ...filters, offset: 0 }, false)} // Force search on mobile click
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md"
               >
                 Search Jobs
@@ -423,32 +512,32 @@ const JobsClient = ({ category, initialProducts }) => {
         </div>
       </div>
 
-      <section className="mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <TrendingJobs jobListings={jobListings}/>
-        
+      <section ref={resultsRef} className="mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <TrendingJobs jobListings={jobListings} />
+
         {/* Loading Indicator */}
         {loading && <div className="text-center py-4 text-[#175f48] font-semibold">
           {/* Loading more jobs... */}
-          </div>} 
-        
+        </div>}
+
         {/* Intersection Observer target for scroll pagination */}
         {hasMore && !loading && (
           // This invisible div is the anchor for the Intersection Observer
           <div id="load-more-trigger" className="h-1 my-8"></div>
         )}
-        
+
         {/* End of results message */}
         {!hasMore && jobListings.length > 0 && !loading && (
-            <div className="text-center py-4 text-gray-500">
-                You've reached the end of the job listings.
-            </div>
+          <div className="text-center py-4 text-gray-500">
+            You've reached the end of the job listings.
+          </div>
         )}
 
         {/* No results message */}
         {!loading && jobListings.length === 0 && !isInitialLoad && (
-            <div className="text-center py-12 text-gray-600 text-xl">
-                No jobs found matching your filters. Try adjusting your search!
-            </div>
+          <div className="text-center py-12 text-gray-600 text-xl">
+            No jobs found matching your filters. Try adjusting your search!
+          </div>
         )}
       </section>
     </div>

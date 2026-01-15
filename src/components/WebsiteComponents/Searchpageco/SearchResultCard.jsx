@@ -145,10 +145,10 @@ const SearchResultCard = ({ item, viewMode = "grid" }) => {
                 <div className="flex justify-between items-end mt-1">
                     {/* Location (similar to MarketplaceCard) */}
                     <div className="text-gray-700">
-                        {(item.location || item.city || item.creator?.city || item.creator?.regions?.name) && (
+                        {(item?.city?.name) && (
                             <>
                                 <div className="text-[10px] text-gray-400 tracking-wide">{t("Location")}:</div>
-                                <div className="font-bold text-xs">{item.location || item.city || item.creator?.city || item.creator?.regions?.name}</div>
+                                <div className="font-bold text-xs">{item?.city?.name}</div>
                             </>
                         )}
                     </div>

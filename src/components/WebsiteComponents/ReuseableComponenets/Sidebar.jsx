@@ -44,12 +44,10 @@ const Sidebar = () => {
 
   const isActive = (href) => pathname.startsWith(href);
   const mainLinkClass = (href) =>
-    `flex items-center gap-2 cursor-pointer ${
-      isActive(href) ? "text-black font-semibold" : "text-green-500"
+    `flex items-center gap-2 cursor-pointer ${isActive(href) ? "text-black font-semibold" : "text-green-500"
     }`;
   const subLinkClass = (href) =>
-    `flex items-center gap-2 ${
-      isActive(href) ? "text-black" : "text-green-500"
+    `flex items-center gap-2 ${isActive(href) ? "text-black" : "text-green-500"
     }`;
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
@@ -60,9 +58,8 @@ const Sidebar = () => {
       {/* Fixed Sidebar Toggle Icon (Mobile Only) */}
       {!showSidebar && (
         <button
-          className={`md:hidden text-green-500 bg-white fixed top-24 ${
-            isArabic ? "right-4" : "left-4"
-          } z-[999]`}
+          className={`md:hidden text-green-500 bg-white absolute top-5 ${isArabic ? "right-4" : "left-4"
+            } z-[999]`}
           onClick={() => setShowSidebar(true)}
         >
           <SlOptionsVertical size={24} />
@@ -71,16 +68,14 @@ const Sidebar = () => {
 
       {/* Sidebar Panel */}
       <div
-        className={`fixed top-0 ${
-          isArabic ? "right-0" : "left-0"
-        } h-full w-64 bg-[#FAFAFA] p-4 z-40 transition-transform duration-300 transform
-    ${
-      showSidebar
-        ? "translate-x-0"
-        : isArabic
-        ? "translate-x-full"
-        : "-translate-x-full"
-    } 
+        className={`fixed top-0 ${isArabic ? "right-0" : "left-0"
+          } h-full w-64 bg-[#FAFAFA] p-4 z-40 transition-transform duration-300 transform
+    ${showSidebar
+            ? "translate-x-0"
+            : isArabic
+              ? "translate-x-full"
+              : "-translate-x-full"
+          } 
     md:relative md:translate-x-0 md:w-60 md:mt-5 md:rounded-2xl`}
       >
         {/* Close (Mobile Only) */}
@@ -92,31 +87,31 @@ const Sidebar = () => {
         </div>
 
         <div className="flex flex-col justify-center items-center">
- {/* Profile Image */}
-  <div className="relative w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center overflow-hidden">
-    {user?.profile_photo ? (
-      <Image
-        src={`${Image_URL}${user.profile_photo}`}
-        alt="Profile"
-        fill
-        sizes="48px"
-        className="object-cover"
-      />
-    ) : (
-      <span className="text-lg font-semibold">
-        {user?.username?.charAt(0)?.toUpperCase()}
-      </span>
-    )}
-  </div>
+          {/* Profile Image */}
+          <div className="relative w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center overflow-hidden">
+            {user?.profile_photo ? (
+              <Image
+                src={`${Image_URL}${user.profile_photo}`}
+                alt="Profile"
+                fill
+                sizes="48px"
+                className="object-cover"
+              />
+            ) : (
+              <span className="text-lg font-semibold">
+                {user?.username?.charAt(0)?.toUpperCase()}
+              </span>
+            )}
+          </div>
 
-  {/* Username */}
-  <div>
-    <h2 className="text-sm font-semibold text-gray-900">
-      {user?.username}
-    </h2>
-    <p className="py-4"></p>
-  </div>
-</div>
+          {/* Username */}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">
+              {user?.username}
+            </h2>
+            <p className="py-4"></p>
+          </div>
+        </div>
         {/* <div className="font-semibold mb-6 hidden md:block">Ma3rood</div> */}
 
         {/* Navigation Links */}
@@ -343,17 +338,16 @@ const Sidebar = () => {
           </Link> */}
 
           {/* Logout */}
-<div className="mt-auto pt-6 border-t border-gray-200">
-  <button
-    onClick={logout}
-    className={`w-full flex items-center gap-2 text-red-500 hover:text-red-600 transition ${
-      isArabic ? "flex-row-reverse justify-end" : ""
-    }`}
-  >
-    <FiLogOut />
-    <span>{t("Logout")}</span>
-  </button>
-</div>
+          <div className="mt-auto pt-6 border-t border-gray-200">
+            <button
+              onClick={logout}
+              className={`w-full flex items-center gap-2 text-red-500 hover:text-red-600 transition ${isArabic ? "flex-row-reverse justify-end" : ""
+                }`}
+            >
+              <FiLogOut />
+              <span>{t("Logout")}</span>
+            </button>
+          </div>
 
         </nav>
       </div>

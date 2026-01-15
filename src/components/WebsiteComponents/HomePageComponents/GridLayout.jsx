@@ -330,7 +330,65 @@ const GridLayout = () => {
         </div>
       </div>
 
-      <div className="relative -mt-16 px-4 pb-16">
+      {/* ================= CATEGORY GRID MOBILE ================= */}
+      <div className="md:hidden relative -mt-16 px-4 pb-4">
+        <div className="mx-auto max-w-6xl">
+          {/* 🔥 Mobile = 2 cols | Desktop = original */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-12 md:grid-rows-2">
+           {staticCategories.map((card, index) => {
+  const isLast = index === staticCategories.length - 1;
+
+  return (
+    <div
+      key={index}
+      onClick={() => handleCategoryClick(card)}
+      className={`group relative overflow-hidden
+        ${isLast ? "col-span-2" : "col-span-1"} row-span-1 h-[100px]
+        md:${card.colSpan} md:${card.rowSpan} md:${card.height}
+        ${card.rounded}
+        ${
+          card.route
+            ? "cursor-pointer hover:scale-[1.02] hover:shadow-lg transition"
+            : ""
+        }`}
+    >
+      <div className="relative h-full w-full">
+        <Image
+          src={card.image}
+          alt={card.title}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 33vw"
+        />
+
+        <div
+          className={`absolute inset-0 flex items-center justify-center ${
+            card.route ? "bg-black/30" : "bg-black/50"
+          }`}
+        >
+          <div className="text-center px-2">
+            <h2 className="text-sm md:text-3xl font-semibold text-white leading-tight line-clamp-2">
+              {t(card.title)}
+            </h2>
+
+            {!card.route && (
+              <p className="text-[10px] md:text-sm text-gray-200 italic">
+                (Coming Soon)
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+})}
+
+          </div>
+        </div>
+      </div>
+
+ {/* ================= CATEGORY GRID DESKTOP ================= */}
+       <div className="md:block relative -mt-16 px-4 pb-16 hidden">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:grid-rows-2">
             {staticCategories.map((card, index) => (

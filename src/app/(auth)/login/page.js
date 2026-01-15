@@ -131,6 +131,7 @@ import { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { IoClose } from "react-icons/io5";
 
 function LoginPageContent() {
   const { user, login, error, isLoading, resetError } = useAuthStore();
@@ -138,7 +139,7 @@ function LoginPageContent() {
   const router = useRouter();
   const { t } = useTranslation();
   const searchParams = useSearchParams();
-const callbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl = searchParams.get("callbackUrl");
 
   // useEffect(() => {
   //   const token = localStorage.getItem("token");
@@ -166,10 +167,10 @@ const callbackUrl = searchParams.get("callbackUrl");
       console.log("Res", res);
       "Login response:", res;
       if (res.success && res.user) {
-      router.replace(callbackUrl || "/");
-      return;
-    }
-     if (res.error == "Emails is not verified yet" && res.email) {
+        router.replace(callbackUrl || "/");
+        return;
+      }
+      if (res.error == "Emails is not verified yet" && res.email) {
         router.push(`/verification?email=${encodeURIComponent(res.email)}`);
       }
     } catch (err) {
@@ -178,14 +179,32 @@ const callbackUrl = searchParams.get("callbackUrl");
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen">
+<div className="flex flex-col md:flex-row w-full h-screen relative">
       {/* Language Switcher */}
-      <div>
+      {/* <div>
         <LanguageSwitcher
           className="absolute top-4 left-2"
           buttonClassName="bg-green-600 text-green"
         />
-      </div>
+      </div> */}
+<button
+  onClick={() => router.push("/")}
+  aria-label="Close"
+  className="
+    absolute z-50 flex items-center justify-center
+    w-10 h-10 rounded-full transition
+
+    /* Mobile */
+    top-4 right-4 bg-gray-100 text-gray-800
+
+    /* Web / Desktop */
+    md:top-6 md:left-6 md:right-auto
+    md:bg-black md:text-white
+    md:hover:bg-gray-900
+  "
+>
+  <IoClose className="w-6 h-6" />
+</button>
 
       {/* LEFT: Form Section */}
       <div className="w-full md:w-[60%] flex flex-col justify-center items-center px-4 py-8 bg-white min-h-screen md:min-h-full">

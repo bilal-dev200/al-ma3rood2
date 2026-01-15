@@ -79,11 +79,12 @@ export const useAuthStore = create(
             city: userData.city,
             state: userData.state,
             region: userData.region,
-            governorate: userData.governorate,
+            area: userData.area,
             password: userData.password,
             country_id: userData.country_id,
             regions_id: userData.regions_id,
-            governorates_id: userData.governorates_id,
+            city_id: userData.city_id,
+            area_id: userData.area_id,
             // city_id: userData.city_id,
           });
 
@@ -93,11 +94,11 @@ export const useAuthStore = create(
             set({ user: null, token: null, isLoading: false });
             return res; // return the response to handle in your component
           } else {
-            throw new Error(res?.data.error || "Registration failed");
+            throw new Error(res?.data.message || "Registration failed");
           }
         } catch (error) {
           set({
-            error: error?.data?.error || "Registration failed",
+            error: error?.data?.message || "Registration failed",
             isLoading: false,
           });
           throw error;
@@ -158,7 +159,8 @@ export const useAuthStore = create(
     }),
     {
       name: "auth-storage",
-      getStorage: () => localStorage,
+      skipHydration: true,
+      getStorage: () => (typeof window !== "undefined" ? localStorage : undefined),
     }
   )
 );

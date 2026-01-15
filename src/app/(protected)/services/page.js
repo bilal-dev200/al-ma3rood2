@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import {
+  // SERVICES_MODULE_METADATA,
   SERVICES_MODULE_METADATA,
-  derivePriceRangeOptions,
+  // derivePriceRangeOptions,
   getFeaturedProviders,
   getPopularTags,
 } from "@/lib/mock/services/data";
@@ -23,7 +24,7 @@ export default async function Page({ searchParams }) {
 
   // Transform categories and regions using the same functions as listing page
   const categories = transformServiceCategories(
-    categoryTree?.data ?? categoryTree?.categories ?? categoryTree ?? []
+    categoryTree?.data?.data ?? categoryTree?.data ?? categoryTree?.categories ?? categoryTree ?? []
   ).filter((category) => category.id);
   const regions = transformRegionsResponse(locationData);
 
@@ -33,20 +34,20 @@ export default async function Page({ searchParams }) {
     subcategory: resolvedSearchParams?.subcategory || "",
     region: resolvedSearchParams?.region || "",
     area: resolvedSearchParams?.area || "",
-    sortBy: resolvedSearchParams?.sortBy || "price-low-high",
+    sortBy: resolvedSearchParams?.sortBy || "latest",
   };
 
-  if (resolvedSearchParams?.priceMin) {
-    filters.priceMin = Number.parseInt(resolvedSearchParams.priceMin, 10) || 0;
-  }
+  // if (resolvedSearchParams?.priceMin) {
+  //   filters.priceMin = Number.parseInt(resolvedSearchParams.priceMin, 10) || 0;
+  // }
 
-  if (resolvedSearchParams?.priceMax) {
-    filters.priceMax =
-      Number.parseInt(resolvedSearchParams.priceMax, 10) ||
-      Number.POSITIVE_INFINITY;
-  }
+  // if (resolvedSearchParams?.priceMax) {
+  //   filters.priceMax =
+  //     Number.parseInt(resolvedSearchParams.priceMax, 10) ||
+  //     Number.POSITIVE_INFINITY;
+  // }
 
-  const [priceBounds] = await Promise.all([derivePriceRangeOptions()]);
+  // const [priceBounds] = await Promise.all([derivePriceRangeOptions()]);
   const popularTags = getPopularTags();
 
   return (
@@ -57,7 +58,7 @@ export default async function Page({ searchParams }) {
           regions={regions}
           featuredProviders={featuredProviders}
           initialListings={[]}
-          priceBounds={priceBounds}
+          // priceBounds={priceBounds}
           initialFilters={filters}
           popularTags={popularTags}
         />

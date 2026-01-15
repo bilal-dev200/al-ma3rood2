@@ -14,8 +14,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function CreatorListingsPage({ searchParams }) {
-  const creatorId = searchParams?.creator_id || "";
-  const status = searchParams?.status || "1";
+  const params = await searchParams;
+  const creatorId = params?.creator_id || "";
+  const status = params?.status || "1";
 
   if (!creatorId) {
     return (
@@ -54,7 +55,7 @@ export default async function CreatorListingsPage({ searchParams }) {
     console.log("api-result", result);
 
     listings = result || { data: { data: [] } };
-    
+
     // Extract creator info from first listing if available
     if (listings?.data?.data?.length > 0) {
       creatorInfo = listings.data.data[0]?.creator;

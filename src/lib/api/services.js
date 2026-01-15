@@ -13,30 +13,39 @@ function buildListParams(filters = {}) {
     params.category_id = categoryId;
   }
 
-  const regionId = Number.parseInt(filters.region, 10);
+  const regionId = Number.parseInt(filters.region_id || filters.region, 10);
   if (!Number.isNaN(regionId)) {
     params.region_id = regionId;
   }
 
-  const governorateId = Number.parseInt(filters.area, 10);
-  if (!Number.isNaN(governorateId)) {
-    params.governorate_id = governorateId;
+  const cityId = Number.parseInt(filters.city, 10);
+  if (!Number.isNaN(cityId)) {
+    params.city_id = cityId;
   }
 
-  if (Array.isArray(filters.priceRange) && filters.priceRange.length === 2) {
-    const [min, max] = filters.priceRange;
-    const parsedMin = Number.parseFloat(min);
-    const parsedMax = Number.parseFloat(max);
-    if (!Number.isNaN(parsedMin)) {
-      params.price_min = parsedMin;
-    }
-    if (!Number.isNaN(parsedMax)) {
-      params.price_max = parsedMax;
-    }
+  const areaId = Number.parseInt(filters.area, 10);
+  if (!Number.isNaN(areaId)) {
+    params.area_id = areaId;
   }
+
+  // if (Array.isArray(filters.priceRange) && filters.priceRange.length === 2) {
+  //   const [min, max] = filters.priceRange;
+  //   const parsedMin = Number.parseFloat(min);
+  //   const parsedMax = Number.parseFloat(max);
+  //   if (!Number.isNaN(parsedMin)) {
+  //     params.price_min = parsedMin;
+  //   }
+  //   if (!Number.isNaN(parsedMax)) {
+  //     params.price_max = parsedMax;
+  //   }
+  // }
 
   if (filters.sortBy) {
     params.sort = filters.sortBy;
+  }
+
+  if (filters.status) {
+    params.status = filters.status;
   }
 
   params.page = filters.page || 1;

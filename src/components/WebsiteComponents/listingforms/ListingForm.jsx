@@ -27,7 +27,7 @@ const priceField = z.preprocess((val) => {
   // Convert empty strings to null, numeric strings to numbers, pass through numbers
   if (typeof val === "string") {
     const trimmed = val.trim();
-    if (trimmed === "") return 0;
+    if (trimmed === "") return null;
     const n = Number(trimmed);
     return isNaN(n) ? val : n;
   }
@@ -216,13 +216,13 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
           });
         }
 
-        if (isMissing(data.reserve_price)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Reserve price is required",
-            path: ["reserve_price"],
-          });
-        }
+        // if (isMissing(data.reserve_price)) {
+        //   ctx.addIssue({
+        //     code: z.ZodIssueCode.custom,
+        //     message: "Reserve price is required",
+        //     path: ["reserve_price"],
+        //   });
+        // }
       }
 
       if (isBuyNow) {
@@ -303,6 +303,13 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
         copy.selling_type = "auction";
       }
     }
+
+    // Infer $1 Reserve state
+    const start = Number(copy.start_price);
+    const reserve = Number(copy.reserve_price);
+    if (start === 1 && (isNaN(reserve) || reserve === 0)) {
+      copy.is_price_one_reserve = true;
+    }
     return copy;
   }, [initialValues]);
 
@@ -361,6 +368,13 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
         } else if (hasStartPrice) {
           copy.selling_type = "auction";
         }
+      }
+
+      // Infer $1 Reserve state
+      const start = Number(copy.start_price);
+      const reserve = Number(copy.reserve_price);
+      if (start === 1 && (isNaN(reserve) || reserve === 0)) {
+        copy.is_price_one_reserve = true;
       }
       reset(copy);
     }
@@ -705,8 +719,8 @@ const ListingForm = ({ initialValues, mode = "create", onSubmit }) => {
           {renderStep()}
         </div>
       </form>
-      <div className="w-full mx-auto px-6 ">
-        <div className="flex justify-between">
+      <div className="w-full mx-auto  px-6 ">
+        <div className="flex justify-between gap-10">
           {activeStep > 0 && (
             <Button title={t("Back")} type="button" onClick={handleBack} />
           )}

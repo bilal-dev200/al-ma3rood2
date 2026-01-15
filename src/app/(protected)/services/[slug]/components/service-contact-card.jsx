@@ -9,6 +9,9 @@ export default function ServiceContactCard({ service }) {
     "";
   const areaLabel =
     service.area ||
+    service.area_name ||
+    service.city ||
+    service.city_name ||
     service.governorate ||
     service.governorate_label ||
     service.governorate_name ||

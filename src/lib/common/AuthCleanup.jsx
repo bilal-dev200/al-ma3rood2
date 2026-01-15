@@ -1,13 +1,18 @@
 "use client";
 import { useEffect } from "react";
-import { useAuthStore } from "../stores/authStore";
+import { useWatchlistStore } from "../stores/watchlistStore";
 import { removeAuthToken } from "../api/auth";
+import { useAuthStore } from "../stores/authStore";
 
 export default function AuthCleanup() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // ✅ Manually rehydrate stores since skipHydration: true
+    useAuthStore.persist.rehydrate();
+    useWatchlistStore.persist.rehydrate();
 
     const checkAuth = () => {
       const token = localStorage.getItem("token");

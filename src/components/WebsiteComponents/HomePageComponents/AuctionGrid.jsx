@@ -10,9 +10,9 @@ const AuctionGrid = ({ heading, cards, centerHeading = false }) => {
   console.log('cards', cards);
 
   return (
-    <div className="">
+    <div className="md:px-0 px-6">
       <h2
-        className={`text-lg sm:text-xl md:text-2xl font-semibold pb-1 mb-6 text-left whitespace-nowrap sm:whitespace-normal`}
+        className={`text-lg sm:text-xl  md:text-2xl font-semibold pb-1 mb-6 text-left whitespace-nowrap sm:whitespace-normal`}
       >
         <span className="inline-block border-b-2 border-gray-400">
           <span className="price">$</span>
@@ -43,14 +43,14 @@ const AuctionGrid = ({ heading, cards, centerHeading = false }) => {
                 />
               </div>
               <div className="px-3 pt-3">
-                <div className="flex items-center justify-between gap-2 mb-1">
+                {/* <div className="md:flex items-center justify-between gap-2 mb-1">
                   {card.category?.name && (
-                    <span className="text-xs text-gray-600 font-medium">
+                    <span className="md:text-xs text-[11px] text-gray-600 font-medium">
                       Category: {card.category.name}
                     </span>
                   )}
                   {card.expire_at && (
-                    <span className="text-xs text-gray-400">
+                    <span className="md:text-xs text-[11px] text-gray-400">
                       Closes:{" "}
                       {new Date(card.expire_at).toLocaleDateString("en-US", {
                         weekday: "short",
@@ -59,7 +59,25 @@ const AuctionGrid = ({ heading, cards, centerHeading = false }) => {
                       })}
                     </span>
                   )}
-                </div>
+                </div> */}
+                <div className="md:flex md:items-center md:justify-between md:gap-2 mb-1">
+  {card.category?.name && (
+    <span className="block md:inline-block md:text-xs text-[11px] text-gray-600 font-medium">
+      Category: {card.category.name}
+    </span>
+  )}
+  {card.expire_at && (
+    <span className="block md:inline-block md:text-xs text-[11px] text-gray-400 mt-1 md:mt-0">
+      Closes:{" "}
+      {new Date(card.expire_at).toLocaleDateString("en-US", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      })}
+    </span>
+  )}
+</div>
+
                 {/* <div className="flex flex-wrap gap-2 text-[11px] text-gray-500 mb-1">
                 {card.brand && <span>{card.brand}</span>}
                 {card.condition && <span>{card.condition}</span>}
@@ -76,7 +94,7 @@ const AuctionGrid = ({ heading, cards, centerHeading = false }) => {
               </div> */}
               </div>
 
-              <div className="px-3 text-sm font-semibold">{card.title}</div>
+              <div className="px-3 line-clamp-2 m0 h-10 text-sm font-semibold">{card.title}</div>
               <div className="border-t border-gray-200 mx-3 my-1" />
 
               <div className="text-gray-700 flex flex-col items-end">

@@ -6,6 +6,7 @@ import { IoEyeSharp } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { authApi } from "@/lib/api/auth";
+import { IoClose } from "react-icons/io5";
 
 export default function LoginForm({ onSubmit, isLoading, resetError, isForgotMode, setIsForgotMode }) {
   const [email, setEmail] = useState("");

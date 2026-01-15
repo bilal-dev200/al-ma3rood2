@@ -684,7 +684,7 @@ export default function MotorDetailsClient({ product: initialProduct, feedbackPe
                 {product.title}
               </h1>
               {(product?.creator?.regions?.name ||
-                product?.creator?.address_1) && (
+                product?.creator?.address_1 || product?.creator?.city?.name || product?.creator?.area?.name) && (
                   <div
                     className={`flex items-center gap-2 text-sm text-gray-500 mt-1 ${i18n.language === "ar" ? "right" : ""
                       }`}
@@ -695,7 +695,7 @@ export default function MotorDetailsClient({ product: initialProduct, feedbackPe
                         ? `${product?.creator?.address_1
                           ? `${product?.creator?.address_1}, `
                           : ""
-                        } ${product?.creator?.governorates?.name}, ${product?.creator?.regions?.name
+                        } ${[product?.creator?.area?.name || product?.creator?.governorates?.name, product?.creator?.city?.name, product?.creator?.regions?.name].filter(Boolean).join(", ")
                         }`
                         : ""}
                     </span>
@@ -796,7 +796,7 @@ export default function MotorDetailsClient({ product: initialProduct, feedbackPe
               {/* Bid Section */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center space-y-4">
                 {/* Buy Now Section */}
-                {product.buy_now_price && product.bids.length == 0 && (
+                {Number(product.buy_now_price.replace(/,/g, "")) > 0 && product.bids.length == 0 && (
                   <>
                     <div className="mb-2">
                       <span className="block text-sm text-gray-600">
@@ -839,7 +839,7 @@ export default function MotorDetailsClient({ product: initialProduct, feedbackPe
                       }) || "0.00"}
                     </p>
                   </div>
-                ) : (
+                ) : Number(product?.start_price.replace(/,/g, "")) > 0 ? (
                   <div>
                     <p className="text-sm text-gray-600 mb-1">
                       {t("Starting From")}
@@ -852,8 +852,8 @@ export default function MotorDetailsClient({ product: initialProduct, feedbackPe
                       }) || "0.00"}
                     </p>
                   </div>
-                )}
-                {!isLister && product?.status == 1 && (
+                ) : null}
+                {!isLister && product?.status == 1 && Number(product?.start_price.replace(/,/g, "")) > 0 && (
                   <button
                     className={`w-full py-3 text-lg font-semibold rounded-full transition-colors ${new Date() > new Date(product.expire_at)
                       ? "bg-gray-300 text-gray-400 cursor-not-allowed"
@@ -886,27 +886,27 @@ export default function MotorDetailsClient({ product: initialProduct, feedbackPe
                   onClose={() => setBuyNowOpen(false)}
                   onBuyNow={refreshProduct}
                 />
-                <p className="text-xs text-gray-500">
-                  <span className="font-medium text-gray-700">
-                    {product.bids &&
-                      product.bids[0]?.amount > product?.reserve_price
-                      ? t("Reserve Met")
-                      : t("Reserve Not Met")}
-                  </span>
-                </p>
-                <p className="text-xs text-gray-500">
-                  <span className="text-green-600 font-medium">
-                    {" "}
-                    {product?.bids_count || 0} {t("bids so far")}
-                  </span>{" "}
-                  –{" "}
-                  <span
-                    className="text-green-600 underline cursor-pointer hover:text-green-800"
-                    onClick={() => setBidHistoryOpen(true)}
-                  >
-                    {t("view history")}
-                  </span>
-                </p>
+                 {Number(product?.start_price.replace(/,/g, "")) > 0 && <p className="text-xs text-gray-500">
+                <span className="font-medium text-gray-700">
+                  {product.bids &&
+                    product.bids[0]?.amount > product?.reserve_price
+                    ? t("Reserve Met")
+                    : t("Reserve Not Met")}
+                </span>
+              </p>}
+                {Number(product?.start_price.replace(/,/g, "")) > 0 && <p className="text-xs text-gray-500">
+                <span className="text-green-600 font-medium">
+                  {" "}
+                  {`${product?.bids_count || 0} ${t("bids so far")}`}
+                </span>{" "}
+                –{" "}
+                <span
+                  className="text-green-600 underline cursor-pointer hover:text-green-800"
+                  onClick={() => setBidHistoryOpen(true)}
+                >
+                  {t("view history")}
+                </span>
+              </p>}
                 {product?.allow_offers && product.bids.length == 0 && (
                   <div className="flex items-center justify-between mt-4">
                     <span className="text-sm text-gray-600">

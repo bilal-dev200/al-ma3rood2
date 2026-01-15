@@ -39,7 +39,7 @@ const staticCategories = [
     rowSpan: "md:row-span-1",
     height: "h-[200px]",
      route: "/jobs",
-    rounded: "rounded-3xl",
+    rounded: "rounded-xl",
   },
   {
     title: "Property",

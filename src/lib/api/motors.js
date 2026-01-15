@@ -61,8 +61,11 @@ export const motorsApi = {
       formattedPayload.filters.region = payload.region;
     }
 
-    if (payload?.governorate) {
-      formattedPayload.filters.governorate = payload.governorate;
+    if (payload?.city) {
+      formattedPayload.filters.city = payload.city;
+    }
+    if (payload?.area) {
+      formattedPayload.filters.area = payload.area;
     }
 
     // ✅ add category_id conditionally
@@ -88,16 +91,16 @@ export const motorsApi = {
     }
 
     // ✅ add min_price if present
-    if (payload?.min_price !== undefined && payload?.min_price !== null) {
+    if (payload?.min_price !== undefined && payload?.min_price !== null && payload?.min_price !== '') {
       formattedPayload.min_price = payload.min_price;
     }
 
-    if (payload?.category_id !== undefined && payload?.category_id !== null) {
+    if (payload?.category_id !== undefined && payload?.category_id !== null && payload?.category_id !== '') {
       formattedPayload.category_id = payload.category_id;
     }
 
     // ✅ add max_price if present
-    if (payload?.max_price !== undefined && payload?.max_price !== null) {
+    if (payload?.max_price !== undefined && payload?.max_price !== null && payload?.max_price !== '') {
       formattedPayload.max_price = payload.max_price;
     }
 

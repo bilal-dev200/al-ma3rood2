@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { z } from "zod";
 import { servicesApi } from "@/lib/api/services";
 import SearchableDropdown from "@/components/WebsiteComponents/ReuseableComponenets/SearchableDropdown";
 import { useServicesStore } from "@/lib/stores/servicesStore";
+import { useLocationStore } from "@/lib/stores/locationStore";
 import AvailabilitySchedule from "@/components/WebsiteComponents/listingforms/AvailabilitySchedule";
 
 const listingSchema = z.object({
@@ -21,7 +22,8 @@ const listingSchema = z.object({
     .min(60, "Share more detail about your process and deliverables"),
   category: z.string().min(1, "Choose a service category"),
   region: z.string().min(1, "Select a region"),
-  area: z.string().min(1, "Select a governorate"),
+  city: z.string().min(1, "Select a city"),
+  area: z.string().min(1, "Select an area"),
   // price: z
   //   .string()
   //   .regex(/^\d+(\.\d{1,2})?$/, "Enter a valid price (numbers only)"),
@@ -46,9 +48,19 @@ export default function CreateServiceListingForm() {
   const router = useRouter();
 
   // Get categories and regions from Zustand store
+  // Get categories from Services Store
   const categories = useServicesStore((state) => state.categories);
-  const regions = useServicesStore((state) => state.regions);
   const isLoadingMeta = useServicesStore((state) => state.isLoadingMeta);
+
+  // Get locations from Location Store
+  const {
+    regions, cities, areas,
+    fetchRegions, fetchCities, fetchAreas
+  } = useLocationStore();
+
+  useEffect(() => {
+    fetchRegions();
+  }, []);
 
   const {
     register,
@@ -66,6 +78,7 @@ export default function CreateServiceListingForm() {
       description: "",
       category: "",
       region: "",
+      city: "",
       area: "",
       price: "",
       priceUnit: "per project",
@@ -85,32 +98,34 @@ export default function CreateServiceListingForm() {
   });
 
   const selectedRegion = watch("region");
+  const selectedCity = watch("city");
   const selectedCategory = watch("category");
-  const selectedPriceUnit = watch("priceUnit");
+  // const selectedPriceUnit = watch("priceUnit");
 
-  // Common price unit options for services
-  const priceUnitOptions = [
-    "per project",
-    "per hour",
-    "per day",
-    "per week",
-    "per month",
-    "per session",
-    "per visit",
-    "per item",
-    "per square meter",
-    "per square foot",
-    "per person",
-    "per room",
-    "per page",
-    "per word",
-    "per minute",
-    "fixed price",
-    "starting from",
-    "call for quote",
-  ];
+  // Handle dependent fetches
+  useEffect(() => {
+    if (selectedRegion) {
+      fetchCities(selectedRegion);
+    }
+  }, [selectedRegion, fetchCities]);
 
-  // Prepare category options for SearchableDropdown
+  useEffect(() => {
+    if (selectedCity) {
+      fetchAreas(selectedCity);
+    }
+  }, [selectedCity, fetchAreas]);
+
+  // Clear downstream fields when upstream changes
+  // Using separate effects or inside onChange in JSX. 
+  // Here, SearchableDropdown takes value and onChange. 
+  // It's better to handle clear logic in the onChange handler in JSX.
+
+  useEffect(() => {
+    // Just for clearing if needed when region changes, but we'll do it in onChange
+  }, [selectedRegion]);
+
+
+  // Prepare category options
   const categoryOptions = useMemo(() => {
     return categories.map((category) => ({
       id: category.id ?? category.value,
@@ -122,55 +137,17 @@ export default function CreateServiceListingForm() {
     }));
   }, [categories]);
 
-  // Prepare region options for SearchableDropdown
-  const regionOptions = useMemo(() => {
-    return regions.map((region) => {
-      const value = region.id ?? region.value;
-      const label = region.label ?? region.name ?? region.title ?? value;
-      return {
-        id: String(value),
-        label: String(label),
-      };
-    });
-  }, [regions]);
-
-  // Prepare governorate options for SearchableDropdown
-  const governorateOptions = useMemo(() => {
-    const match = regions.find(
-      (region) =>
-        region.id === selectedRegion || region.value === selectedRegion || String(region.id) === String(selectedRegion)
-    );
-    if (!match) return [];
-
-    let areas = [];
-    if (Array.isArray(match.areas) && match.areas.length) {
-      areas = match.areas;
-    } else if (Array.isArray(match.governorates) && match.governorates.length) {
-      areas = match.governorates;
-    }
-
-    return areas.map((area) => {
-      if (typeof area === "string") {
-        return { id: area, label: area };
-      }
-      const value = area.id ?? area.value ?? area.slug ?? area.name;
-      const label = area.label ?? area.name ?? value;
-      return {
-        id: String(value),
-        label: String(label),
-      };
-    });
-  }, [regions, selectedRegion]);
-
-  useEffect(() => {
-    setValue("area", "");
-  }, [selectedRegion, setValue]);
+  // Prepare location options
+  const regionOptions = useMemo(() => regions.map(r => ({ id: String(r.id), label: r.name })), [regions]);
+  const cityOptions = useMemo(() => cities.map(c => ({ id: String(c.id), label: c.name })), [cities]);
+  const areaOptions = useMemo(() => areas.map(a => ({ id: String(a.id), label: a.name })), [areas]);
 
   async function onSubmit(values) {
     try {
       const categoryId = Number.parseInt(values.category, 10);
-      const regionId = Number.parseInt(values.region, 10);
-      const governorateId = Number.parseInt(values.area, 10);
+      const regionId = values.region;
+      const cityId = values.city;
+      const areaId = values.area;
 
       const formData = new FormData();
       formData.append("title", values.title.trim());
@@ -179,12 +156,10 @@ export default function CreateServiceListingForm() {
       if (!Number.isNaN(categoryId)) {
         formData.append("category_id", categoryId);
       }
-      if (!Number.isNaN(regionId)) {
-        formData.append("region_id", regionId);
-      }
-      if (!Number.isNaN(governorateId)) {
-        formData.append("governorate_id", governorateId);
-      }
+      if (regionId) formData.append("region_id", regionId);
+      if (cityId) formData.append("city_id", cityId);
+      if (areaId) formData.append("area_id", areaId);
+
       // formData.append("price", values.price);
       // formData.append("price_unit", values.priceUnit.trim());
       if (values.experience) {
@@ -241,6 +216,7 @@ export default function CreateServiceListingForm() {
         description: "",
         category: "",
         region: "",
+        city: "",
         area: "",
         price: "",
         priceUnit: "per project",
@@ -396,7 +372,11 @@ export default function CreateServiceListingForm() {
               <SearchableDropdown
                 options={regionOptions}
                 value={selectedRegion || ""}
-                onChange={(value) => setValue("region", value || "")}
+                onChange={(value) => {
+                  setValue("region", value || "");
+                  setValue("city", "");
+                  setValue("area", "");
+                }}
                 placeholder="All regions"
                 searchPlaceholder="Search regions..."
                 emptyMessage="No regions found"
@@ -410,16 +390,65 @@ export default function CreateServiceListingForm() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
-                Governorate
+                City
               </label>
               <SearchableDropdown
-                options={governorateOptions}
+                options={cityOptions}
+                value={selectedCity || ""}
+                onChange={async (value) => {
+                  setValue("city", value || "");
+                  setValue("area", "");
+                  if (value) {
+                    const fetchedAreas = await fetchAreas(value);
+                    if (fetchedAreas?.length === 1) {
+                      // Wait, areas are objects {id: 1, name: "Area"}. 
+                      // Check how areaOptions are used. 
+                      // Line 143: const areaOptions = useMemo(() => areas.map(a => ({ id: String(a.id), label: a.name })), [areas]);
+                      // SearchableDropdown onChange sends 'value' which is String(a.id) based on option.value.
+                      // fetchedAreas returns array of {id, name...}.
+                      // So we should set value to String(fetchedAreas[0].id) maybe?
+                      // Let's check how 'area' value is expected.
+                      // Line 26: area: z.string()
+                      // Previous usage: setValue("area", value || "")
+                      // So it expects the ID (stringified) or Value used in dropdown.
+                      // Wait, look at line 420: value={watch("area") || ""}
+                      // SearchableDropdown options value is `id` string (line 143).
+                      // So we should set it to String(fetchedAreas[0].id).
+
+                      setValue("area", String(fetchedAreas[0].id));
+                    }
+                  }
+                }}
+                onSearch={(val) => {
+                  if (selectedRegion) fetchCities(selectedRegion, val);
+                }}
+                placeholder="Select city"
+                searchPlaceholder="Search cities..."
+                emptyMessage="No cities found"
+                disabled={!selectedRegion}
+              />
+              {errors.city && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.city.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Area
+              </label>
+              <SearchableDropdown
+                options={areaOptions}
                 value={watch("area") || ""}
                 onChange={(value) => setValue("area", value || "")}
-                placeholder="Any governorate"
-                searchPlaceholder="Search governorates..."
-                emptyMessage="No governorates found"
-                disabled={!governorateOptions.length || !selectedRegion}
+                onSearch={(val) => {
+                  if (selectedCity) fetchAreas(selectedCity, val);
+                }}
+                placeholder="Select area"
+                searchPlaceholder="Search areas..."
+                emptyMessage="No areas found"
+                disabled={!selectedCity}
               />
               {errors.area && (
                 <p className="mt-1 text-xs text-red-500">

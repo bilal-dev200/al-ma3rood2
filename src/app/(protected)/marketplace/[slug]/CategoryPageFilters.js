@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 /**
  * FilterPill Component
  */
-const FilterPill = ({ label, isActive, isOpen, onClick, children, className = "" }) => {
+const FilterPill = ({ label, isActive, isOpen, onClick, children, className = "",mobileWidth = "" }) => {
     return (
         <div className={`relative ${className}`}>
             <button
@@ -26,8 +26,19 @@ const FilterPill = ({ label, isActive, isOpen, onClick, children, className = ""
                 {label}
                 {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
-            {isOpen && (
-                <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[280px] p-4 animate-in fade-in zoom-in-95 duration-200">
+            {/* {isOpen && (
+                <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50  md:min-w-[280px] p-4 animate-in fade-in zoom-in-95 duration-200">
+                    {children}
+                </div>
+            )} */}
+             {isOpen && (
+                <div
+                    className={`
+                        absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 p-4
+                        animate-in fade-in zoom-in-95 duration-200
+                        ${mobileWidth} md:min-w-[280px]
+                    `}
+                >
                     {children}
                 </div>
             )}
@@ -51,12 +62,19 @@ const CategoryPageFilters = ({ categoryId, categories = [] }) => {
 
     // -- Location Store --
     const {
+        cities,
+        areas,
         locations,
         getAllLocations,
         selectedRegion,
-        selectedGovernorate,
+        selectedCity,
+        selectedArea,
         setSelectedRegion,
-        setSelectedGovernorate,
+        setSelectedCity,
+        setSelectedArea,
+        fetchCities,
+        fetchAreas,
+        isLoading: isLocationLoading,
     } = useLocationStore();
 
     useEffect(() => {
@@ -86,11 +104,7 @@ const CategoryPageFilters = ({ categoryId, categories = [] }) => {
     const country = locations.find((c) => c.id == 1);
     const regions = country?.regions || [];
 
-    const governorates = useMemo(() => {
-        if (!selectedRegion || !selectedRegion.name) return [];
-        const region = regions.find((r) => r.name === selectedRegion.name);
-        return region?.governorates || [];
-    }, [regions, selectedRegion]);
+    const regionsList = country?.regions || [];
 
     const conditions = [
         { key: "brand_new_unused", label: "Brand New / Unused" },
@@ -142,7 +156,8 @@ const CategoryPageFilters = ({ categoryId, categories = [] }) => {
         setPriceFrom("");
         setPriceTo("");
         setSelectedRegion(null);
-        setSelectedGovernorate(null);
+        setSelectedCity(null);
+        setSelectedArea(null);
 
         const params = new URLSearchParams(searchParams.toString());
         // Keep search term
@@ -215,18 +230,21 @@ const CategoryPageFilters = ({ categoryId, categories = [] }) => {
                         <div>
                             <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Region</label>
                             <Select
-                                options={regions.map(r => ({ value: r.name, label: r.name }))}
+                                options={regionsList.map(r => ({ value: r.name, label: r.name }))}
                                 value={selectedRegion ? { value: selectedRegion.name, label: selectedRegion.name } : null}
                                 onChange={(val) => {
                                     if (val) {
-                                        const r = regions.find(reg => reg.name === val.value);
-                                        setSelectedRegion(r);
-                                        setSelectedGovernorate(null);
-                                        updateUrl({ region_id: r?.id, governorate_id: null });
+                                        const r = regionsList.find(reg => reg.name === val.value);
+                                        setSelectedRegion(r ? { id: r.id, name: r.name } : null);
+                                        if (r) fetchCities(r.id);
+                                        setSelectedCity(null);
+                                        setSelectedArea(null);
+                                        updateUrl({ region_id: r?.id, city_id: null, area_id: null });
                                     } else {
                                         setSelectedRegion(null);
-                                        setSelectedGovernorate(null);
-                                        updateUrl({ region_id: null, governorate_id: null });
+                                        setSelectedCity(null);
+                                        setSelectedArea(null);
+                                        updateUrl({ region_id: null, city_id: null, area_id: null });
                                     }
                                 }}
                                 placeholder="All Regions"
@@ -235,25 +253,63 @@ const CategoryPageFilters = ({ categoryId, categories = [] }) => {
                                 menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                             />
                         </div>
+
+                        {/* City Select */}
                         {selectedRegion && (
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Governorate</label>
+                                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">City</label>
                                 <Select
-                                    options={governorates.map(g => ({ value: g.name, label: g.name }))}
-                                    value={selectedGovernorate ? { value: selectedGovernorate.name, label: selectedGovernorate.name } : null}
+                                    options={cities.map(c => ({ value: c.name, label: c.name }))}
+                                    value={selectedCity ? { value: selectedCity.name, label: selectedCity.name } : null}
+                                    onInputChange={(inputValue) => {
+                                        if (selectedRegion) fetchCities(selectedRegion.id, inputValue);
+                                    }}
                                     onChange={(val) => {
                                         if (val) {
-                                            const g = governorates.find(gov => gov.name === val.value);
-                                            setSelectedGovernorate(g);
-                                            updateUrl({ governorate_id: g?.id });
+                                            const c = cities.find(city => city.name === val.value);
+                                            setSelectedCity(c ? { id: c.id, name: c.name } : null);
+                                            if (c) fetchAreas(c.id);
+                                            setSelectedArea(null);
+                                            updateUrl({ city_id: c?.id, area_id: null });
                                         } else {
-                                            setSelectedGovernorate(null);
-                                            updateUrl({ governorate_id: null });
+                                            setSelectedCity(null);
+                                            setSelectedArea(null);
+                                            updateUrl({ city_id: null, area_id: null });
                                         }
                                     }}
-                                    placeholder="All Governorates"
+                                    placeholder="All Cities"
                                     styles={selectStyles}
                                     isClearable
+                                    isLoading={isLocationLoading}
+                                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                                />
+                            </div>
+                        )}
+
+                        {/* Area Select */}
+                        {selectedCity && (
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Area</label>
+                                <Select
+                                    options={areas.map(a => ({ value: a.name, label: a.name }))}
+                                    value={selectedArea ? { value: selectedArea.name, label: selectedArea.name } : null}
+                                    onInputChange={(inputValue) => {
+                                        if (selectedCity) fetchAreas(selectedCity.id, inputValue);
+                                    }}
+                                    onChange={(val) => {
+                                        if (val) {
+                                            const a = areas.find(area => area.name === val.value);
+                                            setSelectedArea(a ? { id: a.id, name: a.name } : null);
+                                            updateUrl({ area_id: a?.id });
+                                        } else {
+                                            setSelectedArea(null);
+                                            updateUrl({ area_id: null });
+                                        }
+                                    }}
+                                    placeholder="All Areas"
+                                    styles={selectStyles}
+                                    isClearable
+                                    isLoading={isLocationLoading}
                                     menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                                 />
                             </div>
@@ -267,8 +323,10 @@ const CategoryPageFilters = ({ categoryId, categories = [] }) => {
                     isOpen={openFilter === "condition"}
                     isActive={!!newUsed}
                     onClick={() => toggleFilter("condition")}
+                        mobileWidth="w-52"   // <-- Custom width for mobile
+
                 >
-                    <div className="w-64">
+                    <div className="w-44 md:w-full">
                         <h4 className="font-semibold mb-2 text-gray-700">{t("Condition")}</h4>
                         <div className="flex flex-col gap-1">
                             <button

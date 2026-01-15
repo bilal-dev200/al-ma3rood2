@@ -3,21 +3,26 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { useServiceBookingsStore } from "@/lib/stores/serviceBookingsStore";
 import { useLocationStore } from "@/lib/stores/locationStore";
+import Select from "react-select";
 import { useAuthStore } from "@/lib/stores/authStore";
 
 const bookingSchema = z.object({
   preferredDate: z.string().min(1, "Choose a preferred date"),
+  preferredTimeWindow: z.object({
+    start: z.string().min(1, "Choose a start time"),
+  }),
   startTime: z.string().min(1, "Add a start time"),
   endTime: z.string().min(1, "Add an end time"),
   addressLine1: z.string().min(5, "Add the service address"),
-  regionId: z.string().min(1, "Select a region"),
-  governorateId: z.string().min(1, "Select a governorate"),
+  regionId: z.string().optional(),
+  cityId: z.string().min(1, "Select a city"),
+  areaId: z.string().min(1, "Select an area"),
   projectDetails: z
     .string()
     .min(
@@ -30,26 +35,29 @@ const bookingSchema = z.object({
 export default function BookServiceForm({ service }) {
   const { user } = useAuthStore();
   const [recentBooking, setRecentBooking] = useState(null);
-  const [regionOptions, setRegionOptions] = useState([]);
-  const [governorateOptions, setGovernorateOptions] = useState([]);
-  const getAllLocations = useLocationStore((state) => state.getAllLocations);
+
+  const {
+    locations,
+    getAllLocations,
+    cities: storeCities,
+    areas: storeAreas,
+    fetchCities,
+    fetchAreas,
+    isLoading: isLocationLoading
+  } = useLocationStore();
+
+  const country = locations.find((c) => c.id == 1);
+  const regions = country?.regions || [];
+
   const bookService = useServiceBookingsStore((state) => state.bookService);
 
-  const userRegionId = user?.regions_id || user?.regions?.id || "";
-  const userGovernorateId =
-    user?.governorates_id || user?.governorates?.id || "";
-  const initialRegionId =
-    userRegionId ||
-    service.region_id ||
-    service.regionId ||
-    service.region ||
-    "";
-  const initialGovernorateId =
-    userGovernorateId ||
-    service.governorate_id ||
-    service.governorateId ||
-    service.governorate ||
-    "";
+  const userCityId = user?.city_id || user?.city?.id || "";
+  const userAreaId = user?.area_id || user?.area?.id || "";
+  const userRegionId = user?.region_id || user?.region?.id || "";
+
+  const initialRegionId = userRegionId || "";
+  const initialCityId = userCityId || "";
+  const initialAreaId = userAreaId || "";
 
   const defaultDetails = useMemo(() => {
     const serviceName = service.title || "your service";
@@ -73,23 +81,28 @@ export default function BookServiceForm({ service }) {
     reset,
     setValue,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       preferredDate: "",
+      preferredTimeWindow: {
+        start: "",
+      },
       startTime: "09:00",
       endTime: "11:00",
       addressLine1: "",
       regionId: initialRegionId ? String(initialRegionId) : "",
-      governorateId: initialGovernorateId ? String(initialGovernorateId) : "",
+      cityId: initialCityId ? String(initialCityId) : "",
+      areaId: initialAreaId ? String(initialAreaId) : "",
       projectDetails: defaultDetails,
       budget: "",
     },
   });
 
   const selectedRegionId = watch("regionId");
-  const selectedGovernorateId = watch("governorateId");
+  const selectedCityId = watch("cityId");
 
   // Populate form with user data when available
   useEffect(() => {
@@ -98,84 +111,37 @@ export default function BookServiceForm({ service }) {
     const userAddress =
       user.billing_address || user.address || user.delivery_address || "";
     const userRegionId = user.regions_id || user.regions?.id || "";
+    const userCityId = user.city_id || user.city?.id || "";
+    const userAreaId = user.area_id || user.area?.id || "";
 
     if (userAddress) setValue("addressLine1", userAddress);
     if (userRegionId) setValue("regionId", String(userRegionId));
+    if (userCityId) setValue("cityId", String(userCityId));
+    if (userAreaId) setValue("areaId", String(userAreaId));
   }, [user, setValue]);
 
-  // Set governorate after governorate options are loaded for the selected region
+  // Fetch cities when region changes or is set
   useEffect(() => {
-    if (!user || !governorateOptions.length) return;
-
-    const userGovernorateId =
-      user.governorates_id || user.governorates?.id || "";
-    const currentGovernorateId = selectedGovernorateId;
-
-    // Only set if we have a user governorate ID and it's not already set, or if it's different
-    if (
-      userGovernorateId &&
-      currentGovernorateId !== String(userGovernorateId)
-    ) {
-      // Check if the governorate exists in the current options
-      const governorateExists = governorateOptions.some(
-        (gov) => gov.id === String(userGovernorateId)
-      );
-      if (governorateExists) {
-        setValue("governorateId", String(userGovernorateId));
-      }
+    if (selectedRegionId) {
+      fetchCities(selectedRegionId);
     }
-  }, [user, governorateOptions, selectedGovernorateId, setValue]);
+  }, [selectedRegionId, fetchCities]);
+
+  // Fetch areas when city changes or is set
+  useEffect(() => {
+    if (selectedCityId) {
+      fetchAreas(selectedCityId).then((fetchedAreas) => {
+        // Auto-select area if only one exists
+        if (fetchedAreas && fetchedAreas.length === 1) {
+          setValue("areaId", String(fetchedAreas[0].id));
+        }
+      });
+    }
+  }, [selectedCityId, fetchAreas, setValue]);
 
   useEffect(() => {
-    async function hydrateRegions() {
-      try {
-        const countries = await getAllLocations();
-        const saudi = Array.isArray(countries)
-          ? countries.find((country) => country.name === "Saudi Arabia") ||
-          countries[0]
-          : null;
-        const derivedRegions =
-          saudi?.regions?.map((region) => ({
-            id: String(region.id),
-            label: region.name,
-            governorates:
-              region.governorates?.map((item) => ({
-                id: String(item.id),
-                label: item.name,
-              })) || [],
-          })) || [];
-        setRegionOptions(derivedRegions);
-      } catch (error) {
-        console.error("Unable to load locations", error);
-      }
-    }
-
-    hydrateRegions();
+    getAllLocations();
   }, [getAllLocations]);
-
-  useEffect(() => {
-    if (!regionOptions.length) {
-      setGovernorateOptions([]);
-      return;
-    }
-
-    const activeRegion = regionOptions.find(
-      (region) => region.id === selectedRegionId
-    );
-    const derivedGovernorates = activeRegion?.governorates || [];
-    setGovernorateOptions(derivedGovernorates);
-
-    if (
-      selectedGovernorateId &&
-      !derivedGovernorates.some((item) => item.id === selectedGovernorateId)
-    ) {
-      setValue("governorateId", "");
-    }
-
-    if (!selectedRegionId) {
-      setValue("governorateId", "");
-    }
-  }, [regionOptions, selectedRegionId, selectedGovernorateId, setValue]);
 
   const router = useRouter(); // Initialize router
 
@@ -186,7 +152,7 @@ export default function BookServiceForm({ service }) {
         serviceSlug: service.slug,
         serviceTitle: service.title,
         preferredTimeWindow: {
-          start: values.startTime,
+          start: values.preferredTimeWindow?.start || values.startTime,
           end: values.endTime,
         },
       });
@@ -195,7 +161,7 @@ export default function BookServiceForm({ service }) {
       // Extract provider details
       // Assuming service structure has user/creator info
       const providerEmail = service.user?.email || service.creator?.email || service.email || "";
-      const providerPhone = service.user?.mobile || service.creator?.mobile || service.mobile || service.phone || "";
+      const providerPhone = service?.user?.phone || service.creator?.phone || service.user?.mobile || service.creator?.mobile || "";
       const providerName = service.user?.name || service.user?.username || service.creator?.name || "";
       const providerTitle = service.title || "";
 
@@ -216,7 +182,8 @@ export default function BookServiceForm({ service }) {
       // reset({
       //   ...values,
       //   regionId: values.regionId,
-      //   governorateId: values.governorateId,
+      //   cityId: values.cityId,
+      //   areaId: values.areaId,
       //   projectDetails: defaultDetails,
       // });
     } catch (error) {
@@ -261,21 +228,39 @@ export default function BookServiceForm({ service }) {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Preferred date
-          </label>
-          <input
-            {...register("preferredDate")}
-            type="date"
-            min={new Date().toISOString().split("T")[0]}
-            className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-          {errors.preferredDate && (
-            <p className="mt-1 text-xs text-red-500">
-              {errors.preferredDate.message}
-            </p>
-          )}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Preferred Date
+            </label>
+            <input
+              {...register("preferredDate")}
+              type="date"
+              min={new Date().toISOString().split("T")[0]}
+              className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            {errors.preferredDate && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.preferredDate.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Preferred Time
+            </label>
+            <input
+              {...register("preferredTimeWindow.start")}
+              type="time"
+              className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            {errors.preferredTimeWindow?.start && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.preferredTimeWindow.start.message}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* <div className="grid gap-4 sm:grid-cols-2">
@@ -311,31 +296,32 @@ export default function BookServiceForm({ service }) {
           </div>
         </div> */}
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          {/* Region Select */}
           <div>
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Region
             </label>
-            {regionOptions.length ? (
-              <select
-                {...register("regionId")}
-                className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              >
-                <option value="">Select a region</option>
-                {regionOptions.map((region) => (
-                  <option key={region.id} value={region.id}>
-                    {region.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                {...register("regionId")}
-                type="text"
-                className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="Enter region ID"
-              />
-            )}
+            <Controller
+              name="regionId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={regions.map((r) => ({ value: String(r.id), label: r.name }))}
+                  value={regions.find(r => String(r.id) === field.value) ? { value: field.value, label: regions.find(r => String(r.id) === field.value)?.name } : null}
+                  onChange={(val) => {
+                    field.onChange(val ? val.value : "");
+                    setValue("cityId", "");
+                    setValue("areaId", "");
+                  }}
+                  placeholder="Select a region"
+                  className="text-sm"
+                  isLoading={isLocationLoading}
+                  classNamePrefix="react-select"
+                />
+              )}
+            />
             {errors.regionId && (
               <p className="mt-1 text-xs text-red-500">
                 {errors.regionId.message}
@@ -343,38 +329,69 @@ export default function BookServiceForm({ service }) {
             )}
           </div>
 
+          {/* City Select */}
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Governorate
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              City
             </label>
-            {regionOptions.length ? (
-              <select
-                {...register("governorateId")}
-                disabled={!selectedRegionId || !governorateOptions.length}
-                className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50"
-              >
-                <option value="">
-                  {selectedRegionId
-                    ? "Select a governorate"
-                    : "Choose region first"}
-                </option>
-                {governorateOptions.map((governorate) => (
-                  <option key={governorate.id} value={governorate.id}>
-                    {governorate.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                {...register("governorateId")}
-                type="text"
-                className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="Enter governorate"
-              />
-            )}
-            {errors.governorateId && (
+            <Controller
+              name="cityId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={storeCities.map((c) => ({ value: String(c.id), label: c.name }))}
+                  value={storeCities.find(c => String(c.id) === field.value) ? { value: field.value, label: storeCities.find(c => String(c.id) === field.value)?.name } : null}
+                  onChange={(val) => {
+                    field.onChange(val ? val.value : "");
+                    setValue("areaId", "");
+                  }}
+                  onInputChange={(inputValue) => {
+                    if (selectedRegionId) fetchCities(selectedRegionId, inputValue);
+                  }}
+                  placeholder="Select a city"
+                  className="text-sm"
+                  isLoading={isLocationLoading}
+                  classNamePrefix="react-select"
+                  isDisabled={!selectedRegionId}
+                />
+              )}
+            />
+            {errors.cityId && (
               <p className="mt-1 text-xs text-red-500">
-                {errors.governorateId.message}
+                {errors.cityId.message}
+              </p>
+            )}
+          </div>
+
+          {/* Area Select */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Area
+            </label>
+            <Controller
+              name="areaId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={storeAreas.map((a) => ({ value: String(a.id), label: a.name }))}
+                  value={storeAreas.find(a => String(a.id) === field.value) ? { value: field.value, label: storeAreas.find(a => String(a.id) === field.value)?.name } : null}
+                  onChange={(val) => field.onChange(val ? val.value : "")}
+                  onInputChange={(inputValue) => {
+                    if (selectedCityId) fetchAreas(selectedCityId, inputValue);
+                  }}
+                  placeholder="Select an area"
+                  className="text-sm"
+                  isLoading={isLocationLoading}
+                  classNamePrefix="react-select"
+                  isDisabled={!selectedCityId}
+                />
+              )}
+            />
+            {errors.areaId && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.areaId.message}
               </p>
             )}
           </div>

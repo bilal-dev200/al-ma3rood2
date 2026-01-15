@@ -73,8 +73,20 @@ export function transformRegionsResponse(locationsResponse) {
   return regions.map((region) => ({
     id: String(region.id),
     label: region.name,
+    cities: (region.cities || region.governorates || []).map((city) => ({
+      id: String(city.id),
+      name: city.name,
+      label: city.name,
+      areas: (city.areas || []).map((area) => ({
+        id: String(area.id),
+        name: area.name,
+        label: area.name,
+      })),
+    })),
+    // Keep governorates for backward compatibility but mapped like cities
     governorates: (region.governorates || []).map((gov) => ({
       id: String(gov.id),
+      name: gov.name,
       label: gov.name,
     })),
   }));

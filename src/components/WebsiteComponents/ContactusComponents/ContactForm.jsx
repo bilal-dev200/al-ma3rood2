@@ -13,6 +13,7 @@ import { useAuthStore } from "@/lib/stores/authStore";
 import { useLocationStore } from "@/lib/stores/locationStore";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { FaEnvelope } from "react-icons/fa";
 
 const ContactForm = () => {
   const { t } = useTranslation();
@@ -20,54 +21,28 @@ const ContactForm = () => {
   const [category, setCategory] = useState("Account");
   const [helpWith, setHelpWith] = useState("Emails");
   const [option, setOption] = useState("trouble receiving Ma3rood emails");
-  const { locations, getAllLocations } = useLocationStore();
+  const {
+    regions, cities, areas,
+    fetchRegions, fetchCities, fetchAreas
+  } = useLocationStore();
 
   useEffect(() => {
-    getAllLocations();
-  }, [getAllLocations]);
-
-  const country = locations.find((c) => c.id == 1);
-  const regions = country?.regions || [];
+    fetchRegions();
+  }, []);
 
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [selectedGovernorate, setSelectedGovernorate] = useState(null);
-
-  const governorates = useMemo(() => {
-    if (!selectedRegion) return [];
-    const region = regions.find((r) => r.id === selectedRegion.value);
-    return region?.governorates || [];
-  }, [regions, selectedRegion]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [selectedArea, setSelectedArea] = useState(null);
 
   const schema = yup.object().shape({
     name: yup.string().required("Name is required"),
-    email: yup
-      .string()
-      .email("Invalid email format")
-      .required("Email is required"),
-    phone: yup
-      .string()
-      .matches(/^[0-9]{10,15}$/, "Phone number must be 10 to 15 digits only")
-
-      .required("Phone is required"),
+    email: yup.string().email("Invalid email format").required("Email is required"),
+    phone: yup.string().matches(/^[0-9]{10,15}$/, "Phone number must be 10 to 15 digits only").required("Phone is required"),
     subject: yup.string().required("Subject is required"),
     message: yup.string().required("Message is required"),
-    region: yup
-      .mixed()
-      .test("region-type", "Region is required", function (value) {
-        // allow string or object but not null/undefined
-        if (!value) return false;
-        if (typeof value === "string" && value.trim() !== "") return true;
-        if (typeof value === "object" && Object.keys(value).length > 0) return true;
-        return false;
-      }),
-    governorate: yup
-      .mixed()
-      .test("governorate-type", "Governorate is required", function (value) {
-        if (!value) return false;
-        if (typeof value === "string" && value.trim() !== "") return true;
-        if (typeof value === "object" && Object.keys(value).length > 0) return true;
-        return false;
-      }),
+    region: yup.string().required("Region is required"),
+    city: yup.string().required("City is required"),
+    area: yup.string().required("Area is required"),
   });
 
   const {
@@ -75,6 +50,8 @@ const ContactForm = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -86,14 +63,14 @@ const ContactForm = () => {
       message: "",
       country: "Saudi Arabia",
       region: "",
-      governorate: "",
+      city: "",
+      area: "",
     },
   });
 
+  // Watch for changes to trigger fetches if needed, or rely on Select onChange
 
-
-
-  // ✅ Populate form when user data is available
+  // Populate form when user data is available
   useEffect(() => {
     if (user) {
       reset({
@@ -103,24 +80,14 @@ const ContactForm = () => {
         subject: "",
         message: "",
         country: "Saudi Arabia",
-        region: user.regions,
-        governorate: user.governorates,
+        region: user.region?.name || "",
+        city: user.city?.name || "",
+        area: user.area?.name || "",
       });
 
-      setSelectedRegion(
-        user.regions
-          ? { label: user.regions.name, value: user.regions?.id }
-          : null
-      );
-
-      setSelectedGovernorate(
-        user.governorates
-          ? {
-            label: user.governorates.name,
-            value: user.governorates?.id,
-          }
-          : null
-      );
+      // If we have IDs we might want to pre-fetch cities/areas, but for now let's just set values
+      // Logic to pre-select dropdowns might be complex if we only have names or if we need to fetch first.
+      // Assuming user object has flat structure now or similar.
     }
   }, [user, reset]);
 
@@ -130,19 +97,10 @@ const ContactForm = () => {
     address: "",
   });
 
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [countries, setCountries] = useState([]);
-
-  useEffect(() => {
-    const allCountries = Country.getAllCountries();
-    setCountries(allCountries);
-
-    const defaultCities = City.getCitiesOfCountry("SA");
-    setCities(defaultCities);
-    const defaultStates = State.getStatesOfCountry("SA");
-    setStates(defaultStates);
-  }, []);
+  // Removing old country-state-city logic effectively by not using it
+  // const [states, setStates] = useState([]);
+  // const [cities, setCities] = useState([]);
+  // const [countries, setCountries] = useState([]);
   useEffect(() => {
     if (formData.state) {
       const selectedState = states.find((s) => s.name == formData.state);
@@ -165,9 +123,9 @@ const ContactForm = () => {
         subject: data.subject,
         message: data.message,
         country: data.country,
-        region_id: selectedRegion?.value || null,
-        governorate_id:
-          selectedGovernorate?.value || null,
+        region_id: selectedRegion?.value || regions.find(r => r.name === data.region)?.id,
+        city_id: selectedCity?.value || cities.find(c => c.name === data.city)?.id,
+        area_id: selectedArea?.value || areas.find(a => a.name === data.area)?.id,
       };
 
       const response = await userApi.contactmessage(payload);
@@ -198,6 +156,19 @@ const ContactForm = () => {
           "We’ll ask a few questions – so we can help you find the answer, or to get in touch with us."
         )}
       </p>
+
+      <div className="flex items-center gap-3 mb-8 p-4 bg-white border border-gray-100 rounded-xl shadow-sm w-full md:w-fit">
+        <div className="flex items-center justify-center w-10 h-10 bg-green-50 rounded-full text-green-600">
+          <FaEnvelope size={20} />
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">{t("For more information you can reach us directly at")}</p>
+          <a href="mailto:mubashir@ma3rood.com" className="text-base font-bold text-gray-800 hover:text-green-600 transition-colors">
+            mubashir@ma3rood.com
+          </a>
+        </div>
+      </div>
+
       <div className="flex">
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -310,12 +281,11 @@ const ContactForm = () => {
                 className="w-full p-1.5 border border-gray-200 rounded bg-gray-100 cursor-not-allowed"
               />
             </div>
-            {/* Region */}{" "}
+            {/* Region */}
             <div>
-              {" "}
               <label className="block text-sm font-medium">
                 {t("Region")}
-              </label>{" "}
+              </label>
               <Controller
                 control={control}
                 name="region"
@@ -328,61 +298,122 @@ const ContactForm = () => {
                     }))}
                     onChange={(selected) => {
                       setSelectedRegion(selected);
-                      setSelectedGovernorate(null);
+                      setSelectedCity(null);
+                      setSelectedArea(null);
+                      setValue("city", "");
+                      setValue("area", "");
                       field.onChange(selected?.label);
+                      if (selected?.value) fetchCities(selected.value);
                     }}
-                    value={selectedRegion}
+                    value={selectedRegion || (field.value ? { label: field.value, value: field.value } : null)}
                     placeholder={t("Select region")}
                     isClearable
                   />
                 )}
-              />{" "}
+              />
               {errors.region && (
                 <p className="text-red-600 text-sm mt-1">
-                  {" "}
-                  {errors.region.message}{" "}
+                  {errors.region.message}
                 </p>
-              )}{" "}
-            </div>{" "}
-            {/* Governorate */}{" "}
+              )}
+            </div>
+            {/* City */}
             <div>
-              {" "}
               <label className="block text-sm font-medium">
-                {" "}
-                {t("Governorate")}{" "}
-              </label>{" "}
+                {t("City")}
+              </label>
               <Controller
                 control={control}
-                name="governorate"
+                name="city"
                 render={({ field }) => (
                   <Select
                     {...field}
-                    options={governorates.map((g) => ({
-                      label: g.name,
-                      value: g.id,
+                    options={cities.map((c) => ({
+                      label: c.name,
+                      value: c.id,
                     }))}
-                    onChange={(selected) => {
-                      setSelectedGovernorate(selected);
+                    onChange={async (selected) => {
+                      setSelectedCity(selected);
+                      setSelectedArea(null);
+                      setValue("area", "");
                       field.onChange(selected?.label);
+                      if (selected?.value) {
+                        const fetchedAreas = await fetchAreas(selected.value);
+                        if (fetchedAreas?.length === 1) {
+                          const area = fetchedAreas[0];
+                          const areaOption = { label: area.name, value: area.id };
+                          setSelectedArea(areaOption);
+                          field.onChange(area.name); // ContactForm uses controller with 'area' name but value seems to be label string based on line 362: field.onChange(selected?.label)
+                          // Wait, line 362 in original file handles Area onChange.
+                          // line 325: field.onChange(selected?.label) - City field stores label?
+                          // ContactForm seems to store strings in form data based on usage.
+                          setValue("area", area.name);
+                        }
+                      }
                     }}
-                    value={selectedGovernorate}
+                    onInputChange={(inputValue) => {
+                      if (selectedRegion?.value) {
+                        fetchCities(selectedRegion.value, inputValue);
+                      }
+                    }}
+                    value={selectedCity || (field.value ? { label: field.value, value: field.value } : null)}
                     placeholder={
                       selectedRegion
-                        ? t("Select governorate")
+                        ? t("Select city")
                         : t("Select region first")
                     }
-                    isDisabled={!selectedRegion}
+                    isDisabled={!selectedRegion && !watch("region")}
                     isClearable
                   />
                 )}
-              />{" "}
-              {errors.governorate && (
+              />
+              {errors.city && (
                 <p className="text-red-600 text-sm mt-1">
-                  {" "}
-                  {errors.governorate.message}{" "}
+                  {errors.city.message}
                 </p>
-              )}{" "}
-            </div>{" "}
+              )}
+            </div>
+            {/* Area */}
+            <div>
+              <label className="block text-sm font-medium">
+                {t("Area")}
+              </label>
+              <Controller
+                control={control}
+                name="area"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={areas.map((a) => ({
+                      label: a.name,
+                      value: a.id,
+                    }))}
+                    onChange={(selected) => {
+                      setSelectedArea(selected);
+                      field.onChange(selected?.label);
+                    }}
+                    onInputChange={(inputValue) => {
+                      if (selectedCity?.value) {
+                        fetchAreas(selectedCity.value, inputValue);
+                      }
+                    }}
+                    value={selectedArea || (field.value ? { label: field.value, value: field.value } : null)}
+                    placeholder={
+                      selectedCity
+                        ? t("Select area")
+                        : t("Select city first")
+                    }
+                    isDisabled={!selectedCity && !watch("city")}
+                    isClearable
+                  />
+                )}
+              />
+              {errors.area && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.area.message}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Message */}

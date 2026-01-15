@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { FaTiktok, FaInstagram, FaFacebook, FaLinkedin, FaYoutube } from "react-icons/fa";
+import { FaTiktok, FaInstagram, FaFacebook, FaLinkedin } from "react-icons/fa";
 
 const footerData = [
   {
@@ -10,7 +10,7 @@ const footerData = [
       { text: "Latest deals", href: "/hotDeals" },
       { text: "Stores", href: "/marketplace" },
       { text: "Cool Auction", href: "/coolAuction" },
-      { text: "1 reserve", href: "/marketplace", price: "$" },
+      // { text: "1 reserve", href: "/marketplace", price: "$" },
     ],
   },
   {
@@ -131,32 +131,63 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-2">
-        <p>{t("Copyright 2025 © All rights reserved")}</p>
-        <div className="flex items-center gap-3">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiNwLg5q5AETDBbqhSaI7gdCYcWvicii6UCw&s"
-            className="h-5"
-            alt="Tabby"
-          />
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5KpGG8CYq9sJTMohKt_76EyG7VaYa9KyCg&s"
-            className="h-5"
-            alt="Paypal"
-          />
+        <p>
+          {t(`Copyright ${new Date().getFullYear()} © All rights reserved`)}
+        </p>
+        <div className="relative group flex flex-col items-center justify-center">
+          <div className="flex items-center gap-4 transition-all duration-300 group-hover:opacity-20 group-hover:blur-[1px]">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiNwLg5q5AETDBbqhSaI7gdCYcWvicii6UCw&s"
+              className="h-5 grayscale"
+              alt="Tabby"
+            />
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH5KpGG8CYq9sJTMohKt_76EyG7VaYa9KyCg&s"
+              className="h-5 grayscale"
+              alt="Tamara"
+            />
+            <img
+              src="/stc-pay.png"
+              className="h-8 grayscale w-auto object-contain"
+              alt="STC Pay"
+            />
+            <img
+              src="/smsa-express.png"
+              className="h-8 grayscale w-auto object-contain"
+              alt="SMSA Express"
+            />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <span className="bg-gray-900/90 text-white text-[10px] font-medium px-3 py-1.5 rounded-full shadow-lg backdrop-blur-[2px]">
+              {t("Coming Soon")}
+            </span>
+          </div>
         </div>
 
         <div className="flex gap-4 text-gray-500">
-          <Link href="/privacy">{t("Terms and Conditions")}</Link>
+          <Link href="/terms">{t("Terms and Conditions")}</Link>
           <Link href="/privacy">{t("Privacy Policy")}</Link>
         </div>
 
         {/* Social Icons */}
         <div className="flex gap-4 text-gray-500 mt-2 sm:mt-0">
-          <FaTiktok size={20} className="hover:text-black cursor-pointer bg-transparent" />
-          <FaInstagram size={20} className="hover:text-pink-600 cursor-pointer bg-transparent" />
-          <FaFacebook size={20} className="hover:text-blue-600 cursor-pointer bg-transparent" />
-          <FaLinkedin size={20} className="hover:text-blue-700 cursor-pointer bg-transparent" />
-          <FaYoutube size={20} className="hover:text-red-600 cursor-pointer bg-transparent" />
+          <a href="https://www.tiktok.com/@user27423812387656" target="_blank" rel="noopener noreferrer">
+            <FaTiktok size={20} className="hover:text-black cursor-pointer bg-transparent" />
+          </a>
+          <a href="https://www.instagram.com/ma3rood_/" target="_blank" rel="noopener noreferrer">
+            <FaInstagram size={20} className="hover:text-pink-600 cursor-pointer bg-transparent" />
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61586486150903" target="_blank" rel="noopener noreferrer">
+            <FaFacebook size={20} className="hover:text-blue-600 cursor-pointer bg-transparent" />
+          </a>
+          <a href="https://www.linkedin.com/company/ma3rood/about/" target="_blank" rel="noopener noreferrer">
+            <FaLinkedin size={20} className="hover:text-blue-700 cursor-pointer bg-transparent" />
+          </a>
+          <a href="https://x.com/ma3rood" target="_blank" rel="noopener noreferrer">
+            <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="20" width="20" xmlns="http://www.w3.org/2000/svg" className="hover:text-black cursor-pointer bg-transparent">
+              <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
+            </svg>
+          </a>
         </div>
 
       </div>

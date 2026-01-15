@@ -88,7 +88,8 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
     odometer_min: "",
     odometer_max: "",
     search: "",
-    governorate: "",
+    city: "",
+    area: "",
     region: "",
     category_id: null,
   });
@@ -98,14 +99,34 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
   const [models, setModels] = useState([]);
   const [yearOptions, setYearOptions] = useState([]);
   const [vehicleType, setVehicleType] = useState("cars");
-  const { locations, getAllLocations } = useLocationStore();
+  const {
+    locations,
+    getAllLocations,
+    cities: storeCities,
+    areas: storeAreas,
+    fetchCities,
+    fetchAreas,
+    isLoading: isLocationLoading,
+  } = useLocationStore();
+
   const country = locations.find((c) => c.id == 1);
   const regions = country?.regions || [];
 
-  const governorates = useMemo(() => {
-    const region = regions.find((r) => r.name === filters.region);
-    return region?.governorates || [];
-  }, [regions, filters.region]);
+  // Fetch Cities when Region changes
+  useEffect(() => {
+    const selectedRegion = regions.find((r) => r.name === filters.region);
+    if (selectedRegion) {
+      fetchCities(selectedRegion.id);
+    }
+  }, [filters.region, regions]);
+
+  // Fetch Areas when City changes
+  useEffect(() => {
+    const selectedCity = storeCities.find((c) => c.name === filters.city);
+    if (selectedCity) {
+      fetchAreas(selectedCity.id);
+    }
+  }, [filters.city, storeCities]);
 
   // 🎯 Load vehicle data from JSON
   useEffect(() => {
@@ -259,8 +280,9 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
         min_price: filters?.price_min,
         search: filters?.search,
         regions_id: regions.find((r) => r.name === filters.region)?.id || null,
-        governorates_id:
-          governorates.find((g) => g.name === filters.governorate)?.id || null,
+        cities_id: storeCities.find((c) => c.name === filters.city)?.id || null,
+        areas_id: storeAreas.find((a) => a.name === filters.area)?.id || null,
+
         category_id: filters?.category_id
           ? filters.category_id
           : activeTab
@@ -433,7 +455,8 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
       odometer_min: "",
       odometer_max: "",
       search: "",
-      governorate: "",
+      city: "",
+      area: "",
       region: "",
       category_id: null,
     });
@@ -455,6 +478,14 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
       "&:hover": { borderColor: "#22c55e" },
     }),
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  };
+
+  const priceSelectStyles = {
+    ...customStyles,
+    control: (base, state) => ({
+      ...customStyles.control(base, state),
+      paddingLeft: '28px', // Space for currency symbol
+    }),
   };
 
   return (
@@ -539,24 +570,12 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
             {/* Initial Filter Grid */}
             {activeTab !== "allcat" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-                
+
                 {/* Condition */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t("Condition")}
                   </label>
-                  {/* <select
-                    value={filters.condition}
-                    onChange={(e) => handleFilterChange('condition', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">{t("All Conditions")}</option>
-                    {motorSearchFilters.conditions.map(condition => (
-                      <option key={condition} value={condition} className="capitalize">
-                        {condition}
-                      </option>
-                    ))}
-                  </select> */}
                   <Select
                     instanceId="condition-select"
                     options={conditionOptions}
@@ -578,6 +597,174 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
                     }
                   />
                 </div>
+
+                {/* Price Range */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Price Range")}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                        <span className="text-gray-500 price">$</span>
+                      </div>
+                      <Select
+                        instanceId="price-min-select"
+                        value={
+                          filters.price_min
+                            ? { value: filters.price_min, label: filters.price_min.toLocaleString() }
+                            : null
+                        }
+                        onChange={(selected) =>
+                          handleFilterChange("price_min", selected ? selected.value : "")
+                        }
+                        options={[0, 500, 1000, 5000, 10000, 20000, 50000].map(
+                          (price) => ({
+                            value: price,
+                            label: price.toLocaleString(),
+                          })
+                        )}
+                        placeholder={t("Min")}
+                        styles={priceSelectStyles}
+                        menuPortalTarget={
+                          typeof document !== "undefined" ? document.body : null
+                        }
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                        <span className="text-gray-500 price">$</span>
+                      </div>
+                      <Select
+                        instanceId="price-max-select"
+                        value={
+                          filters.price_max
+                            ? { value: filters.price_max, label: filters.price_max.toLocaleString() }
+                            : null
+                        }
+                        onChange={(selected) =>
+                          handleFilterChange("price_max", selected ? selected.value : "")
+                        }
+                        options={[1000, 5000, 10000, 20000, 50000, 100000].map(
+                          (price) => ({
+                            value: price,
+                            label: price.toLocaleString(),
+                          })
+                        )}
+                        placeholder={t("Max")}
+                        styles={priceSelectStyles}
+                        menuPortalTarget={
+                          typeof document !== "undefined" ? document.body : null
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fuel Type */}
+                {motorSearchFilters.categoryOptions[
+                  allowedTabs.find(
+                    (t) => t.key.toLowerCase() === activeTab.toLowerCase()
+                  )?.name || "Cars"
+                ]?.fuelTypes?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t("Fuel Type")}{" "}
+                      </label>
+                      <Select
+                        instanceId="fuel-type-select"
+                        options={(
+                          motorSearchFilters.categoryOptions[
+                            allowedTabs.find(
+                              (t) =>
+                                t.key.toLowerCase() === activeTab.toLowerCase()
+                            )?.name || "Cars"
+                          ]?.fuelTypes || []
+                        ).map((fuel) => ({ value: fuel, label: fuel }))}
+                        value={
+                          filters.fuel_type
+                            ? { value: filters.fuel_type, label: filters.fuel_type }
+                            : null
+                        }
+                        onChange={(selected) =>
+                          handleFilterChange("fuel_type", selected ? selected.value : "")
+                        }
+                        placeholder={t("All Fuel Types")}
+                        styles={customStyles}
+                        menuPortalTarget={
+                          typeof document !== "undefined" ? document.body : null
+                        }
+                      />
+                    </div>
+                  )}
+
+                {/* Transmission */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Transmission")}
+                  </label>
+                  <Select
+                    instanceId="transmission-select"
+                    options={motorSearchFilters.transmissions.map((trans) => ({
+                      value: trans,
+                      label: trans,
+                    }))}
+                    value={
+                      filters.transmission
+                        ? {
+                          value: filters.transmission,
+                          label: filters.transmission,
+                        }
+                        : null
+                    }
+                    onChange={(selected) =>
+                      handleFilterChange("transmission", selected ? selected.value : "")
+                    }
+                    placeholder={t("All Transmissions")}
+                    styles={customStyles}
+                    menuPortalTarget={
+                      typeof document !== "undefined" ? document.body : null
+                    }
+                  />
+                </div>
+
+                {/* Body Style */}
+                {motorSearchFilters.categoryOptions[
+                  allowedTabs.find(
+                    (t) => t.key.toLowerCase() === activeTab.toLowerCase()
+                  )?.name || "Cars"
+                ]?.bodyStyles?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t("Body Style")}
+                      </label>
+                      <Select
+                        instanceId="body-style-select"
+                        options={(
+                          motorSearchFilters.categoryOptions[
+                            allowedTabs.find(
+                              (t) =>
+                                t.key.toLowerCase() === activeTab.toLowerCase()
+                            )?.name || "Cars"
+                          ]?.bodyStyles || []
+                        ).map((style) => ({ value: style, label: style }))}
+                        value={
+                          filters.body_style
+                            ? { value: filters.body_style, label: filters.body_style }
+                            : null
+                        }
+                        onChange={(selected) =>
+                          handleFilterChange("body_style", selected ? selected.value : "")
+                        }
+                        placeholder={t("All Body Styles")}
+                        styles={customStyles}
+                        menuPortalTarget={
+                          typeof document !== "undefined" ? document.body : null
+                        }
+                      />
+                    </div>
+                  )}
 
                 {/* Make */}
                 <div>
@@ -689,139 +876,7 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
                   </div>
                 </div>
 
-                {/* Price Range */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("Price Range")}
-                    {/* <span className="price">$</span> */}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <select
-                      value={filters.price_min}
-                      onChange={(e) =>
-                        handleFilterChange("price_min", e.target.value)
-                      }
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                      <option value="">{t("Min")}</option>
-                      {[0, 500, 1000, 5000, 10000, 20000, 50000].map(
-                        (price) => (
-                          <option key={price} value={price}>
-                            {price.toLocaleString()}
-                          </option>
-                        )
-                      )}
-                    </select>
-
-                    <select
-                      value={filters.price_max}
-                      onChange={(e) =>
-                        handleFilterChange("price_max", e.target.value)
-                      }
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                      <option value="">{t("Max")}</option>
-                      {[1000, 5000, 10000, 20000, 50000, 100000].map(
-                        (price) => (
-                          <option key={price} value={price}>
-                            {price.toLocaleString()}
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Fuel Type */}
-                {motorSearchFilters.categoryOptions[
-                  allowedTabs.find(
-                    (t) => t.key.toLowerCase() === activeTab.toLowerCase()
-                  )?.name || "Cars"
-                ]?.fuelTypes?.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t("Fuel Type")}{" "}
-                      </label>
-                      <select
-                        value={filters.fuel_type}
-                        onChange={(e) =>
-                          handleFilterChange("fuel_type", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        <option value="">{t("All Fuel Types")}</option>
-                        {(
-                          motorSearchFilters.categoryOptions[
-                            allowedTabs.find(
-                              (t) =>
-                                t.key.toLowerCase() === activeTab.toLowerCase()
-                            )?.name || "Cars"
-                          ]?.fuelTypes || []
-                        ).map((fuel) => (
-                          <option key={fuel} value={fuel}>
-                            {fuel}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                {/* Transmission */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t("Transmission")}
-                  </label>
-                  <select
-                    value={filters.transmission}
-                    onChange={(e) =>
-                      handleFilterChange("transmission", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">{t("All Transmissions")}</option>
-                    {motorSearchFilters.transmissions.map((trans) => (
-                      <option key={trans} value={trans}>
-                        {trans}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Body Style */}
-                {motorSearchFilters.categoryOptions[
-                  allowedTabs.find(
-                    (t) => t.key.toLowerCase() === activeTab.toLowerCase()
-                  )?.name || "Cars"
-                ]?.bodyStyles?.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t("Body Style")}
-                      </label>
-                      <select
-                        value={filters.body_style}
-                        onChange={(e) =>
-                          handleFilterChange("body_style", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        <option value="">{t("All Body Styles")}</option>
-                        {(
-                          motorSearchFilters.categoryOptions[
-                            allowedTabs.find(
-                              (t) =>
-                                t.key.toLowerCase() === activeTab.toLowerCase()
-                            )?.name || "Cars"
-                          ]?.bodyStyles || []
-                        ).map((style) => (
-                          <option key={style} value={style}>
-                            {style}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-<div>
                   <label className="block mb-1 text-sm font-medium">
                     {t("Region")}
                   </label>
@@ -838,8 +893,8 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
                       setFilters((prev) => ({
                         ...prev,
                         region: selected?.value || "",
-                        governorate: "",
                         city: "",
+                        area: "",
                       }))
                     }
                     options={regions.map((r) => ({
@@ -856,43 +911,82 @@ const MotorsClient = ({ category, initialProducts, pagination }) => {
                     }
                   />
                 </div>
+
                 <div>
                   <label className="block mb-1 text-sm font-medium">
-                    {t("Governorate")}
+                    {t("City")}
                   </label>
-                  {/* {cities.length > 0 && ( */}
                   <Select
-                    instanceId="governorate-select"
-                    name="governorate"
+                    instanceId="city-select"
+                    name="city"
                     value={
-                      filters.governorate
-                        ? {
-                          value: filters.governorate,
-                          label: filters.governorate,
-                        }
+                      filters.city
+                        ? { value: filters.city, label: filters.city }
                         : null
                     }
                     onChange={(selected) =>
                       setFilters((prev) => ({
                         ...prev,
-                        governorate: selected?.value || "",
-                        city: "",
+                        city: selected?.value || "",
+                        area: "",
                       }))
                     }
-                    options={governorates.map((g) => ({
-                      value: g.name,
-                      label: g.name,
+                    options={storeCities.map((c) => ({
+                      value: c.name,
+                      label: c.name,
                     }))}
-                    placeholder={t("Select a Governorate")}
+                    placeholder={t("Select a City")}
                     className="text-sm"
                     classNamePrefix="react-select"
                     isClearable
+                    isLoading={isLocationLoading}
+                    isDisabled={!filters.region}
                     styles={customStyles}
                     menuPortalTarget={
                       typeof document !== "undefined" ? document.body : null
                     }
                   />
                 </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    {t("Area")}
+                  </label>
+                  <Select
+                    instanceId="area-select"
+                    name="area"
+                    value={
+                      filters.area
+                        ? {
+                          value: filters.area,
+                          label: filters.area,
+                        }
+                        : null
+                    }
+                    onChange={(selected) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        area: selected?.value || "",
+                      }))
+                    }
+                    options={storeAreas.map((a) => ({
+                      value: a.name,
+                      label: a.name,
+                    }))}
+                    placeholder={t("Select an Area")}
+                    className="text-sm"
+                    classNamePrefix="react-select"
+                    isClearable
+                    isLoading={isLocationLoading}
+                    isDisabled={!filters.city}
+                    styles={customStyles}
+                    menuPortalTarget={
+                      typeof document !== "undefined" ? document.body : null
+                    }
+                  />
+                </div>
+
+
               </div>
             )}
             {/* ✅ BOTTOM Search Box for cars */}

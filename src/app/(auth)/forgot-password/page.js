@@ -54,7 +54,7 @@ function ForgotPasswordContent() {
       console.error("Forgot Password Error:", err);
       setError(
         err.response?.data?.message ||
-          "Something went wrong. Please try again."
+        "Something went wrong. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -64,12 +64,12 @@ function ForgotPasswordContent() {
   return (
     <div className="flex flex-col md:flex-row w-full h-screen">
       {/* Language Switcher */}
-      <div>
+      {/* <div>
         <LanguageSwitcher
           className="absolute top-4 left-2"
           buttonClassName="bg-green-600 text-green"
         />
-      </div>
+      </div> */}
 
       {/* LEFT: Form Section */}
       <div className="w-full md:w-[60%] flex flex-col justify-center items-center px-4 py-8 bg-white min-h-screen md:min-h-full">
@@ -158,11 +158,10 @@ function ForgotPasswordContent() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full py-2 px-4 cursor-pointer border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                    isLoading
+                  className={`w-full py-2 px-4 cursor-pointer border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${isLoading
                       ? "bg-green-400 cursor-not-allowed"
                       : "bg-green-600 hover:bg-green-700"
-                  }`}
+                    }`}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">

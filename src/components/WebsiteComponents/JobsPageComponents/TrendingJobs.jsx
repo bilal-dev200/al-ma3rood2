@@ -22,7 +22,7 @@ export default function TrendingJobs({ jobListings }) {
               key={index}
               title={job.title}
               company={job.company_name}
-              location={`${job.governorate?.name},${job.region?.name}` || "Unknown"}
+              location={[job.area?.name || job.governorate?.name, job.city?.name, job.region?.name].filter(Boolean).join(", ") || "Unknown"}
               date={new Date(job.created_at).toLocaleDateString()}
               description={job.short_summary}
               banner={job.banner}

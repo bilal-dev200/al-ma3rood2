@@ -49,12 +49,12 @@ function OffersModal({ offers = [], open, onClose, onAccept, onDecline }) {
                         const seconds = Math.floor((diffMs / 1000) % 60);
                         return expiresAt
                           ? `Expires in ${hours
-                              .toString()
-                              .padStart(2, "0")}:${minutes
+                            .toString()
+                            .padStart(2, "0")}:${minutes
                               .toString()
                               .padStart(2, "0")}:${seconds
-                              .toString()
-                              .padStart(2, "0")}`
+                                .toString()
+                                .padStart(2, "0")}`
                           : "Expires in: -";
                       }
                       return getTimeLeft(offer.expires_at);
@@ -278,11 +278,54 @@ export default function ListingCard({ listing, actions }) {
           )}
         </div>
         <div className="text-right sm:text-left mt-2 sm:mt-0">
-          <span className="text-xs text-gray-500 block">{t("Buy Now")}</span>
-          <span className="font-semibold text-gray-800 text-base">
-            <span className="price">$</span>
-            <span className="ml-1">{listing.price}</span>
-          </span>
+          {(() => {
+            const buyNowPrice = Number(String(listing.price || "0").replace(/,/g, ""));
+            const startPrice = Number(String(listing.start_price || "0").replace(/,/g, ""));
+            const hasBids = listing.bids && listing.bids.length > 0;
+            const currentBid = hasBids ? listing.bids[0].amount : "0.00";
+
+            if (buyNowPrice > 0 && !hasBids) {
+              return (
+                <>
+                  <span className="text-xs text-gray-500 block">{t("Buy Now")}</span>
+                  <span className="font-semibold text-gray-800 text-base">
+                    <span className="price">$</span>
+                    <span className="ml-1">{listing.price}</span>
+                  </span>
+                </>
+              );
+            } else if (hasBids) {
+              return (
+                <>
+                  <span className="text-xs text-gray-500 block">{t("Current Bid")}</span>
+                  <span className="font-semibold text-gray-800 text-base">
+                    <span className="price">$</span>
+                    <span className="ml-1">{currentBid}</span>
+                  </span>
+                </>
+              );
+            } else if (startPrice > 0) {
+              return (
+                <>
+                  <span className="text-xs text-gray-500 block">{t("Starting From")}</span>
+                  <span className="font-semibold text-gray-800 text-base">
+                    <span className="price">$</span>
+                    <span className="ml-1">{listing.start_price}</span>
+                  </span>
+                </>
+              );
+            } else {
+              // Fallback if no price is available or both are 0 (shouldn't happen ideally for valid listings)
+              return (
+                <>
+                  <span className="text-xs text-gray-500 block">{t("Price")}</span>
+                  <span className="font-semibold text-gray-800 text-base">
+                    <span className="ml-1">{t("N/A")}</span>
+                  </span>
+                </>
+              );
+            }
+          })()}
         </div>
       </div>
 

@@ -10,61 +10,66 @@ function ServiceCategories({
   isLoading = false,
   error = null,
   description,
+  categories,
 }) {
   const { setSelectedCategory } = useCategoryStore();
   const { t } = useTranslation();
   const router = useRouter();
 
-  // ✅ Static categories (SSR-safe)
-  const categories = {
-    data: [
-      {
-        id: 6421,
-        parent_id: null,
-        name: "Domestic services",
-        slug: "Services/Domestic-services",
-        icon: "/icons/service/domestic-services.svg",
-        image_path: "/icons/service/domestic-services.png",
-        total_listing_count: 0,
-      },
-      {
-        id: 6432,
-        parent_id: null,
-        name: "Events & entertainment",
-        slug: "Services/Events-entertainment",
-        icon: "/icons/service/events-entertainment.svg",
-        image_path: "/icons/service/events-entertainment.png",
-        total_listing_count: 0,
-      },
-      {
-        id: 6439,
-        parent_id: null,
-        name: "Health & wellbeing",
-        slug: "Services/Health-wellbeing",
-        icon: "/icons/service/health-wellbeing.svg",
-        image_path: "/icons/service/health-wellbeing.png",
-        total_listing_count: 0,
-      },
-      {
-        id: 6457,
-        parent_id: null,
-        name: "Other services",
-        slug: "Services/Other-services",
-        icon: "/icons/service/other-services.svg",
-        image_path: "/icons/service/other-services.png",
-        total_listing_count: 0,
-      },
-      {
-        id: 6446,
-        parent_id: null,
-        name: "Trades",
-        slug: "Services/Trades",
-        icon: "/icons/service/trades.svg",
-        image_path: "/icons/service/trades.png",
-        total_listing_count: 0,
-      },
-    ],
-  };
+  // ✅ Static categories (SSR-safe) - Fallback
+  // const staticCategories = {
+  //   data: [
+  //     {
+  //       id: 6421,
+  //       parent_id: null,
+  //       name: "Domestic services",
+  //       slug: "Services/Domestic-services",
+  //       icon: "/icons/service/domestic-services.svg",
+  //       image_path: "/icons/service/domestic-services.png",
+  //       total_listing_count: 0,
+  //     },
+  //     {
+  //       id: 6432,
+  //       parent_id: null,
+  //       name: "Events & entertainment",
+  //       slug: "Services/Events-entertainment",
+  //       icon: "/icons/service/events-entertainment.svg",
+  //       image_path: "/icons/service/events-entertainment.png",
+  //       total_listing_count: 0,
+  //     },
+  //     {
+  //       id: 6439,
+  //       parent_id: null,
+  //       name: "Health & wellbeing",
+  //       slug: "Services/Health-wellbeing",
+  //       icon: "/icons/service/health-wellbeing.svg",
+  //       image_path: "/icons/service/health-wellbeing.png",
+  //       total_listing_count: 0,
+  //     },
+  //     {
+  //       id: 6457,
+  //       parent_id: null,
+  //       name: "Other services",
+  //       slug: "Services/Other-services",
+  //       icon: "/icons/service/other-services.svg",
+  //       image_path: "/icons/service/other-services.png",
+  //       total_listing_count: 0,
+  //     },
+  //     {
+  //       id: 6446,
+  //       parent_id: null,
+  //       name: "Trades",
+  //       slug: "Services/Trades",
+  //       icon: "/icons/service/trades.svg",
+  //       image_path: "/icons/service/trades.png",
+  //       total_listing_count: 0,
+  //     },
+  //   ],
+  // };
+
+  // const categoriesToDisplay = categories && categories.data && categories.data.length > 0
+  //   ? categories
+  //   : (categories && Array.isArray(categories) && categories.length > 0 ? { data: categories } : staticCategories);
 
   if (isLoading) {
     return <div className="p-4 text-center">Loading...</div>;
@@ -116,12 +121,20 @@ function ServiceCategories({
                 onClick={() => handleClick(cat)}
                 className="w-[22%] flex flex-col items-center justify-center p-2 bg-white rounded-lg hover:shadow cursor-pointer transition"
               >
-                <img
-                  src={cat.image_path}
+                {!cat.parent_id && (cat.image_path || cat.icon) ? (<img
+                  src={`${process.env.NEXT_PUBLIC_BASE_IMAGE_URL_LIVE_MA3ROOD}${cat.icon}` || `${process.env.NEXT_PUBLIC_BASE_IMAGE_URL_LIVE_MA3ROOD}${cat.image_path}`}
                   alt={cat.name}
-                  className="w-10 h-10 mb-2 object-cover"
-                />
-                <p className="text-xs text-center font-medium">{cat.name}</p>
+                  className="w-10 h-10 mb-2 object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                  }}
+                />) : null}
+                <p
+                  className="text-xs text-center font-medium line-clamp-2"
+                  suppressHydrationWarning
+                >
+                  {cat.name}
+                </p>
               </div>
             ))}
           </div>
@@ -129,18 +142,28 @@ function ServiceCategories({
 
         {/* ✅ Desktop grid */}
         <div className="hidden sm:grid grid-cols-6 lg:grid-cols-8 gap-4">
-          {categories.data.map((cat) => (
+          {categories?.data?.map((cat) => (
             <div
               key={cat.id}
               onClick={() => handleClick(cat)}
               className="flex flex-col items-center justify-center p-3 bg-white rounded-lg shadow hover:shadow-md cursor-pointer transition"
             >
-              <img
-                src={cat.image_path}
-                alt={cat.name}
-                className="w-10 h-10 mb-2"
-              />
-              <p className="text-xs text-center font-medium">{cat.name}</p>
+              {!cat.parent_id && (cat.icon || cat.image_path) ? (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_BASE_IMAGE_URL_LIVE_MA3ROOD}${cat.icon}` || `${process.env.NEXT_PUBLIC_BASE_IMAGE_URL_LIVE_MA3ROOD}${cat.image_path}`}
+                  alt={cat.name}
+                  className="w-10 h-10 mb-2 object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/placeholder.svg"
+                  }}
+                />) : null}
+              <p
+                className="text-xs text-center font-medium line-clamp-2"
+                suppressHydrationWarning
+              >
+                {`${cat.name} (${cat.total_listing_count || 0})`}
+              </p>
             </div>
           ))}
         </div>

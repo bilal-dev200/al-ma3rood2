@@ -33,7 +33,8 @@ const jobListingSchema = z
       .refine((val) => val !== null && val > 0, "Job Category is required"),
     subcategory_id: z.number().int().optional().nullable(),
     region_id: z.string().min(1, "Region is required"),
-    governorate_id: z.string().min(1, "Governorate is required"),
+    city_id: z.string().min(1, "City is required"),
+    area_id: z.string().min(1, "Area is required"),
 
     company_name: z.string().min(2, "Company Name is required"),
     work_type: z.enum(["full_time", "part_time", "contract", "freelance", "remote"], {
@@ -96,7 +97,7 @@ const jobSteps = [
     title: "Basic Info & Pay",
     key: "basic-info",
     fields: [
-      "title", "category_id", "region_id", "governorate_id",
+      "title", "category_id", "region_id", "city_id", "area_id",
       "company_name", "work_type", "minimum_pay_type",
       "minimum_pay_amount", "package_id", "deadline",
     ]
@@ -138,7 +139,8 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
       category_id: null,
       subcategory_id: null,
       region_id: "",
-      governorate_id: "",
+      city_id: "",
+      area_id: "",
       company_name: "",
       work_type: "full_time",
       minimum_pay_type: "hourly",
@@ -174,15 +176,36 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
 
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { locations, getAllLocations } = useLocationStore();
-  const country = locations.find((c) => c.id == 1); // Saudi Arabia
-  const regions = country?.regions || [];
 
-  const governorates =
-    regions.find((r) => r?.name === watch("region_id"))?.governorates || [];
+  const {
+    regions, cities, areas,
+    fetchRegions, fetchCities, fetchAreas,
+    isLoading: isLocationLoading
+  } = useLocationStore();
 
-  const cities =
-    governorates.find((g) => g?.name === watch("governorate_id"))?.cities || [];
+  useEffect(() => {
+    fetchRegions();
+  }, []);
+
+  // Watch location fields to trigger fetches if needed, but primarily component will handle it via onChange
+  // However, derived lists might be needed if we stick to "find by name" approach or if we just want them available
+
+  const watchedRegion = watch("region_id");
+  const watchedCity = watch("city_id");
+
+  useEffect(() => {
+    if (watchedRegion) {
+      const r = regions.find(x => x.name === watchedRegion);
+      if (r) fetchCities(r.id);
+    }
+  }, [watchedRegion, regions, fetchCities]);
+
+  useEffect(() => {
+    if (watchedCity) {
+      const c = cities.find(x => x.name === watchedCity);
+      if (c) fetchAreas(c.id);
+    }
+  }, [watchedCity, cities, fetchAreas]);
 
   const router = useRouter();
   const { t } = useTranslation();
@@ -211,16 +234,27 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
     if (initialValues.region && initialValues.region.name) {
       copy.region_id = initialValues.region.name;
     } else {
-      // If the object isn't present, set to empty string for React Hook Form
       copy.region_id = "";
     }
 
-    // Use the nested 'governorate' object to get the name for the governorate_id field
-    if (initialValues.governorate && initialValues.governorate.name) {
-      copy.governorate_id = initialValues.governorate.name;
+    if (initialValues.city && initialValues.city.name) {
+      copy.city_id = initialValues.city.name;
     } else {
-      copy.governorate_id = "";
+      copy.city_id = "";
     }
+
+    if (initialValues.area && initialValues.area.name) {
+      copy.area_id = initialValues.area.name;
+    } else {
+      copy.area_id = "";
+    }
+
+    // Legacy governorate cleanup
+    // if (initialValues.governorate && initialValues.governorate.name) {
+    //   copy.governorate_id = initialValues.governorate.name;
+    // } else {
+    //   copy.governorate_id = "";
+    // }
     if (Array.isArray(initialValues.key_points)) {
       // Join the array elements using a newline character to populate the textarea
       copy.key_points = initialValues.key_points.join('\n');
@@ -256,8 +290,8 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
 
 
   useEffect(() => {
-    getAllLocations();
-  }, [getAllLocations]);
+    fetchRegions();
+  }, []);
 
   useEffect(() => {
     if (Object.keys(normalizedInitialValues).length > 0) {
@@ -422,7 +456,9 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
       // IDs 
       if (data.category_id) formData.append("category_id", data.category_id.toString());
       if (data.region_id) formData.append("region_id", regions.find((r) => r.name === data.region_id)?.id || null);
-      if (data.governorate_id) formData.append("governorate_id", governorates.find((g) => g.name === data.governorate_id)?.id || null,);
+      if (data.city_id) formData.append("city_id", cities.find((c) => c.name === data.city_id)?.id || null);
+      if (data.area_id) formData.append("area_id", areas.find((a) => a.name === data.area_id)?.id || null);
+
       if (data.package_id) formData.append("package_id", data.package_id.toString());
       if (data.deadline) formData.append("deadline", data.deadline);
 
@@ -574,7 +610,7 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
             {errors.work_type && <p className="text-red-500 text-sm mt-1">{errors.work_type.message}</p>}
           </div>
 
-          {/* Region ID (Placeholder) */}
+          {/* Region ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Region*</label>
             <Controller
@@ -583,12 +619,17 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
               render={({ field }) => (
                 <Select
                   {...field}
+                  instanceId="region-select"
                   value={
                     field.value
                       ? { value: field.value, label: field.value }
                       : null
                   }
-                  onChange={(selected) => field.onChange(selected?.value || "")}
+                  onChange={(selected) => {
+                    field.onChange(selected?.value || "");
+                    setValue("city_id", "");
+                    setValue("area_id", "");
+                  }}
                   options={regions.map((g) => ({
                     value: g?.name,
                     label: g?.name,
@@ -597,39 +638,87 @@ const JobListingForm = ({ initialValues, mode = "create" }) => {
                   className="text-sm w-full"
                   classNamePrefix="react-select"
                   isClearable
+                  isLoading={isLocationLoading}
                 />
               )}
             />
             {errors.region_id && <p className="text-red-500 text-sm mt-1">{errors.region_id.message}</p>}
           </div>
 
-          {/* Governorate ID (Placeholder) */}
+          {/* City ID */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Governorate*</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">City*</label>
             <Controller
-              name="governorate_id"
+              name="city_id"
               control={control}
               render={({ field }) => (
                 <Select
                   {...field}
+                  instanceId="city-select"
+                  value={
+                    field.value
+                      ? { value: field.value, label: field.value }
+                      : null
+                  }
+                  onChange={async (selected) => {
+                    field.onChange(selected?.value || "");
+                    setValue("area_id", "");
+                    const city = cities.find(c => c.name === selected?.value);
+                    if (city?.id) {
+                      const fetchedAreas = await fetchAreas(city.id);
+                      if (fetchedAreas?.length === 1) {
+                        setValue("area_id", fetchedAreas[0].name);
+                      }
+                    }
+                  }}
+
+                  options={cities.map((g) => ({
+                    value: g?.name,
+                    label: g?.name,
+                  }))}
+                  placeholder={t("Select a City")}
+                  className="text-sm"
+                  classNamePrefix="react-select"
+                  isDisabled={!watch("region_id")}
+                  isClearable
+                  isLoading={isLocationLoading}
+                />
+              )}
+            />
+            {errors.city_id && <p className="text-red-500 text-sm mt-1">{errors.city_id.message}</p>}
+          </div>
+
+          {/* Area ID */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Area*</label>
+            <Controller
+              name="area_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  instanceId="area-select"
                   value={
                     field.value
                       ? { value: field.value, label: field.value }
                       : null
                   }
                   onChange={(selected) => field.onChange(selected?.value || "")}
-                  options={governorates.map((g) => ({
+
+                  options={areas.map((g) => ({
                     value: g?.name,
                     label: g?.name,
                   }))}
-                  placeholder={t("Select a Governorate")}
+                  placeholder={t("Select an Area")}
                   className="text-sm"
                   classNamePrefix="react-select"
+                  isDisabled={!watch("city_id")}
                   isClearable
+                  isLoading={isLocationLoading}
                 />
               )}
             />
-            {errors.governorate_id && <p className="text-red-500 text-sm mt-1">{errors.governorate_id.message}</p>}
+            {errors.area_id && <p className="text-red-500 text-sm mt-1">{errors.area_id.message}</p>}
           </div>
 
           {/* Minimum Pay Amount */}

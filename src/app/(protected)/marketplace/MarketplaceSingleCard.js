@@ -63,7 +63,9 @@ const MarketplaceSingleCard = ({ card, className = "", viewMode = "grid" }) => {
                                         {`${card?.creator?.address_1
                                             ? `${card?.creator?.address_1}, `
                                             : ""
-                                            } ${card?.creator?.governorates?.name}, ${card?.creator?.regions?.name
+                                            } ${card?.creator?.areas?.name ? `${card?.creator?.areas?.name}, ` : ""
+                                            }${card?.creator?.cities?.name || card?.creator?.governorates?.name || ""
+                                            }, ${card?.creator?.regions?.name
                                             }`}
                                     </div>
                                 </div>
@@ -188,7 +190,9 @@ const MarketplaceSingleCard = ({ card, className = "", viewMode = "grid" }) => {
                                 </div>
                                 <div className="font-bold text-xs">
                                     {`${card?.creator?.address_1 ? `${card?.creator?.address_1}, ` : ""
-                                        } ${card?.creator?.governorates?.name || ''}, ${card?.creator?.regions?.name || ''
+                                        } ${card?.creator?.areas?.name ? `${card?.creator?.areas?.name}, ` : ""
+                                        }${card?.creator?.cities?.name || card?.creator?.governorates?.name || ''
+                                        }, ${card?.creator?.regions?.name || ''
                                         }`}
                                 </div>
                             </>

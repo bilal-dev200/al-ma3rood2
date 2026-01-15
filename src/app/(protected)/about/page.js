@@ -33,7 +33,7 @@ const page = () => {
           <h2 className="text-3xl font-bold mb-4">{t("Who We Are")}</h2>
           <p className="leading-relaxed">
             {t(
-              "Ma3rood is Saudi Arabia’s modern, mobile-first marketplace designed to connect buyers and sellers with ease, trust, and efficiency. Whether you’re searching for a family car, a new home, a job opportunity, or unique household items, Ma3rood brings it all together in one simple, secure platform."
+              "Ma3rood is Saudi Arabia’s modern, marketplace designed to connect buyers and sellers with ease, trust, and efficiency. Whether you’re searching for a family car, a new home, a job opportunity, or unique household items, Ma3rood brings it all together in one simple, secure platform."
             )}
           </p>
           <p className="mt-4 leading-relaxed">
@@ -153,9 +153,9 @@ const page = () => {
           )}
         </blockquote>
       </section>
-      <div className="border-t">
+      {/* <div className="border-t">
         <LatestNews />
-      </div>
+      </div> */}
     </div>
   );
 };

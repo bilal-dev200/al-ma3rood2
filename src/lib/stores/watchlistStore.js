@@ -45,7 +45,8 @@ export const useWatchlistStore = create(
     }),
     {
       name: 'watchlist-storage',
-      getStorage: () => localStorage,
+      skipHydration: true,
+      getStorage: () => (typeof window !== "undefined" ? localStorage : undefined),
     }
   )
 ); 

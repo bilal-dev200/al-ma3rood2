@@ -17,6 +17,7 @@ import Breadcrumbs from "@/components/WebsiteComponents/ReuseableComponenets/Bre
 import { toast } from "react-toastify";
 import { RxCross2 } from "react-icons/rx";
 import { formatSaudiTime } from "@/lib/common/format";
+import Link from "next/link";
 
 function BidHistoryModal({ bids, open, onClose }) {
   const { t } = useTranslation();
@@ -519,6 +520,34 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
 
   console.log("product", product);
 
+const [touchStart, setTouchStart] = useState(null);
+const [touchEnd, setTouchEnd] = useState(null);
+
+const handleTouchStart = (e) => {
+  setTouchStart(e.targetTouches[0].clientX);
+};
+
+const handleTouchMove = (e) => {
+  setTouchEnd(e.targetTouches[0].clientX);
+};
+
+const handleTouchEnd = () => {
+  if (!touchStart || !touchEnd) return;
+  const distance = touchStart - touchEnd;
+  const threshold = 50; // min distance for swipe
+  if (distance > threshold) {
+    // swiped left → next image
+    setCarouselIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  } else if (distance < -threshold) {
+    // swiped right → previous image
+    setCarouselIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  }
+  setTouchStart(null);
+  setTouchEnd(null);
+};
+
+
+
   // Handler to refresh product data (bids, bid_count)
   const refreshProduct = async () => {
     try {
@@ -586,7 +615,7 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                 </button>
               )}
 
-              <img
+              {/* <img
                 src={
                   images[carouselIndex]
                     ? `${Image_URL}${images[carouselIndex]}`
@@ -599,7 +628,21 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                   setModalImageIndex(carouselIndex);
                   setImageModalOpen(true);
                 }}
-              />
+              /> */}
+              <img
+  src={images[carouselIndex] ? `${Image_URL}${images[carouselIndex]}` : Image_NotFound}
+  alt={`Product Image ${carouselIndex + 1}`}
+  className="object-contain rounded-lg w-full h-full cursor-pointer"
+  style={{ maxHeight: 400 }}
+  onClick={() => {
+    setModalImageIndex(carouselIndex);
+    setImageModalOpen(true);
+  }}
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+/>
+
 
               {/* Right Arrow */}
               {images.length > 1 && (
@@ -681,11 +724,9 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                     {product.creator?.regions?.name ? (
                       <>
                         {t("Location")}:{" "}
-                        {`${product?.creator?.address_1
-                          ? `${product?.creator?.address_1}, `
-                          : ""
-                          } ${product?.creator?.governorates?.name}, ${product?.creator?.regions?.name
-                          }`}
+                        {`${product?.creator?.address_1 ? `${product?.creator?.address_1}, ` : ""}${product?.creator?.areas?.name ? `${product?.creator?.areas?.name}, ` : ""
+                          }${product?.creator?.cities?.name || product?.creator?.governorates?.name || ""
+                          }, ${product?.creator?.regions?.name}`}
                       </>
                     ) : (
                       <>
@@ -789,7 +830,7 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
             {/* Bid Section */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center space-y-4">
               {/* Buy Now Section */}
-              {product.buy_now_price && product.bids.length == 0 && (
+              {Number(product.buy_now_price.replace(/,/g, "")) > 0 && product.bids.length == 0 && (
                 <>
                   <div className="mb-2">
                     <span className="block text-sm text-gray-600">Buy Now</span>
@@ -825,7 +866,7 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                     {product.bids[0]?.amount || "0.00"}
                   </p>
                 </div>
-              ) : (
+              ) : Number(product?.start_price.replace(/,/g, "")) > 0 ? (
                 <div>
                   <p className="text-sm text-gray-600 mb-1">
                     {t("Starting From")}
@@ -835,8 +876,8 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                     {product.start_price || "0.00"}
                   </p>
                 </div>
-              )}
-              {!isLister && product?.status == 1 && (
+              ) : null}
+              {!isLister && product?.status == 1 && Number(product?.start_price.replace(/,/g, "")) > 0 && (
                 <button
                   className={`w-full py-3 text-lg font-semibold rounded-full transition-colors ${new Date() > new Date(product.expire_at)
                     ? "bg-gray-300 text-gray-400 cursor-not-allowed"
@@ -869,15 +910,15 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                 onClose={() => setBuyNowOpen(false)}
                 onBuyNow={refreshProduct}
               />
-              <p className="text-xs text-gray-500">
+              {Number(product?.start_price.replace(/,/g, "")) > 0 && <p className="text-xs text-gray-500">
                 <span className="font-medium text-gray-700">
                   {product.bids &&
                     product.bids[0]?.amount > product?.reserve_price
                     ? t("Reserve Met")
                     : t("Reserve Not Met")}
                 </span>
-              </p>
-              <p className="text-xs text-gray-500">
+              </p>}
+              {Number(product?.start_price.replace(/,/g, "")) > 0 && <p className="text-xs text-gray-500">
                 <span className="text-green-600 font-medium">
                   {" "}
                   {`${product?.bids_count || 0} ${t("bids so far")}`}
@@ -889,7 +930,7 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                 >
                   {t("view history")}
                 </span>
-              </p>
+              </p>}
               {product?.allow_offers && product.bids.length == 0 && (
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-sm text-gray-600">
@@ -943,15 +984,13 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                 <div className="text-sm text-green-600 font-medium mt-1">
                   {feedbackPercentage ? `${feedbackPercentage}% ${t("positive feedback")}` : "No Feedbacks Yet"}
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">
+                <div className="text-xs text-gray-500 mt-0.5 w-80">
                   {product.creator?.regions?.name ? (
                     <>
                       {t("Location")}:{" "}
-                      {`${product?.creator?.address_1
-                        ? `${product?.creator?.address_1}, `
-                        : ""
-                        } ${product?.creator?.governorates?.name}, ${product?.creator?.regions?.name
-                        }`}
+                      {`${product?.creator?.address_1 ? `${product?.creator?.address_1}, ` : ""}${product?.creator?.areas?.name ? `${product?.creator?.areas?.name}, ` : ""
+                          }${product?.creator?.cities?.name || product?.creator?.governorates?.name || ""
+                          }, ${product?.creator?.regions?.name}`}
                     </>
                   ) : (
                     <>
@@ -960,6 +999,12 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
                     </>
                   )}
                 </div>
+                <Link
+                  href={`/marketplace/creator?creator_id=${product.creator?.id || ""}&status=1`}
+                  className="text-xs text-green-600 font-medium hover:underline mt-1 inline-block"
+                >
+                  {t("View other listings")}
+                  </Link>
               </div>
 
               {/* Add to Favorite */}
@@ -1049,10 +1094,39 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
         {/* <div className="text-sm text-gray-600 space-y-2">
           <p>{product.description}</p>
         </div> */}
-        <div
+        {/* <div
           className="text-gray-700 text-md space-y-1"
           dangerouslySetInnerHTML={{ __html: product.description }}
-        />
+        /> */}
+      {/* <div
+  className="text-gray-700 text-md space-y-1 
+             max-h-64 md:max-h-80 
+             overflow-y-auto 
+             w-full md:w-3/4 lg:w-2/3 
+             px-4 py-2 border border-gray-200 rounded-lg"
+  dangerouslySetInnerHTML={{ __html: product.description }}
+/> */}
+{/* <div
+  className="text-gray-700 text-md space-y-1 
+             max-h-30 md:max-h-80 
+             overflow-y-auto 
+             w-full md:w-3/4 lg:w-[590px] 
+             px-4 py-2 border border-gray-200 rounded-lg 
+             break-words"
+  dangerouslySetInnerHTML={{ __html: product.description }}
+/> */}
+<div
+  className="text-gray-700 text-md space-y-1 
+             max-h-30 md:max-h-80 
+             overflow-y-auto 
+             w-full md:w-3/4 lg:w-[590px] 
+             px-4 py-2 border border-gray-200 md:border-0 rounded-lg 
+             break-words"
+  dangerouslySetInnerHTML={{ __html: product.description }}
+/>
+
+
+
         {/*  */}
         <div className="mt-10">
           <h3 className="text-xl font-semibold border-b pb-3">
@@ -1419,7 +1493,7 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
           router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
         }}
       />
-      {isImageModalOpen && (
+      {/* {isImageModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
           <button
             className="absolute top-6 right-8 text-white text-4xl font-bold"
@@ -1460,7 +1534,65 @@ export default function ProductDetailsClient({ product: initialProduct, feedback
             &#8594;
           </button>
         </div>
+      )} */}
+      {isImageModalOpen && (
+  <div
+    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+    onClick={() => setImageModalOpen(false)} // click outside closes modal
+  >
+    <div
+      className="relative"
+      onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside image
+    >
+      {/* Close Button */}
+      <button
+        className="absolute top-4 right-4 text-white text-3xl font-bold z-10"
+        onClick={() => setImageModalOpen(false)}
+        aria-label="Close"
+      >
+        &times;
+      </button>
+
+      {/* Previous Arrow */}
+      {images.length > 1 && (
+        <button
+          className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-3xl z-10"
+          onClick={() =>
+            setModalImageIndex((prev) =>
+              prev === 0 ? images.length - 1 : prev - 1
+            )
+          }
+          aria-label="Previous"
+        >
+          &#8592;
+        </button>
       )}
+
+      {/* Image */}
+      <img
+        src={images[modalImageIndex] ? `${Image_URL}${images[modalImageIndex]}` : Image_NotFound}
+        alt={`Full Image ${modalImageIndex + 1}`}
+        className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+      />
+
+      {/* Next Arrow */}
+      {images.length > 1 && (
+        <button
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-3xl z-10"
+          onClick={() =>
+            setModalImageIndex((prev) =>
+              prev === images.length - 1 ? 0 : prev + 1
+            )
+          }
+          aria-label="Next"
+        >
+          &#8594;
+        </button>
+      )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

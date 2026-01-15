@@ -14,11 +14,14 @@ export default function JobOverview({ product }) {
   if (!product) return null;
 
   // ✅ Extract data from API response
+  // ✅ Extract data from API response
   const {
     title,
     company_name,
     region,
-    governorate,
+    city,
+    area,
+    governorate, // Keep for fallback if needed, or remove if confident
     work_type,
     minimum_pay_amount,
     minimum_pay_type,
@@ -30,7 +33,7 @@ export default function JobOverview({ product }) {
   const details = [
     {
       label: "Location",
-      value: `${governorate?.name || "N/A"}, ${region?.name || "N/A"}`,
+      value: `${area?.name || governorate?.name || "N/A"}, ${city?.name || "N/A"}, ${region?.name || "N/A"}`,
     },
     { label: "Job Type", value: work_type ? work_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "N/A" || "N/A" },
     {
@@ -60,7 +63,7 @@ export default function JobOverview({ product }) {
               <div className="flex items-center space-x-1">
                 <MapPin className="w-4 h-4" />
                 <span>
-                  {governorate?.name}, {region?.name}
+                  {area?.name || governorate?.name || "N/A"}, {city?.name || "N/A"}
                 </span>
               </div>
             </div>
@@ -76,12 +79,12 @@ export default function JobOverview({ product }) {
             </button>
             {console.log(product?.user?.id, user?.id)}
             {product?.user?.id !== user?.id && (
-            <button
-              onClick={handleApplyClick}
-              className="bg-[#175f48] hover:bg-blue-600 text-white px-5 py-2 rounded-md text-sm"
-            >
-              Apply Now
-            </button>
+              <button
+                onClick={handleApplyClick}
+                className="bg-[#175f48] hover:bg-blue-600 text-white px-5 py-2 rounded-md text-sm"
+              >
+                Apply Now
+              </button>
             )}
           </div>
         </div>

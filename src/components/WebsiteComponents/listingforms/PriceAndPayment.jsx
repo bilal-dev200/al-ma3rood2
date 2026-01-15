@@ -26,6 +26,7 @@ const PriceAndPayment = () => {
   const start_price = watch("start_price");
   const reserve_price = watch("reserve_price");
   const expire_at = watch("expire_at");
+  const is_price_one_reserve = watch("is_price_one_reserve");
 
   // Helper function to check if a date is today
   const isToday = (date) => {
@@ -47,10 +48,17 @@ const PriceAndPayment = () => {
 
   // Clear reserve_price when start_price is empty
   useEffect(() => {
-    if (!start_price || start_price.trim() === "") {
+    if (!start_price || String(start_price).trim() === "") {
       setValue("reserve_price", "", { shouldValidate: false });
     }
   }, [start_price, setValue]);
+
+  useEffect(() => {
+    if (is_price_one_reserve) {
+      setValue("start_price", 1, { shouldValidate: true });
+      setValue("reserve_price", "", { shouldValidate: true });
+    }
+  }, [is_price_one_reserve, setValue]);
 
   return (
     // <div className="w-[800px]">
@@ -291,19 +299,36 @@ const PriceAndPayment = () => {
       {/* Allow Offers - shown if selling_type includes buy_now */}
       {(watch("selling_type") === "buy_now" || watch("selling_type") === "auction" || watch("selling_type") === "both") && (
         <div className="mb-6">
-          <label className="inline-flex items-center space-x-2">
-            <input
-              type="checkbox"
-              {...register("allow_offers")}
-              className="accent-green-500"
-            />
-            <span className="font-bold">
-              {t("Allow buyers to make an offer")}
-            </span>
-          </label>
-          <p className="text-xs ml-6 text-gray-400">
-            {t("Offers can be made until the reserve price is met.")}
-          </p>
+          <div className="mb-2">
+            <label className="inline-flex items-center space-x-2">
+              <input
+                type="checkbox"
+                {...register("allow_offers")}
+                className="accent-green-500"
+              />
+              <span className="font-bold">
+                {t("Allow buyers to make an offer")}
+              </span>
+            </label>
+            <p className="text-xs ml-6 text-gray-400">
+              {t("Offers can be made until the reserve price is met.")}
+            </p>
+          </div>
+
+          {(watch("selling_type") === "auction" || watch("selling_type") === "both") && (
+            <div>
+              <label className="inline-flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  {...register("is_price_one_reserve")}
+                  className="accent-green-500"
+                />
+                <span className="font-bold">
+                  Start auction with <span className="price">$</span>1 reserve
+                </span>
+              </label>
+            </div>
+          )}
         </div>
       )}
 
@@ -321,6 +346,7 @@ const PriceAndPayment = () => {
               <input
                 type="number"
                 min="0"
+                disabled={is_price_one_reserve}
                 {...register("start_price")}
                 className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring 
                   [&::-webkit-inner-spin-button]:appearance-none 
@@ -329,7 +355,7 @@ const PriceAndPayment = () => {
                   ${errors.start_price
                     ? "border-red-500 focus:border-red-500"
                     : "border-gray-300 focus:border-green-400"
-                  } placeholder-price`}
+                  } placeholder-price disabled:bg-gray-100 disabled:text-gray-500`}
               />
             </div>
             {errors.start_price && (
@@ -340,7 +366,7 @@ const PriceAndPayment = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t("Reserve price")} <span className="text-red-500">*</span>
+              {t("Reserve price")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -349,7 +375,7 @@ const PriceAndPayment = () => {
               <input
                 type="number"
                 min="0"
-                disabled={!start_price}
+                disabled={!start_price || is_price_one_reserve}
                 {...register("reserve_price")}
                 className={`w-full border pl-8 pr-4 py-2 rounded focus:outline-none focus:ring
                   [&::-webkit-inner-spin-button]:appearance-none 
@@ -358,7 +384,7 @@ const PriceAndPayment = () => {
                   ${errors.reserve_price
                     ? "border-red-500 focus:border-red-500"
                     : "border-gray-300 focus:border-green-400"
-                  } placeholder-price`}
+                  } placeholder-price disabled:bg-gray-100 disabled:text-gray-500`}
               />
             </div>
             {errors.reserve_price && (

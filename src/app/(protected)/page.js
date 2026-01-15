@@ -14,42 +14,10 @@ import { fetchAllCategories } from "@/lib/api/category.server";
 import { useAuthStore } from "@/lib/stores/authStore";
 import Watch from "@/components/WebsiteComponents/HomePageComponents/Watch";
 
-// const dummyCards = [
-//   {
-//     title: "Charity Auction - signed All",
-//     price: "$1,540",
-//     tags: "Categories: Marketplace • Closes: Tue 1 Apr",
-//     sm: "Reserve met",
-//     image:
-//       "https://media.istockphoto.com/id/1396856251/photo/colonial-house.jpg?s=612x612&w=0&k=20&c=_tGiix_HTQkJj2piTsilMuVef9v2nUwEkSC9Alo89BM=",
-//   },
-//   {
-//     title: "Paul Henry’s mansion",
-//     price: "Deadline sale by 29 May",
-//     tags: "Categories: Marketplace • Listed: Tue 1 Apr",
-//     image:
-//       "https://media.istockphoto.com/id/1396856251/photo/colonial-house.jpg?s=612x612&w=0&k=20&c=_tGiix_HTQkJj2piTsilMuVef9v2nUwEkSC9Alo89BM=",
-//   },
-//   {
-//     title: "Paul Henry’s mansion",
-//     price: "Price by negotiation",
-//     tags: "Categories: Marketplace • Listed: Tue 1 Apr",
-//     image:
-//       "https://media.istockphoto.com/id/1396856251/photo/colonial-house.jpg?s=612x612&w=0&k=20&c=_tGiix_HTQkJj2piTsilMuVef9v2nUwEkSC9Alo89BM=",
-//   },
-//   {
-//     title: "Paul Henry’s mansion",
-//     price: "Price by negotiation",
-//     tags: "Categories: Marketplace • Listed: Tue 1 Apr",
-//     image:
-//       "https://media.istockphoto.com/id/1396856251/photo/colonial-house.jpg?s=612x612&w=0&k=20&c=_tGiix_HTQkJj2piTsilMuVef9v2nUwEkSC9Alo89BM=",
-//   },
-// ];
-
 export const metadata = {
-  title: "Ma3rood",
+  title: "Marketplace in Saudi Arabia | Buy Sell Online - Ma3rood",
   description:
-    "Browse and discover the best deals on MA3rood Marketplace. Find products, categories, and more.",
+    "Ma3rood is Saudi Arabia's first online bidding marketplace, offering to place custom online bids on buying and selling in KSA. Discover great deals, local treasures today!",
   // openGraph: {
   //   title: "Marketplace | Ma3rood",
   //   description: "Browse and discover the best deals on Ma3rood Marketplace. Find products, categories, and more.",
@@ -73,10 +41,11 @@ export default async function Home({ params, searchParams }) {
   // Fetch $1 reserve listings
   const reserveListings = await fetchListingsByReservePrice(1);
   const reserveCards = reserveListings?.data || [];
-  const { categoryId } = await searchParams;
-  const categoryIdFilter = searchParams?.category_id || "";
-  const search = searchParams?.search || "";
-  const city = searchParams?.city || "";
+  const resolvedSearchParams = await searchParams;
+  const { categoryId } = resolvedSearchParams;
+  const categoryIdFilter = resolvedSearchParams?.category_id || "";
+  const search = resolvedSearchParams?.search || "";
+  const city = resolvedSearchParams?.city || "";
   console.log("For Test Category", categoryIdFilter);
 
   const [catResult, listings, coolAuctions] = await Promise.all([

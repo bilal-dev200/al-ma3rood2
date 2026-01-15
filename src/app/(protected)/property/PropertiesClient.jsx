@@ -75,29 +75,53 @@ const PropertiesClient = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const observerRef = useRef(null);
+  // const resultsRef = useRef(null);
   const firstLoad = useRef(true);
-  const { locations, getAllLocations } = useLocationStore();
+  const {
+    locations,
+    getAllLocations,
+    cities: storeCities,
+    areas: storeAreas,
+    fetchCities,
+    fetchAreas,
+    isLoading: isLocationLoading,
+  } = useLocationStore();
+
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
     category_id: null,
     price_min: 0,
-    price_max: 10000000,
+    price_max: 1000000000,
     condition: "",
     land_area: "", // dropdown single field
     parking: "", // dropdown single field
     country: "",
     city: "",
     region: "",
-    governorate: "",
+    area: "",
+    bedrooms: "",
+    bathrooms: "",
   });
+
   const country = locations.find((c) => c.id == 1);
   const regions = country?.regions || [];
 
-  const governorates = useMemo(() => {
-    const region = regions.find((r) => r.name === filters.region);
-    return region?.governorates || [];
-  }, [regions, filters.region]);
+  // Fetch Cities when Region changes
+  useEffect(() => {
+    const selectedRegion = regions.find((r) => r.name === filters.region);
+    if (selectedRegion) {
+      fetchCities(selectedRegion.id);
+    }
+  }, [filters.region, regions]);
+
+  // Fetch Areas when City changes
+  useEffect(() => {
+    const selectedCity = storeCities.find((c) => c.name === filters.city);
+    if (selectedCity) {
+      fetchAreas(selectedCity.id);
+    }
+  }, [filters.city, storeCities]);
 
 
 
@@ -123,7 +147,8 @@ const PropertiesClient = ({
         max_price: filters?.price_max,
         min_price: filters?.price_min,
         search: filters?.search,
-        governorate: filters?.governorate,
+        city: filters?.city,
+        area: filters?.area,
         region: filters?.region,
         sort: sortBy,
         // pagination: {
@@ -133,6 +158,8 @@ const PropertiesClient = ({
         listing_type: "property",
         pagination: { page: nextPage, per_page: 6 },
         category_id: filters?.category_id,
+        bedrooms: filters?.bedrooms,
+        bathrooms: filters?.bathrooms,
       };
 
       console.log("📡 Loading page:", nextPage);
@@ -170,11 +197,14 @@ const PropertiesClient = ({
         min_price: filters?.price_min,
         search: filters?.search,
         sort: sortBy,
-        governorate: filters?.governorate,
+        city: filters?.city,
+        area: filters?.area,
         region: filters?.region,
         listing_type: "property",
         pagination: { page: 1, per_page: 12 },
         category_id: filters?.category_id,
+        bedrooms: filters?.bedrooms,
+        bathrooms: filters?.bathrooms,
       };
 
       console.log("🔍 Fetching properties with filters:", payload);
@@ -183,6 +213,11 @@ const PropertiesClient = ({
       const newData = response || [];
       setMotorListings(newData);
       setHasMore(response?.pagination?.current_page < response?.pagination?.last_page);
+
+      // Scroll to results
+      // setTimeout(() => {
+      //   resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // }, 100);
     } catch (err) {
       console.error("❌ Error fetching filtered listings:", err);
     } finally {
@@ -312,14 +347,16 @@ const PropertiesClient = ({
       search: "",
       category_id: null,
       price_min: 0,
-      price_max: 10000000,
+      price_max: 1000000000,
       condition: "",
       land_area: "",
       parking: "",
       country: "",
       city: "",
       region: "",
-      governorate: "",
+      area: "",
+      bedrooms: "",
+      bathrooms: "",
     });
     setActiveTab("");
     setSearchQuery("");
@@ -344,13 +381,106 @@ const PropertiesClient = ({
     { value: 6157, label: "For Sale" },
   ];
 
-  const priceOptions = [
+  const bedroomOptions = [
+    { value: "", label: "Any Bedrooms" },
+    { value: "1", label: "1" },
+    { value: "2", label: "2" },
+    { value: "3", label: "3" },
+    { value: "4", label: "4" },
+    { value: "5", label: "5" },
+    { value: "6+", label: "6+" },
+  ];
+
+  const bathroomOptions = [
+    { value: "", label: "Any Bathrooms" },
+    { value: "1", label: "1" },
+    { value: "2", label: "2" },
+    { value: "3", label: "3" },
+    { value: "4", label: "4" },
+    { value: "5", label: "5" },
+    { value: "6+", label: "6+" },
+  ];
+
+  const categoryPriceOptions = {
+    "For Sale": [
+      { value: "", label: "Select Price" },
+      { value: "100000", label: "100k" },
+      { value: "250000", label: "250k" },
+      { value: "500000", label: "500k" },
+      { value: "750000", label: "750k" },
+      { value: "1000000", label: "1M" },
+      { value: "2000000", label: "2M" },
+      { value: "5000000", label: "5M" },
+      { value: "10000000", label: "10M" },
+      { value: "20000000", label: "20M+" },
+    ],
+    "For Rent": [
+      { value: "", label: "Select Price" },
+      { value: "2000", label: "2k" },
+      { value: "5000", label: "5k" },
+      { value: "10000", label: "10k" },
+      { value: "20000", label: "20k" },
+      { value: "50000", label: "50k" },
+      { value: "100000", label: "100k" },
+      { value: "200000", label: "200k" },
+      { value: "500000", label: "500k+" },
+    ],
+    "Flatmates": [
+      { value: "", label: "Select Price" },
+      { value: "500", label: "500" },
+      { value: "1000", label: "1k" },
+      { value: "2000", label: "2k" },
+      { value: "3000", label: "3k" },
+      { value: "5000", label: "5k" },
+      { value: "7000", label: "7k" },
+      { value: "10000", label: "10k+" },
+    ],
+    "Commercial Property": [
+      { value: "", label: "Select Price" },
+      { value: "50000", label: "50k" },
+      { value: "100000", label: "100k" },
+      { value: "250000", label: "250k" },
+      { value: "500000", label: "500k" },
+      { value: "1000000", label: "1M" },
+      { value: "5000000", label: "5M" },
+      { value: "10000000", label: "10M" },
+      { value: "50000000", label: "50M+" },
+    ],
+    "Businesses": [
+      { value: "", label: "Select Price" },
+      { value: "50000", label: "50k" },
+      { value: "100000", label: "100k" },
+      { value: "250000", label: "250k" },
+      { value: "500000", label: "500k" },
+      { value: "1000000", label: "1M" },
+      { value: "5000000", label: "5M" },
+      { value: "10000000", label: "10M" },
+      { value: "50000000", label: "50M+" },
+    ],
+  };
+
+  const defaultPriceOptions = [
     { value: "", label: "Select Price" },
+    { value: "50000", label: "50k" },
     { value: "100000", label: "100k" },
-    { value: "200000", label: "200k" },
+    { value: "250000", label: "250k" },
     { value: "500000", label: "500k" },
     { value: "1000000", label: "1M+" },
   ];
+
+  const customStyles = {
+    control: (base, state) => ({
+      ...base,
+      borderColor: state.isFocused ? "#175f48" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #175f48" : "none",
+      "&:hover": { borderColor: "#175f48" },
+    }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  };
+
+  const currentPriceOptions = useMemo(() => {
+    return categoryPriceOptions[activeTab] || defaultPriceOptions;
+  }, [activeTab, categoryPriceOptions]);
 
   const landAreaOptions = [
     { value: "", label: "Select Land Area" },
@@ -458,7 +588,7 @@ const PropertiesClient = ({
                       setFilters((prev) => ({
                         ...prev,
                         region: selected?.value || "",
-                        governorate: "",
+
                         city: "",
                       }))
                     }
@@ -475,25 +605,55 @@ const PropertiesClient = ({
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-sm font-medium">{t("Governorate")}</label>
-                  {/* {cities.length > 0 && ( */}
+                  <label className="block mb-1 text-sm font-medium">{t("City")}</label>
                   <Select
-                    name="governorate"
+                    name="city"
                     value={
-                      filters.governorate
-                        ? { value: filters.governorate, label: filters.governorate }
+                      filters.city
+                        ? { value: filters.city, label: filters.city }
                         : null
                     }
                     onChange={(selected) =>
                       setFilters((prev) => ({
                         ...prev,
-                        governorate: selected?.value || "",
-                        city: "",
+                        city: selected?.value || "",
+                        area: "",
                       }))
                     }
-                    options={governorates.map((g) => ({ value: g.name, label: g.name }))}
-                    placeholder={t("Select a Governorate")}
+                    options={storeCities.map((c) => ({ value: c.name, label: c.name }))}
+                    placeholder={t("Select a City")}
                     className="text-sm z-20"
+                    isLoading={isLocationLoading}
+                    isDisabled={!filters.region}
+                    classNamePrefix="react-select"
+                    isClearable
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">{t("Area")}</label>
+                  <Select
+                    name="area"
+                    value={
+                      filters.area
+                        ? { value: filters.area, label: filters.area }
+                        : null
+                    }
+                    onChange={(selected) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        area: selected?.value || "",
+                      }))
+                    }
+                    options={storeAreas.map((a) => ({ value: a.name, label: a.name }))}
+                    placeholder={t("Select an Area")}
+                    className="text-sm z-20"
+                    isLoading={isLocationLoading}
+                    isDisabled={!filters.city}
                     classNamePrefix="react-select"
                     isClearable
                     menuPortalTarget={typeof document !== "undefined" ? document.body : null}
@@ -515,8 +675,11 @@ const PropertiesClient = ({
                         (o) => o.value === filters.category_id
                       )}
                       onChange={(selected) =>
-                        setFilters({ ...filters, category_id: selected.value })
+                        setFilters({ ...filters, category_id: selected ? selected.value : null })
                       }
+                      menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                      styles={customStyles}
+                      isClearable
                     />
                   </div>
                 )}
@@ -532,13 +695,16 @@ const PropertiesClient = ({
                       (o) => o.value === filters.condition
                     )}
                     onChange={(selected) =>
-                      setFilters({ ...filters, condition: selected.value })
+                      setFilters({ ...filters, condition: selected ? selected.value : "" })
                     }
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={customStyles}
+                    isClearable
                   />
                 </div>
 
                 {/* Price Range */}
-                <div className="z-20">
+                <div className="z-[9999]">
                   <label className="block mb-1 text-sm font-medium text-gray-700">
                     {t("Min Price")}
                   </label>
@@ -548,16 +714,20 @@ const PropertiesClient = ({
                     </div>
                     <Select
                       instanceId="min-price-select"
-                      options={priceOptions}
-                      value={priceOptions.find(
+                      options={currentPriceOptions}
+                      value={currentPriceOptions.find(
                         (o) => o.value === filters.price_min
                       )}
                       onChange={(selected) =>
-                        setFilters({ ...filters, price_min: selected.value })
+                        setFilters({ ...filters, price_min: selected ? selected.value : 0 })
                       }
+                      menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                      isClearable
                       styles={{
-                        control: (base) => ({
+                        ...customStyles,
+                        control: (base, state) => ({
                           ...base,
+                          ...customStyles.control(base, state),
                           paddingLeft: "28px",
                         }),
                       }}
@@ -575,16 +745,20 @@ const PropertiesClient = ({
                     </div>
                     <Select
                       instanceId="max-price-select"
-                      options={priceOptions}
-                      value={priceOptions.find(
+                      options={currentPriceOptions}
+                      value={currentPriceOptions.find(
                         (o) => o.value === filters.price_max
                       )}
                       onChange={(selected) =>
-                        setFilters({ ...filters, price_max: selected.value })
+                        setFilters({ ...filters, price_max: selected ? selected.value : 1000000000 })
                       }
+                      menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                      isClearable
                       styles={{
-                        control: (base) => ({
+                        ...customStyles,
+                        control: (base, state) => ({
                           ...base,
+                          ...customStyles.control(base, state),
                           paddingLeft: "28px",
                         }),
                       }}
@@ -604,13 +778,56 @@ const PropertiesClient = ({
                       (o) => o.value === filters.land_area
                     )}
                     onChange={(selected) =>
-                      setFilters({ ...filters, land_area: selected.value })
+                      setFilters({ ...filters, land_area: selected ? selected.value : "" })
                     }
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={customStyles}
+                    isClearable
+                  />
+                </div>
+
+                {/* Bedrooms */}
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    {t("Bedrooms")}
+                  </label>
+                  <Select
+                    instanceId="bedrooms-select"
+                    options={bedroomOptions}
+                    value={bedroomOptions.find(
+                      (o) => o.value === filters.bedrooms
+                    )}
+                    onChange={(selected) =>
+                      setFilters({ ...filters, bedrooms: selected ? selected.value : "" })
+                    }
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={customStyles}
+                    isClearable
+                  />
+                </div>
+
+                {/* Bathrooms */}
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    {t("Bathrooms")}
+                  </label>
+                  <Select
+                    instanceId="bathrooms-select"
+                    options={bathroomOptions}
+                    value={bathroomOptions.find(
+                      (o) => o.value === filters.bathrooms
+                    )}
+                    onChange={(selected) =>
+                      setFilters({ ...filters, bathrooms: selected ? selected.value : "" })
+                    }
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={customStyles}
+                    isClearable
                   />
                 </div>
 
                 {/* Parking */}
-                <div className="z-10">
+                {/* <div className="z-10">
                   <label className="block mb-1 text-sm font-medium text-gray-700">
                     {t("Parking")}
                   </label>
@@ -621,10 +838,13 @@ const PropertiesClient = ({
                       (o) => o.value === filters.parking
                     )}
                     onChange={(selected) =>
-                      setFilters({ ...filters, parking: selected.value })
+                      setFilters({ ...filters, parking: selected ? selected.value : "" })
                     }
+                    menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                    styles={customStyles}
+                    isClearable
                   />
-                </div>
+                </div> */}
 
 
               </div>

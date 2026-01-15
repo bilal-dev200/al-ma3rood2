@@ -11,12 +11,14 @@ import { categoriesApi } from "@/lib/api/category";
 import { listingsApi } from "@/lib/api/listings";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { useTranslation } from "react-i18next";
+import Select from "react-select";
 import CategoryModal from "./CategoryModal";
-import GooglePlacesAutocomplete from "../GooglePlacesAutocomplete";
+import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import QuillEditor from "@/components/ui/QuillEditor";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useLocationStore } from "@/lib/stores/locationStore";
+import { useTranslation } from "react-i18next";
 
 /**
  * Zod schema for property listing
@@ -56,8 +58,8 @@ const propertyListingSchema = z.object({
   address: z.string().optional(),
   country: z.string().optional(),
   region: z.string().optional(),
-  governorate: z.string().optional(),
   city: z.string().optional(),
+  area: z.string().optional(),
   floor_area: z.string().optional(),
   land_area: z.string().optional(),
   rv: z.string().optional(),
@@ -141,9 +143,9 @@ const steps = [
 ];
 
 const stepFields = {
-    0: ["category_id", "title", "address", "floor_area", "condition", "property_type_field", "business_type", "land_area", "parking", "bedrooms", "bathrooms", "description"], // Property Details
-    1: ["images"], // Photos
-    2: ["buy_now_price", "start_price", "reserve_price", "expire_at"], // Price & Payment (The Refine takes care of the OR logic on final submit)
+  0: ["category_id", "title", "address", "floor_area", "condition", "property_type_field", "business_type", "land_area", "parking", "bedrooms", "bathrooms", "description"], // Property Details
+  1: ["images"], // Photos
+  2: ["buy_now_price", "start_price", "reserve_price", "expire_at"], // Price & Payment (The Refine takes care of the OR logic on final submit)
 };
 
 // Helper function to get max date (60 days from today)
@@ -213,7 +215,7 @@ const Properties = ({ initialValues, mode = "create" }) => {
     // Preserve as string for the controlled input field
     return parsed;
   }
-  
+
   const normalizedInitialValues = useMemo(() => {
     if (!initialValues) return {};
 
@@ -406,8 +408,8 @@ const Properties = ({ initialValues, mode = "create" }) => {
         "sub_type",
         "address",
         "country",
+        "country",
         "region",
-        "governorate",
         "city",
         "area",
         "property_type_field",
@@ -487,7 +489,7 @@ const Properties = ({ initialValues, mode = "create" }) => {
     } catch (error) {
       console.error("Error creating property listing:", error);
       setIsSubmitting(false);
-      
+
       // Handle API validation errors
       const validationErrors = error?.data?.data || error?.response?.data?.data;
       if (validationErrors && typeof validationErrors === "object") {
@@ -542,7 +544,7 @@ const Properties = ({ initialValues, mode = "create" }) => {
       const errorMessages = Object.values(errors)
         .filter((error) => error?.message)
         .map((error) => error.message);
-      
+
       if (errorMessages.length > 0) {
         errorMessages.forEach((msg) => toast.error(msg));
       } else {
@@ -565,24 +567,23 @@ const Properties = ({ initialValues, mode = "create" }) => {
     selectedCategory,
     watch,
   }) => {
-    // Listing Categories and Subcategories
+    const {
+      regions, cities, areas,
+      fetchRegions, fetchCities, fetchAreas,
+      isLoading: isLocationLoading
+      // selectedRegion, selectedCity, selectedArea
+    } = useLocationStore();
+
+    useEffect(() => {
+      fetchRegions();
+    }, []);
+
+    // ... keeping existing options ...
     const listingOptions = {
       sale: ["House", "Apartment", "Commercial Plot", "Agricultural Land"],
       rent: ["Flat", "Shop", "Office Space", "Portion"],
       lease: ["Warehouse", "Factory", "Farmhouse"],
       auction: ["Residential Plot", "Industrial Plot"],
-    };
-
-    // Country/City/Area Data
-    const countries = {
-      "Saudi Arabia": {
-        Riyadh: ["Olaya", "Al Malaz", "Al Nakheel", "Diplomatic Quarter"],
-        Jeddah: ["Al Hamra", "Al Rawdah", "Al Safa", "Corniche"],
-        Dammam: ["Al Faisaliyah", "Al Shatea", "Al Aziziyah"],
-        Khobar: ["Corniche", "Al Ulaya", "Al Rawabi"],
-        Mecca: ["Ajyad", "Al Awali", "Al Shesha"],
-        Medina: ["Al Haram", "Quba", "Uhud"],
-      },
     };
 
     const conditionOptions = [
@@ -596,7 +597,6 @@ const Properties = ({ initialValues, mode = "create" }) => {
       { value: "recently_renovated", label: "Recently Renovated" },
     ];
 
-    // console.log('check', selectedCategory)
     const landAreaOptions = [
       { value: "", label: "Select Land Area" },
       { value: "100", label: "100 sqm" },
@@ -615,23 +615,55 @@ const Properties = ({ initialValues, mode = "create" }) => {
       { value: "4", label: "4+ Slots" },
     ];
 
-    // States
-    const [selectedListingType, setSelectedListingType] = useState("");
-    const [selectedSubType, setSelectedSubType] = useState("");
-    const [selectedCountry, setSelectedCountry] = useState("");
-    const [selectedCity, setSelectedCity] = useState("");
-
-    const cities = selectedCountry
-      ? Object.keys(countries[selectedCountry])
-      : [];
-    const areas =
-      selectedCountry && selectedCity
-        ? countries[selectedCountry][selectedCity]
-        : [];
-
+    // Derived values handled by store logic mostly
     const category_id = watch("category_id");
-    // Modal open handler
     const openCategoryModal = () => setIsModalOpen(true);
+
+    // Handlers
+    const handleRegionChange = (e) => {
+      const val = e.target.value;
+      setValue("region", val);
+      setValue("city", "");
+      setValue("area", "");
+      const regionId = regions.find(r => r.name === val)?.id;
+      if (regionId) fetchCities(regionId);
+    };
+
+    const handleCityChange = (e) => {
+      const val = e.target.value;
+      setValue("city", val);
+      setValue("area", "");
+      const cityId = cities.find(c => c.name === val)?.id;
+      if (cityId) fetchAreas(cityId);
+    };
+
+    const handleAreaChange = (e) => {
+      setValue("area", e.target.value);
+    };
+
+    // Watchers for controlled inputs if needed, or just use RHF Controller
+    // Since we are using standard inputs/selects in this form part, we can use register/watch
+
+    // To sync store with existing form values (e.g. edit mode), we might need an effect
+    // But for now, let's just make the dropdowns work for new input.
+
+    const watchedRegion = watch("region");
+    const watchedCity = watch("city");
+
+    useEffect(() => {
+      if (watchedRegion) {
+        const regionId = regions.find(r => r.name === watchedRegion)?.id;
+        if (regionId) fetchCities(regionId);
+      }
+    }, [watchedRegion, regions]);
+
+    useEffect(() => {
+      if (watchedCity) {
+        const cityId = cities.find(c => c.name === watchedCity)?.id;
+        if (cityId) fetchAreas(cityId);
+      }
+    }, [watchedCity, cities]);
+
 
     return (
       <div className="space-y-8">
@@ -648,7 +680,7 @@ const Properties = ({ initialValues, mode = "create" }) => {
           {category_id && selectedCategory ? (
             <div className="flex justify-between items-center">
               <p className="text-base text-green-600 font-semibold">
-                {selectedCategory?.parent?.name ? selectedCategory?.parent?.name + " > " + selectedCategory?.name : selectedCategory?.name }
+                {selectedCategory?.parent?.name ? selectedCategory?.parent?.name + " > " + selectedCategory?.name : selectedCategory?.name}
               </p>
               <button
                 type="button"
@@ -674,52 +706,6 @@ const Properties = ({ initialValues, mode = "create" }) => {
               )}
             </div>
           )}
-          {/* Listing Type */}
-          {/* <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Listing Type
-            </label>
-            <select
-              value={selectedListingType}
-              onChange={(e) => {
-                setSelectedListingType(Number(e.target.value)); // number banado
-                setSelectedSubType("");
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Select Type</option>
-              {categories
-                .filter((cat) => cat.parent_id === null) // only top-level
-                .map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-            </select>
-
-          </div> */}
-
-          {/* <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Property Sub-Type
-            </label>
-            <select
-              value={selectedSubType}
-              onChange={(e) => setSelectedSubType(Number(e.target.value))}
-              disabled={!selectedListingType}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Select Sub-Type</option>
-              {categories
-                .filter((cat) => cat.parent_id === selectedListingType) 
-                .map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.name}
-                  </option>
-                ))}
-            </select>
-
-          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -752,39 +738,29 @@ const Properties = ({ initialValues, mode = "create" }) => {
                   onChange={field.onChange}
                   onPlaceSelect={(location) => {
                     setSelectedLocation(location);
-                    console.log("🗺️ Location object received:", location);
 
                     if (location.address_components) {
                       const components = location.address_components;
+                      const getComponent = (type) => components.find((c) => c.types.includes(type))?.long_name || "";
 
-                      // Helper to extract component by type
-                      const getComponent = (type) =>
-                        components.find((c) => c.types.includes(type))
-                          ?.long_name || "";
-
-                      // Extract relevant fields
-                      const city =
-                        getComponent("locality") ||
-                        getComponent("administrative_area_level_2");
-                      const governorate = getComponent(
-                        "administrative_area_level_2"
-                      );
-                      const region = getComponent(
-                        "administrative_area_level_1"
-                      );
+                      const city = getComponent("locality");
+                      const area = getComponent("sublocality") || getComponent("sublocality_level_1") || getComponent("neighborhood");
+                      const region = getComponent("administrative_area_level_1");
                       const country = getComponent("country");
 
                       console.log("🏙️ City:", city);
-                      console.log("🏛️ Governorate:", governorate);
+                      console.log("📍 Area:", area);
                       console.log("🌍 Region:", region);
-                      console.log("🇸🇦 Country:", country);
 
                       // Update form fields automatically
                       setValue("city", city);
-                      setValue("governorate", governorate);
+                      setValue("area", area); // Use area instead of governorate
                       setValue("region", region);
                       setValue("country", country);
                     }
+                  }}
+                  autocompletionRequest={{
+                    componentRestrictions: { country: ["sa"] },
                   }}
                   placeholder="Enter property address"
                 />
@@ -801,8 +777,98 @@ const Properties = ({ initialValues, mode = "create" }) => {
             )}
           </div>
 
-          {/* Country */}
-          {/* <div>
+          {/* Dynamic Location Selects */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+            <Controller
+              name="region"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={regions.map(r => ({ value: r.name, label: r.name }))}
+                  value={regions.find(r => r.name === field.value) ? { value: field.value, label: field.value } : null}
+                  onChange={(val) => {
+                    field.onChange(val?.value || "");
+                    setValue("city", "");
+                    setValue("area", "");
+                    const regionId = regions.find(r => r.name === val?.value)?.id;
+                    if (regionId) fetchCities(regionId);
+                  }}
+                  isClearable
+                  placeholder="Select Region"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  instanceId="property-region-select"
+                  isLoading={isLocationLoading}
+                />
+              )}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+            <Controller
+              name="city"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={cities.map(c => ({ value: c.name, label: c.name }))}
+                  value={cities.find(c => c.name === field.value) ? { value: field.value, label: field.value } : null}
+                  onChange={async (val) => {
+                    field.onChange(val?.value || "");
+                    setValue("area", "");
+                    const cityId = cities.find(c => c.name === val?.value)?.id;
+                    if (cityId) {
+                      const fetchedAreas = await fetchAreas(cityId);
+                      if (fetchedAreas?.length === 1) {
+                        setValue("area", fetchedAreas[0].name);
+                      }
+                    }
+                  }}
+                  isDisabled={!watch("region")}
+                  isClearable
+                  placeholder="Select City"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  instanceId="property-city-select"
+                  isLoading={isLocationLoading}
+
+                />
+              )}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Area</label>
+            <Controller
+              name="area"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={areas.map(a => ({ value: a.name, label: a.name }))}
+                  value={areas.find(a => a.name === field.value) ? { value: field.value, label: field.value } : null}
+                  onChange={(val) => {
+                    field.onChange(val?.value || "");
+                  }}
+                  isDisabled={!watch("city")}
+                  isClearable
+                  placeholder="Select Area"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  instanceId="property-area-select"
+                  isLoading={isLocationLoading}
+
+                />
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Country */}
+        {/* <div>
   <label className="block text-sm font-medium text-gray-700 mb-2">
     Country
   </label>
@@ -829,8 +895,8 @@ const Properties = ({ initialValues, mode = "create" }) => {
   />
 </div> */}
 
-          {/* City */}
-          {/* <div>
+        {/* City */}
+        {/* <div>
   <label className="block text-sm font-medium text-gray-700 mb-2">
     City
   </label>
@@ -859,8 +925,8 @@ const Properties = ({ initialValues, mode = "create" }) => {
   />
 </div> */}
 
-          {/* Area */}
-          {/* <div className="md:col-span-2">
+        {/* Area */}
+        {/* <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Area</label>
             <select
               disabled={!selectedCity}
@@ -875,58 +941,58 @@ const Properties = ({ initialValues, mode = "create" }) => {
             </select>
           </div> */}
 
-          {/* Floor Area */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Floor Area (sq ft)
-            </label>
-            <Controller
-              name="floor_area"
-              control={control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="number"
-                  min="0"
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    const numValue = parseFloat(value);
-                    if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
-                      field.onChange(value);
-                    } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
-                      field.onChange("");
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
-                />
-              )}
-            />
-          </div>
+        {/* Floor Area */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Floor Area (sq ft)
+          </label>
+          <Controller
+            name="floor_area"
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type="number"
+                min="0"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = parseFloat(value);
+                  if (value === "" || (!isNaN(numValue) && numValue >= 0)) {
+                    field.onChange(value);
+                  } else if (value !== "" && !isNaN(numValue) && numValue < 0) {
+                    field.onChange("");
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+              />
+            )}
+          />
+        </div>
 
-          {/* Condition */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Condition
-            </label>
-            <Controller
-              name="condition"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
-                >
-                  {conditionOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-          </div>
-          {(selectedCategory?.parent_id || selectedCategory?.parent_id) ==
-            6154 && (
+        {/* Condition */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Condition
+          </label>
+          <Controller
+            name="condition"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+              >
+                {conditionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+        </div>
+        {(selectedCategory?.parent_id || selectedCategory?.parent_id) ==
+          6154 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Property Type
@@ -951,102 +1017,102 @@ const Properties = ({ initialValues, mode = "create" }) => {
             </div>
           )}
 
-          {(selectedCategory?.parent_id || selectedCategory?.id) == 6468 && ( // assuming 6153 is "Businesses"
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Type
-              </label>
-              <Controller
-                name="business_type"
-                control={control}
-                render={({ field }) => (
-                  <select
-                    {...field}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">Select Business Type</option>
-                    <option value="restaurant">Restaurant / Café</option>
-                    <option value="retail_shop">Retail Shop</option>
-                    <option value="salon_spa">Salon / Spa</option>
-                    <option value="gym_fitness_center">
-                      Gym / Fitness Center
-                    </option>
-                    <option value="supermarket">Supermarket / Grocery</option>
-                    <option value="other">Other</option>
-                  </select>
-                )}
-              />
-            </div>
-          )}
-
-          {/* Land Area */}
+        {(selectedCategory?.parent_id || selectedCategory?.id) == 6468 && ( // assuming 6153 is "Businesses"
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Land Area
+              Business Type
             </label>
             <Controller
-              name="land_area"
-              control={control}
-              render={({ field }) => (
-                <SearchableDropdownWithCustom
-                  options={landAreaOptions.map((option) => option.label)}
-                  value={
-                    landAreaOptions.find(
-                      (option) => option.value === field.value
-                    )?.label || field.value || ""
-                  }
-                  onChange={(selected) => {
-                    const trimmed = selected ? selected.trim() : "";
-                    const match = landAreaOptions.find(
-                      (option) =>
-                        option.label.toLowerCase() === trimmed.toLowerCase()
-                    );
-                    if (match) {
-                      field.onChange(match.value);
-                    } else {
-                      // Validate custom input - if it's a number, ensure it's non-negative
-                      const numValue = parseFloat(trimmed);
-                      if (trimmed === "" || (!isNaN(numValue) && numValue >= 0)) {
-                        field.onChange(trimmed);
-                      }
-                      // If negative number, don't update the field
-                    }
-                  }}
-                  placeholder="Select Land Area"
-                  customLabel="Land area not in list? Type it yourself"
-                  customPlaceholder="Enter land area"
-                />
-              )}
-            />
-          </div>
-
-          {/* Parking */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Parking
-            </label>
-            <Controller
-              name="parking"
+              name="business_type"
               control={control}
               render={({ field }) => (
                 <select
                   {...field}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
                 >
-                  {parkingOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="">Select Business Type</option>
+                  <option value="restaurant">Restaurant / Café</option>
+                  <option value="retail_shop">Retail Shop</option>
+                  <option value="salon_spa">Salon / Spa</option>
+                  <option value="gym_fitness_center">
+                    Gym / Fitness Center
+                  </option>
+                  <option value="supermarket">Supermarket / Grocery</option>
+                  <option value="other">Other</option>
                 </select>
               )}
             />
           </div>
+        )}
 
-          {/* Bedrooms */}
-          {![6154, 6468].includes(
-            selectedCategory?.parent_id || selectedCategory?.id
-          ) && (
+        {/* Land Area */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Land Area
+          </label>
+          <Controller
+            name="land_area"
+            control={control}
+            render={({ field }) => (
+              <SearchableDropdownWithCustom
+                options={landAreaOptions.map((option) => option.label)}
+                value={
+                  landAreaOptions.find(
+                    (option) => option.value === field.value
+                  )?.label || field.value || ""
+                }
+                onChange={(selected) => {
+                  const trimmed = selected ? selected.trim() : "";
+                  const match = landAreaOptions.find(
+                    (option) =>
+                      option.label.toLowerCase() === trimmed.toLowerCase()
+                  );
+                  if (match) {
+                    field.onChange(match.value);
+                  } else {
+                    // Validate custom input - if it's a number, ensure it's non-negative
+                    const numValue = parseFloat(trimmed);
+                    if (trimmed === "" || (!isNaN(numValue) && numValue >= 0)) {
+                      field.onChange(trimmed);
+                    }
+                    // If negative number, don't update the field
+                  }
+                }}
+                placeholder="Select Land Area"
+                customLabel="Land area not in list? Type it yourself"
+                customPlaceholder="Enter land area"
+              />
+            )}
+          />
+        </div>
+
+        {/* Parking */}
+        {/* <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Parking
+          </label>
+          <Controller
+            name="parking"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+              >
+                {parkingOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+        </div> */}
+
+        {/* Bedrooms */}
+        {![6154, 6468].includes(
+          selectedCategory?.parent_id || selectedCategory?.id
+        ) && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Number of Bedrooms
@@ -1065,27 +1131,27 @@ const Properties = ({ initialValues, mode = "create" }) => {
               />
             </div>
           )}
-          {/* Bathrooms */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Number of Bathrooms
-            </label>
-            <Controller
-              name="bathrooms"
-              control={control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="number"
-                  min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
-                />
-              )}
-            />
-          </div>
+        {/* Bathrooms */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Number of Bathrooms
+          </label>
+          <Controller
+            name="bathrooms"
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type="number"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+              />
+            )}
+          />
+        </div>
 
-          {/* RV & Price */}
-          {/* <div>
+        {/* RV & Price */}
+        {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Rateable Value (RV)
             </label>
@@ -1119,8 +1185,8 @@ const Properties = ({ initialValues, mode = "create" }) => {
             />
           </div> */}
 
-          {/* Agency Reference */}
-          {/* <div className="md:col-span-2">
+        {/* Agency Reference */}
+        {/* <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Agency Reference
             </label>
@@ -1137,7 +1203,7 @@ const Properties = ({ initialValues, mode = "create" }) => {
             />
           </div> */}
 
-          {/* Details
+        {/* Details
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Details
@@ -1154,29 +1220,29 @@ const Properties = ({ initialValues, mode = "create" }) => {
               )}
             />
           </div> */}
-           {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
-              </label>
-              <Controller
-                name="description"
-                control={control}
-                rules={{ required: "Description is required" }}
-                render={({ field: { onChange, value }, fieldState: { error } }) => (
-                  <div className="rounded-md">
-                    <QuillEditor
-                      value={value}
-                      onChange={onChange}
-                      error={error?.message}
-                      placeholder="Enter Description"
-                    />
-                  </div>
-                )}
-              />
-            </div>
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Description *
+          </label>
+          <Controller
+            name="description"
+            control={control}
+            rules={{ required: "Description is required" }}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <div className="rounded-md">
+                <QuillEditor
+                  value={value}
+                  onChange={onChange}
+                  error={error?.message}
+                  placeholder="Enter Description"
+                />
+              </div>
+            )}
+          />
+        </div>
 
-          {/* <div>
+        {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Water Supply
             </label>
@@ -1193,7 +1259,7 @@ const Properties = ({ initialValues, mode = "create" }) => {
             />
           </div> */}
 
-          {/* <div className="md:col-span-2 flex items-center gap-2">
+        {/* <div className="md:col-span-2 flex items-center gap-2">
             <Controller
               name="hide_rv"
               control={control}
@@ -1209,7 +1275,7 @@ const Properties = ({ initialValues, mode = "create" }) => {
             <span className="text-gray-700">Hide RV on Listing</span>
           </div> */}
 
-          {/* <div>
+        {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Condition *</label>
             <Controller
               name="condition"
@@ -1222,14 +1288,12 @@ const Properties = ({ initialValues, mode = "create" }) => {
               )}
             />
           </div> */}
-        </div>
-
         {/* Navigation Buttons */}
         <div className="flex justify-between pt-6">
           {/* <Button onClick={prevStep} variant="outline" className="px-6 py-2 flex items-center">
-            <IoIosArrowBack className="mr-2" />
-            Back
-          </Button> */}
+              <IoIosArrowBack className="mr-2" />
+              Back
+            </Button> */}
           <Button onClick={handleNextStep} className="px-6 py-2 flex items-center">
             Continue
             <IoIosArrowForward className="ml-2" />
@@ -1424,11 +1488,10 @@ const Properties = ({ initialValues, mode = "create" }) => {
                     }}
                     className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring
                           [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
-                          ${
-                            errors.expire_at
-                              ? "border-red-500 focus:border-red-500"
-                              : "border-gray-300 focus:border-green-400"
-                          }`}
+                          ${errors.expire_at
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:border-green-400"
+                      }`}
                     placeholderText={t("Select date and time")}
                   />
                 )}
@@ -1496,37 +1559,80 @@ const Properties = ({ initialValues, mode = "create" }) => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <div className="flex items-center justify-between">
           {steps.map((step, index) => (
             <div key={step.key} className="flex items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  index <= activeStep
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 text-gray-600"
-                }`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${index <= activeStep
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-600"
+                  }`}
               >
                 {index + 1}
               </div>
               <span
-                className={`ml-2 text-sm font-medium ${
-                  index <= activeStep ? "text-green-600" : "text-gray-500"
-                }`}
+                className={`ml-2 text-sm font-medium ${index <= activeStep ? "text-green-600" : "text-gray-500"
+                  }`}
               >
                 {step.title}
               </span>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-46 h-1 mx-4 ${
-                    index < activeStep ? "bg-green-500" : "bg-gray-200"
-                  }`}
+                  className={`w-46 h-1 mx-4 ${index < activeStep ? "bg-green-500" : "bg-gray-200"
+                    }`}
                 />
               )}
             </div>
           ))}
         </div>
+      </div> */}
+      <div className="mb-8">
+  <div
+    className={`
+      flex items-center
+      w-full
+      overflow-x-auto md:overflow-visible
+      space-x-2 md:space-x-4
+      scrollbar-hide
+    `}
+  >
+    {steps.map((step, index) => (
+      <div
+        key={step.key}
+        className="flex items-center flex-shrink-0"
+      >
+        {/* Step Circle */}
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            index <= activeStep ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"
+          }`}
+        >
+          {index + 1}
+        </div>
+
+        {/* Step Title */}
+        <span
+          className={`ml-2 text-sm font-medium ${
+            index <= activeStep ? "text-green-600" : "text-gray-500"
+          }`}
+        >
+          {step.title}
+        </span>
+
+        {/* Connector Line */}
+        {index < steps.length - 1 && (
+          <div
+            className={`h-1 flex-1 md:w-16 md:mx-4 bg-gray-200 ${
+              index < activeStep ? "bg-green-500" : ""
+            }`}
+          />
+        )}
       </div>
+    ))}
+  </div>
+</div>
+
 
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">

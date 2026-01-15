@@ -222,77 +222,78 @@ export default function UnsoldClient() {
               case "marketplace":
                 router.push(`/marketplace`);
                 break;
-                case "property":
+              case "property":
                 router.push(`/property`);
                 break;
               case "motors":
                 router.push(`/motors`);
                 break;
-            default:
-              console.warn("Unknown listing type:", listing.listing_type);
-              break;
-          }
-        };
+              default:
+                console.warn("Unknown listing type:", listing.listing_type);
+                break;
+            }
+          };
           return (
-          <ListingCard
-            key={listing.id}
-            listing={{
-              id: listing.id,
-              title: listing.title,
-              listing_type: listing.listing_type,
-              reserve_price: listing.reserve_price,
-              bids: listing.bids,
-              status: listing.status,
-              price: listing.buy_now_price || "N/A",
-              views: listing.view_count || 0,
-              watchers: 0,
-              closingDate: listing.expire_at,
-              image: listing.images?.[0]?.image_path
-                ? `${Image_URL}${listing.images[0].image_path}`
-                : "/default-image.jpg",
-              link: `/marketplace/${
-                listing.category?.slug?.split("/").pop() || "unknown"
-              }/${listing.slug}`,
-            }}
-            // actions={commonActions(listing)}
-            actions={[
-              {
-                label: (
-                  <span className="flex items-center gap-1">
-                    {listing.note
-                      ? listing.note.split(" ").slice(0, 3).join(" ") + "..."
-                      : t("Add note")}
-                    {listing.note && <FaEdit className="text-xs" />}
-                  </span>
-                ),
+            <ListingCard
+              key={listing.id}
+              listing={{
+                id: listing.id,
+                title: listing.title,
+                listing_type: listing.listing_type,
+                reserve_price: listing.reserve_price,
+                bids: listing.bids,
+                status: listing.status,
+                price: listing.buy_now_price || "N/A",
+                views: listing.view_count || 0,
+                watchers: 0,
+                closingDate: listing.expire_at,
+                image: listing.images?.[0]?.image_path
+                  ? `${Image_URL}${listing.images[0].image_path}`
+                  : "/default-image.jpg",
+                link: `/marketplace/${listing.category?.slug?.split("/").pop() || "unknown"
+                  }/${listing.slug}`,
+                start_price: listing.start_price,
+              }}
+              // actions={commonActions(listing)}
+              actions={[
+                {
+                  label: (
+                    <span className="flex items-center gap-1">
+                      {listing.note
+                        ? listing.note.split(" ").slice(0, 3).join(" ") + "..."
+                        : t("Add note")}
+                      {listing.note && <FaEdit className="text-xs" />}
+                    </span>
+                  ),
 
-                onClick: () => handleOpenNoteModal(listing),
-              },
-              ,
-              // { label: "Relist", onClick: () => {handleRelist(listing.slug)} },
-              // { label: "Relist", onClick: () => setShowModal(true) },
-              // {
-              //   label: "Relist",
-              //   onClick: () => {
-              //     setSelectedRelistSlug(listing.slug);
-              //     setShowModal(true);
-              //   },
-              // },
-              {
-                label: t("Relist"),
-                onClick: () => {
-                  setSelectedRelistListing(listing); // Save the listing object
-                  setShowModal(true); // Open modal
+                  onClick: () => handleOpenNoteModal(listing),
                 },
-              },
+                ,
+                // { label: "Relist", onClick: () => {handleRelist(listing.slug)} },
+                // { label: "Relist", onClick: () => setShowModal(true) },
+                // {
+                //   label: "Relist",
+                //   onClick: () => {
+                //     setSelectedRelistSlug(listing.slug);
+                //     setShowModal(true);
+                //   },
+                // },
+                {
+                  label: t("Relist"),
+                  onClick: () => {
+                    setSelectedRelistListing(listing); // Save the listing object
+                    setShowModal(true); // Open modal
+                  },
+                },
 
-              {
-                label: t("See similar"),
-                onClick: () => handleSeeSimilarClick(listing),
-              },
-            ]}
-          />
-        )})
+                {
+                  label: t("See similar"),
+                  onClick: () => handleSeeSimilarClick(listing),
+                },
+              ]}
+            />
+          )
+        })
       )}
 
       <NoteModal

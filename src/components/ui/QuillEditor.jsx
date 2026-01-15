@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo } from "react";
-import ReactQuill from "react-quill-new";
+import dynamic from "next/dynamic";
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import "react-quill-new/dist/quill.snow.css";
 
 export default function QuillEditor({ value, onChange, error, placeholder }) {
@@ -30,9 +31,8 @@ export default function QuillEditor({ value, onChange, error, placeholder }) {
         modules={modules}
         formats={formats}
         placeholder={placeholder || "Describe your item..."}
-        className={`bg-white rounded-md border ${
-          error ? "border-red-500" : "border-gray-300"
-        } focus:none `}
+        className={`bg-white rounded-md border ${error ? "border-red-500" : "border-gray-300"
+          } focus:none `}
       />
       {error && (
         <p className="text-red-500 text-sm mt-1">{error}</p>

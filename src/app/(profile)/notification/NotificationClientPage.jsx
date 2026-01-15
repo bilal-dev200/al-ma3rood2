@@ -53,10 +53,9 @@ const NotificationClientPage = () => {
 
   const markAllAsRead = async () => {
     try {
-      const ids = notifications.map((n) => n.id);
-      await Promise.all(ids.map((id) => userApi.userReadNotification(id)));
+      await userApi.userAllReadNotification();
       toast.success(t("Notification marked as read!"));
-      setNotifications([]);
+      await fetchListings();
     } catch (error) {
       toast.error(t("Failed to mark notification as read."));
     }
@@ -97,20 +96,20 @@ const NotificationClientPage = () => {
 
         {notifications.map((item) => {
           const isRead = item.read_at !== null;
-          
+
           const handleNotificationClick = () => {
             if (!item.listing) return;
-            
+
             const listing = item.listing;
 
             // console.log("notification listing", listing);
-            
+
             // Check listing.type first for service and job
             if (listing.type === "service") {
               router.push(`/services/${listing?.slug}`);
               return;
             }
-            
+
             if (listing.type === "job") {
               router.push(`/jobs/${listing?.slug}`);
               return;
@@ -139,18 +138,16 @@ const NotificationClientPage = () => {
             <div
               key={item.id}
               onClick={handleNotificationClick}
-              className={`bg-white rounded-md shadow p-4 relative w-full max-w-xl mb-6 cursor-pointer hover:shadow-lg transition-shadow ${
-                isRead ? "opacity-75" : ""
-              }`}
+              className={`bg-white rounded-md shadow p-4 relative w-full max-w-xl mb-6 cursor-pointer hover:shadow-lg transition-shadow ${isRead ? "opacity-75" : ""
+                }`}
             >
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemove(item.id);
                 }}
-                className={`absolute top-2 ${
-                  isRTL ? "left-2" : "right-2"
-                } ${isRead ? "text-gray-400 hover:text-gray-600" : "text-green-600 hover:text-green-800"} z-10`}
+                className={`absolute top-2 ${isRTL ? "left-2" : "right-2"
+                  } ${isRead ? "text-gray-400 hover:text-gray-600" : "text-green-600 hover:text-green-800"} z-10`}
                 title={t("Mark as read")}
               >
                 <FaBell />
@@ -175,9 +172,8 @@ const NotificationClientPage = () => {
 
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className={`font-bold text-md mb-1 ${
-                      isRead ? "text-gray-500" : "text-black"
-                    }`}>
+                    <h3 className={`font-bold text-md mb-1 ${isRead ? "text-gray-500" : "text-black"
+                      }`}>
                       {item.data?.title || item.listing?.title || t("Notification")}
                     </h3>
                     <p className="text-sm text-gray-700 mb-4">

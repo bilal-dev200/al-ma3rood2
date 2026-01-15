@@ -135,21 +135,21 @@ const Market = ({
                             </div>
                           </div>
                         )} */}
-                        <div className="text-gray-700">
-                         {(card.creator?.regions?.name || card.creator?.city) && (
+                      <div className="text-gray-700">
+                        {(card.creator?.regions?.name || card.creator?.city) && (
                           <>
-                        <div className="text-[10px] text-gray-400 tracking-wide">
-                          {t("Location")}:
-                        </div>
-                        <div className="font-bold text-xs">
-                          {(`${card?.creator?.address_1 ? `${card?.creator?.address_1}, ` : ""} ${card?.creator?.governorates?.name}, ${card?.creator?.regions?.name}`)}
-                        </div>
-                        </>
-                         )}
+                            <div className="text-[10px] text-gray-400 tracking-wide">
+                              {t("Location")}:
+                            </div>
+                            <div className="font-bold text-xs">
+                              {`${card?.creator?.address_1 ? `${card?.creator?.address_1}, ` : ""}${card?.creator?.areas?.name ? `${card?.creator?.areas?.name}, ` : ""}${card?.creator?.cities?.name || card?.creator?.governorates?.name || ""}, ${card?.creator?.regions?.name}`}
+                            </div>
+                          </>
+                        )}
                       </div>
 
-                     {card.bids_count === 0
-                      ? card.buy_now_price && (
+                      {card.bids_count === 0
+                        ? card.buy_now_price && (
                           <div className="text-right text-gray-700 flex flex-col items-end">
                             <div className="text-[9px] text-gray-400 uppercase tracking-wide">
                               {t("Buy Now")}:
@@ -160,7 +160,7 @@ const Market = ({
                             </div>
                           </div>
                         )
-                      : card.bids_count &&
+                        : card.bids_count &&
                         card.bids?.length > 0 && (
                           <div className="text-right text-gray-700 flex flex-col items-end">
                             <div className="text-[9px] text-gray-400 uppercase tracking-wide">
